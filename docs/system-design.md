@@ -8,9 +8,9 @@ requires a paid service.
 > queue, outbox, WebSockets, health checks, logs, metrics) is covered by automated tests. The full
 > Docker Compose stack (two web instances, worker, WebSocket server, Postgres, Valkey, nginx
 > gateway) has been built and run locally, and the browser tests pass through the gateway. Alert
-> rules, Alertmanager routing, Kubernetes manifests and GitHub workflows pass their official
-> validators. Not yet run anywhere: a real Kubernetes cluster, the Prometheus/Grafana/Loki
-> containers, and the GitHub Actions pipelines (they need your GitHub repo and hosting).
+> rules, Alertmanager routing and Kubernetes manifests pass their official validators, and the
+> GitHub Actions CI pipeline passes on GitHub. Not yet run: a real Kubernetes cluster, the
+> Prometheus/Grafana/Loki containers, and the deploy workflow (they need hosting).
 > See [Verification status](#verification-status).
 
 ## 1. Goals and constraints
@@ -457,6 +457,7 @@ person to choose the image and pass the GitHub Environment approval. Required se
 | Gateway tests | Security headers sent twice (gateway and app) | Headers come only from the app |
 | Gateway tests | Micro-cached responses replayed a previous request's `X-Request-Id` | Gateway hides the app's copy and sets its own |
 | Accessibility (newer axe) | Logo link and "Ask ops" button text didn't match their accessible names | Names include the visible text |
+| First GitHub CI runs | Route types missing on a fresh checkout; mobile lock file broken on Linux; image names must be lowercase; Trivy found 3 fixable critical Perl CVEs in the base image | `next typegen` before type-check; Linux-generated locks; lowercase `ghcr.io` names; `apt-get upgrade` in the image |
 
 ## 16. Targets and capacity
 
@@ -498,8 +499,8 @@ and readiness results are cached for 2 s.
 | Docker image + Docker Compose stack behind the nginx gateway | Built and run locally (Colima); site, accessibility, health, WebSocket and security tests pass through the gateway |
 | Alert rules / Prometheus config / Alertmanager routing | `promtool check rules` (20 rules), `promtool check config`, `amtool check-config` pass |
 | Kubernetes manifests (staging + production overlays, incl. CloudNativePG, KEDA, Prometheus Operator resources) | Rendered with `kubectl kustomize`; all 54 resources valid with `kubeconform -strict` |
-| GitHub Actions workflows | `actionlint` passes; not yet run on GitHub |
-| Real Kubernetes cluster, Prometheus/Grafana/Loki containers | **Not run yet** (needs hosting) |
+| GitHub Actions CI (quality, tests on Postgres, browser tests, image build + Trivy scan, push to GHCR) | **Passing on GitHub** |
+| Real Kubernetes cluster, Prometheus/Grafana/Loki containers, deploy workflow | **Not run yet** (needs hosting) |
 | Load/capacity | Measured locally with autocannon (§16); not yet on staging hardware |
 | Government datasets (Census, BLS, FHFA) | Downloaded and verified (checksums, completeness, plausibility), live-format contract tests pass |
 | Accessibility | axe-core WCAG 2.1 AA audits pass on 15 pages |

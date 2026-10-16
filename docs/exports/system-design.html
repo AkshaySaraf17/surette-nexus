@@ -34,9 +34,9 @@ requires a paid service.</p>
 queue, outbox, WebSockets, health checks, logs, metrics) is covered by automated tests. The full
 Docker Compose stack (two web instances, worker, WebSocket server, Postgres, Valkey, nginx
 gateway) has been built and run locally, and the browser tests pass through the gateway. Alert
-rules, Alertmanager routing, Kubernetes manifests and GitHub workflows pass their official
-validators. Not yet run anywhere: a real Kubernetes cluster, the Prometheus/Grafana/Loki
-containers, and the GitHub Actions pipelines (they need your GitHub repo and hosting).
+rules, Alertmanager routing and Kubernetes manifests pass their official validators, and the
+GitHub Actions CI pipeline passes on GitHub. Not yet run: a real Kubernetes cluster, the
+Prometheus/Grafana/Loki containers, and the deploy workflow (they need hosting).
 See <a href="#verification-status">Verification status</a>.</p>
 </blockquote>
 <h2 id="1-goals-and-constraints">1. Goals and constraints</h2><table>
@@ -687,6 +687,11 @@ person to choose the image and pass the GitHub Environment approval. Required se
 <td>Logo link and &quot;Ask ops&quot; button text didn&#39;t match their accessible names</td>
 <td>Names include the visible text</td>
 </tr>
+<tr>
+<td>First GitHub CI runs</td>
+<td>Route types missing on a fresh checkout; mobile lock file broken on Linux; image names must be lowercase; Trivy found 3 fixable critical Perl CVEs in the base image</td>
+<td><code>next typegen</code> before type-check; Linux-generated locks; lowercase <code>ghcr.io</code> names; <code>apt-get upgrade</code> in the image</td>
+</tr>
 </tbody></table>
 <h2 id="16-targets-and-capacity">16. Targets and capacity</h2><p>Targets (SLOs) to hold ourselves to. These are <strong>goals, not measurements</strong>:</p>
 <table>
@@ -774,11 +779,11 @@ and readiness results are cached for 2 s.</p>
 <td>Rendered with <code>kubectl kustomize</code>; all 54 resources valid with <code>kubeconform -strict</code></td>
 </tr>
 <tr>
-<td>GitHub Actions workflows</td>
-<td><code>actionlint</code> passes; not yet run on GitHub</td>
+<td>GitHub Actions CI (quality, tests on Postgres, browser tests, image build + Trivy scan, push to GHCR)</td>
+<td><strong>Passing on GitHub</strong></td>
 </tr>
 <tr>
-<td>Real Kubernetes cluster, Prometheus/Grafana/Loki containers</td>
+<td>Real Kubernetes cluster, Prometheus/Grafana/Loki containers, deploy workflow</td>
 <td><strong>Not run yet</strong> (needs hosting)</td>
 </tr>
 <tr>

@@ -34,8 +34,9 @@ recorded manual run, not just written.
 ## Built, not independently verified
 
 - Docker image and the Compose stack with the nginx gateway: built and run locally; browser tests pass through the gateway.
-- Kubernetes manifests, alert rules, Alertmanager routing and GitHub workflows: pass their official validators
-  (kubeconform, promtool, amtool, actionlint) but haven't run on a real cluster or on GitHub yet.
+- GitHub Actions CI passes on GitHub (quality, tests, browser tests, image build + security scan, image published).
+- Kubernetes manifests, alert rules and Alertmanager routing pass their official validators (kubeconform, promtool,
+  amtool) but haven't run on a real cluster yet; the deploy workflow is opt-in (`DEPLOY_ENABLED`).
 - Prometheus, Grafana and Loki containers: configs validated, containers not started (disk space on the dev machine).
 - Load numbers are from a laptop; re-run `npm run test:load` on staging hardware.
 - Mobile app changes (port 3100, team login): type-checked, not run on a device in this round.

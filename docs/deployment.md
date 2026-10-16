@@ -72,7 +72,8 @@ Using managed Postgres or Redis? Remove `components/data` from the overlay and p
   **Production** is a manual "Run workflow" with GitHub Environment approval. Each deploy runs the
   migration Job, rolls out web, worker and realtime, smoke-tests `/api/health/ready`, and rolls back
   automatically on failure.
-- Repository secrets needed: `KUBECONFIG` in the `staging` and `production` environments.
+- Repository secrets needed: `KUBECONFIG` in the `staging` and `production` environments, plus the repository
+  variable `DEPLOY_ENABLED=true` to turn on automatic staging deploys. CI already passes on GitHub.
 
 ## Free software used
 
