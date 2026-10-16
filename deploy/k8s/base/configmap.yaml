@@ -1,0 +1,22 @@
+# Non-secret settings. Secrets (DATABASE_URL, JWT_SECRET, METRICS_TOKEN, REDIS_URL, …)
+# come from the "surette-secrets" Secret — create it with External Secrets / Sealed
+# Secrets / your cloud secret manager; see secret.example.yaml for the keys.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: surette-config
+data:
+  NODE_ENV: production
+  PUBLIC_SITE_URL: https://nexus.example.com
+  SITE_TEAM_SLUG: surette
+  STORAGE_DIR: /data/storage
+  MIGRATIONS_DIR: /app/database/migrations
+  LOG_LEVEL: info
+  RATE_LIMIT_STORE: redis
+  EMBEDDED_WORKER: "0"
+  WORKER_CONCURRENCY: "4"
+  DATABASE_POOL_SIZE: "10"
+  DATABASE_STATEMENT_TIMEOUT_MS: "15000"
+  NEXT_PUBLIC_ANALYTICS_PROJECT: nexus-site
+  OLLAMA_URL: ""
+  OLLAMA_MODEL: llama3.2:3b

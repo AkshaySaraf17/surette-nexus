@@ -1,0 +1,189 @@
+# GENERATED from deploy/observability/prometheus/alerts.yml — edit that file, then run
+#   node scripts/sync-alert-rules.mjs
+# (web/tests/deploy-config.test.ts fails if the two drift apart.)
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: surette-alerts
+  labels:
+    release: kube-prometheus-stack
+spec:
+  groups:
+    - name: surette-availability
+      rules:
+        - alert: SuretteTargetDown
+          expr: up{job=~"surette-.*"} == 0
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: '{{ $labels.job }} instance {{ $labels.instance }} is down'
+            runbook: docs/runbooks.md#target-down
+        - alert: SuretteWorkerMissing
+          expr: absent(up{job="surette-worker"} == 1)
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: No background worker is running — webhooks, scheduled jobs and outbox relay are stalled
+            runbook: docs/runbooks.md#worker-missing
+        - alert: SuretteNotReady
+          expr: probe_success{job="blackbox-ready"} == 0
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: Readiness probe failing from outside the cluster ({{ $labels.instance }})
+            runbook: docs/runbooks.md#not-ready
+        - alert: SuretteHighErrorRate
+          expr: |
+            (sum(rate(http_request_duration_seconds_count{status=~"5.."}[5m]))
+              / clamp_min(sum(rate(http_request_duration_seconds_count[5m])), 1e-9)) > 0.05
+            and sum(rate(http_request_duration_seconds_count[5m])) > 0.1
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: More than 5% of API requests are failing
+            runbook: docs/runbooks.md#high-error-rate
+        - alert: SuretteElevatedErrorRate
+          expr: |
+            (sum(rate(http_request_duration_seconds_count{status=~"5.."}[15m]))
+              / clamp_min(sum(rate(http_request_duration_seconds_count[15m])), 1e-9)) > 0.01
+            and sum(rate(http_request_duration_seconds_count[15m])) > 0.05
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: More than 1% of API requests are failing
+            runbook: docs/runbooks.md#high-error-rate
+        - alert: SuretteSlowRequests
+          expr: |
+            histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket{route!~"/api/events|/api/agent/concierge|/api/properties/upload"}[10m]))) > 1.5
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: p95 API latency above 1.5 s
+            runbook: docs/runbooks.md#slow-requests
+        - alert: SuretteTlsCertExpiring
+          expr: probe_ssl_earliest_cert_expiry - time() < 14 * 86400
+          for: 1h
+          labels:
+            severity: warning
+          annotations:
+            summary: TLS certificate for {{ $labels.instance }} expires in under 14 days
+            runbook: docs/runbooks.md#tls
+    - name: surette-data
+      rules:
+        - alert: SuretteDbPoolSaturated
+          expr: max(db_pool_connections{state="waiting"}) > 0
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: Requests are waiting for database connections
+            runbook: docs/runbooks.md#db-pool
+        - alert: SuretteDbSlowTransactions
+          expr: histogram_quantile(0.95, sum by (le) (rate(db_transaction_duration_seconds_bucket[10m]))) > 0.5
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: p95 database transaction time above 500 ms
+            runbook: docs/runbooks.md#db-slow
+        - alert: PostgresDown
+          expr: pg_up == 0
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: PostgreSQL is unreachable
+            runbook: docs/runbooks.md#postgres-down
+        - alert: PostgresConnectionsHigh
+          expr: sum(pg_stat_activity_count) / max(pg_settings_max_connections) > 0.8
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: PostgreSQL is above 80% of max_connections
+            runbook: docs/runbooks.md#db-pool
+        - alert: PostgresReplicaLagging
+          expr: max(pg_replication_lag_seconds) > 30
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: Read replica is more than 30 s behind
+            runbook: docs/runbooks.md#replica-lag
+        - alert: RedisDown
+          expr: redis_up == 0
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: Redis is down — rate limits fall back to memory and the shared cache is off
+            runbook: docs/runbooks.md#redis-down
+    - name: surette-async
+      rules:
+        - alert: SuretteJobsDeadLettered
+          expr: sum by (type) (increase(jobs_processed_total{outcome="dead"}[15m])) > 0
+          labels:
+            severity: warning
+          annotations:
+            summary: '{{ $value }} {{ $labels.type }} job(s) exhausted their retries'
+            runbook: docs/runbooks.md#dead-jobs
+        - alert: SuretteQueueBacklog
+          expr: sum(job_queue_depth{status="queued"}) > 500
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: More than 500 jobs waiting
+            runbook: docs/runbooks.md#queue-backlog
+        - alert: SuretteOutboxLagging
+          expr: max(outbox_lag_seconds) > 60
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: Domain events are waiting more than a minute to be relayed
+            runbook: docs/runbooks.md#outbox-lag
+        - alert: SuretteOutboxStalled
+          expr: max(outbox_lag_seconds) > 300
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: Outbox relay stalled for 5+ minutes
+            runbook: docs/runbooks.md#outbox-lag
+    - name: surette-dependencies
+      rules:
+        - alert: SuretteCircuitOpen
+          expr: max by (breaker) (circuit_breaker_state) == 2
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: Circuit breaker {{ $labels.breaker }} has been open for 5 minutes
+            runbook: docs/runbooks.md#circuit-open
+        - alert: SuretteRateLimitSpike
+          expr: sum(rate(rate_limited_total[5m])) > 5
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: Sustained rate-limit rejections — possible abuse or a misbehaving client
+            runbook: docs/runbooks.md#rate-limits
+    - name: surette-business
+      rules:
+        - alert: SuretteAnalyticsSilent
+          expr: |
+            sum(increase(analytics_events_total{project="nexus-site",result="accepted"}[3h])) == 0
+            and on() (hour() >= 13)
+          for: 30m
+          labels:
+            severity: warning
+          annotations:
+            summary: No consented analytics events from the website for 3 hours
+            runbook: docs/runbooks.md#analytics-silent

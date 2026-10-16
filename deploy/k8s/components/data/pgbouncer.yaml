@@ -1,0 +1,17 @@
+# PgBouncer in transaction-pooling mode: hundreds of app connections share a few dozen
+# Postgres connections. Compatible with the app because every request runs in one
+# transaction and uses SET LOCAL / set_config(..., true). LISTEN/NOTIFY and migrations
+# bypass it via DATABASE_DIRECT_URL.
+apiVersion: postgresql.cnpg.io/v1
+kind: Pooler
+metadata:
+  name: pgbouncer
+spec:
+  cluster: { name: surette-db }
+  instances: 2
+  type: rw
+  pgbouncer:
+    poolMode: transaction
+    parameters:
+      max_client_conn: "1000"
+      default_pool_size: "40"

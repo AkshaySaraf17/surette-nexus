@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: realtime
+  labels: { app.kubernetes.io/name: realtime }
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate: { maxUnavailable: 0, maxSurge: 1 }
+  selector: { matchLabels: { app.kubernetes.io/name: realtime } }
+  template:
+    metadata:
+      labels: { app.kubernetes.io/name: realtime }
+    spec:
+      terminationGracePeriodSeconds: 30
+      securityContext: { runAsNonRoot: true, runAsUser: 10001, seccompProfile: { type: RuntimeDefault } }
+      containers:
+        - name: realtime
+          image: surette-nexus
+          args: ["npm", "run", "realtime:prod"]
+          ports: [{ name: http, containerPort: 3200 }]
+          envFrom:
+            - configMapRef: { name: surette-config }
+            - secretRef: { name: surette-secrets }
+          env:
+            - { name: SERVICE_NAME, value: surette-realtime }
+            - { name: REALTIME_PORT, value: "3200" }
+          resources:
+            requests: { cpu: 100m, memory: 192Mi }
+            limits: { memory: 512Mi }
+          readinessProbe:
+            httpGet: { path: /readyz, port: http }
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /healthz, port: http }
+            periodSeconds: 20
+          lifecycle:
+            preStop: { exec: { command: ["sleep", "5"] } }
+          securityContext: { allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: { drop: [ALL] } }
+          volumeMounts: [{ name: tmp, mountPath: /tmp }]
+      volumes: [{ name: tmp, emptyDir: {} }]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: realtime
+  labels: { app.kubernetes.io/name: realtime }
+spec:
+  selector: { app.kubernetes.io/name: realtime }
+  ports: [{ name: http, port: 80, targetPort: http }]
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: realtime
+spec:
+  scaleTargetRef: { apiVersion: apps/v1, kind: Deployment, name: realtime }
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource: { name: cpu, target: { type: Utilization, averageUtilization: 60 } }

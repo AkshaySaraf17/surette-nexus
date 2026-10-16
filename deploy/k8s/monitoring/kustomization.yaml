@@ -1,0 +1,12 @@
+# For clusters running kube-prometheus-stack (Prometheus Operator + Grafana + Alertmanager).
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - service-monitors.yaml
+  - prometheus-rule.yaml
+configMapGenerator:
+  - name: surette-grafana-dashboard
+    files: [surette-overview.json]   # copied from deploy/observability by scripts/sync-alert-rules.mjs
+    options:
+      disableNameSuffixHash: true
+      labels: { grafana_dashboard: "1" }   # picked up by the Grafana dashboard sidecar

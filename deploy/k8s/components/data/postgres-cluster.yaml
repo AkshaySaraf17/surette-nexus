@@ -1,0 +1,45 @@
+# PostgreSQL via the CloudNativePG operator (Apache-2.0): 1 primary + 2 streaming replicas,
+# automatic failover, continuous backups + point-in-time recovery to object storage.
+# It creates services surette-db-rw (primary) and surette-db-ro (replicas), which map to
+# DATABASE_DIRECT_URL and DATABASE_READ_URL.
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: surette-db
+spec:
+  instances: 3
+  imageName: ghcr.io/cloudnative-pg/postgresql:17
+  primaryUpdateStrategy: unsupervised
+  postgresql:
+    shared_preload_libraries: [pg_stat_statements]
+    parameters:
+      max_connections: "200"
+      shared_buffers: 512MB
+      effective_cache_size: 1536MB
+      work_mem: 8MB
+      log_min_duration_statement: "500"       # log slow queries (ms)
+      pg_stat_statements.track: all
+  bootstrap:
+    initdb:
+      database: surette
+      owner: surette
+  storage: { size: 50Gi }
+  resources:
+    requests: { cpu: 500m, memory: 2Gi }
+    limits: { memory: 2Gi }
+  monitoring: { enablePodMonitor: true }
+  backup:
+    retentionPolicy: 30d
+    barmanObjectStore:
+      destinationPath: s3://CHANGE-ME-backups/surette-db
+      s3Credentials:
+        accessKeyId: { name: surette-backup-creds, key: ACCESS_KEY_ID }
+        secretAccessKey: { name: surette-backup-creds, key: SECRET_ACCESS_KEY }
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: surette-db-daily
+spec:
+  schedule: "0 0 4 * * *"
+  cluster: { name: surette-db }

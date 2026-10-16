@@ -1,0 +1,195 @@
+{
+  "generatedAt": "2026-10-16T14:25:52.216Z",
+  "license": "U.S. Government works — public domain (17 U.S.C. § 105).",
+  "datasets": {
+    "acs5": {
+      "dataset": "acs5",
+      "agency": "U.S. Census Bureau",
+      "title": "American Community Survey 2020–2024 5-year estimates (tables B01003, B19013, B25077, B25064, B25003)",
+      "retrievedAt": "2026-10-16T14:25:22.545Z",
+      "files": [
+        {
+          "url": "https://www2.census.gov/programs-surveys/acs/summary_file/2024/table-based-SF/data/5YRData/acsdt5y2024-b01003.dat",
+          "bytes": 18313708,
+          "sha256": "38d1a992bb058d184009b10b9b34987279aee575e4323165cfb5706c69b6ca90"
+        },
+        {
+          "url": "https://www2.census.gov/programs-surveys/acs/summary_file/2024/table-based-SF/data/5YRData/acsdt5y2024-b19013.dat",
+          "bytes": 17917916,
+          "sha256": "b25a176b0e6c339b6f3a2a0d3d8446bf06f5f080b4395993ec9a8313efb1c229"
+        },
+        {
+          "url": "https://www2.census.gov/programs-surveys/acs/summary_file/2024/table-based-SF/data/5YRData/acsdt5y2024-b25077.dat",
+          "bytes": 18496426,
+          "sha256": "89eb2153764a2330b23959d8bbc29b3a8f3016f087b990f2a8ea0d5096d9a816"
+        },
+        {
+          "url": "https://www2.census.gov/programs-surveys/acs/summary_file/2024/table-based-SF/data/5YRData/acsdt5y2024-b25064.dat",
+          "bytes": 17272062,
+          "sha256": "b36e6dc1fcef36b8b307d31b37517b64c80d8b9c70d48c9b1894242860f42eb0"
+        },
+        {
+          "url": "https://www2.census.gov/programs-surveys/acs/summary_file/2024/table-based-SF/data/5YRData/acsdt5y2024-b25003.dat",
+          "bytes": 26901770,
+          "sha256": "68e963e1ed60fcf6b0658579cefc6498b7a9eb780b9f3e87fd1b9775c4d4ac6c"
+        }
+      ],
+      "file": "acs5.csv",
+      "fileSha256": "b354892ceaa35303e0741cd29e53586b329d1b971fc020479525d5e71a7a8c04",
+      "rows": 55
+    },
+    "bls_laus": {
+      "dataset": "bls_laus",
+      "agency": "U.S. Bureau of Labor Statistics",
+      "title": "Local Area Unemployment Statistics, monthly, 2017–2026 (not seasonally adjusted)",
+      "retrievedAt": "2026-10-16T14:25:23.056Z",
+      "files": [
+        {
+          "url": "https://api.bls.gov/publicAPI/v1/timeseries/data/ (POST LAUCN230110000000003, LAUCN230250000000003, LASST230000000000003, LNU04000000)",
+          "bytes": 40004,
+          "sha256": "b2b0cc1fa87da908f141884868f4ba683d5b5be377eae75cf6b8f7520a4c37a2"
+        }
+      ],
+      "notes": [
+        "kennebec 2026-08 preliminary",
+        "somerset 2026-08 preliminary",
+        "maine 2026-08 preliminary"
+      ],
+      "file": "bls_laus.csv",
+      "fileSha256": "4588192e57608d0a5804cfd3b2089eece147758611e5a526eae5e857316c402c",
+      "rows": 461
+    },
+    "census_bps": {
+      "dataset": "census_bps",
+      "agency": "U.S. Census Bureau",
+      "title": "Building Permits Survey, annual county and state totals",
+      "retrievedAt": "2026-10-16T14:25:25.694Z",
+      "files": [
+        {
+          "url": "https://www2.census.gov/econ/bps/County/co2016a.txt",
+          "bytes": 369295,
+          "sha256": "6ff9421bd21ce5f0a3d4c986b20ef07118325871570e0aa3f97983ee7e1a5613"
+        },
+        {
+          "url": "https://www2.census.gov/econ/bps/State/st2016a.txt",
+          "bytes": 10542,
+          "sha256": "18eb867896567740aeeb73a35486f59b44888db639a1b05a652996a43fd9c4f3"
+        },
+        {
+          "url": "https://www2.census.gov/econ/bps/County/co2017a.txt",
+          "bytes": 366973,
+          "sha256": "1e0d55f4706598f8971eba452a2fd2855a2d7b0ec1262c3dd246194968654456"
+        },
+        {
+          "url": "https://www2.census.gov/econ/bps/State/st2017a.txt",
+          "bytes": 10344,
+          "sha256": "f8c780ad19a3fe6c3f5c7803e27a63f6ceb4c4f2b3537d83c83dda8780f16933"
+        },
+        {
+          "url": "https://www2.census.gov/econ/bps/County/co2018a.txt",
+          "bytes": 366773,
+          "sha256": "7804746d2fd77346b6d981a607c12897051025741f1d17c29653bb5dde032e04"
+        },
+        {
+          "url": "https://www2.census.gov/econ/bps/State/st2018a.txt",
+          "bytes": 10463,
+          "sha256": "94fe186b27aa8cbc37eb4b4cff8e11dfe5dd0e33693c6399bb1f0f301f57790c"
+        },
+        {
+          "url": "https://www2.census.gov/econ/bps/County/co2019a.txt",
+          "bytes": 368766,
+          "sha256": "4ea529befaa1d93f8a20fe79c2aa4430456e91766e5ecf07ad4840457703b25b"
+        },
+        {
+          "url": "https://www2.census.gov/econ/bps/State/st2019a.txt",
+          "bytes": 10535,
+          "sha256": "b257d0c7094af2ea0c0a6bd83d1d2fcf324bbe2b13da7261b9e4e3d93b7edfa1"
+        },
+        {
+          "url": "https://www2.census.gov/econ/bps/County/co2020a.txt",
+          "bytes": 369908,
+          "sha256": "04efba6d3ffecd19340dece9d76d01343f8b97647617c79422c04e227e2d7293"
+        },
+        {
+          "url": "https://www2.census.gov/econ/bps/State/st2020a.txt",
+          "bytes": 10432,
+          "sha256": "446533087cb10997e488f081d05a2f04179468a04bd543316c0167763965cfd4"
+        },
+        {
+          "url": "https://www2.census.gov/econ/bps/County/co2021a.txt",
+          "bytes": 372012,
+          "sha256": "ce2c9aa7b7c036ddbc99d6dc398ddf71e4a0ad0fc2782db883b559ca264f14b6"
+        },
+        {
+          "url": "https://www2.census.gov/econ/bps/State/st2021a.txt",
+          "bytes": 10616,
+          "sha256": "82fea768a93c91a702c91727d8dea64d2573f835dc9858b11d0e63a4092c524b"
+        },
+        {
+          "url": "https://www2.census.gov/econ/bps/County/co2022a.txt",
+          "bytes": 374937,
+          "sha256": "0a88c16861ede81b04f8785e1c626e772510f33f1de9452f7592d86d308e2b5c"
+        },
+        {
+          "url": "https://www2.census.gov/econ/bps/State/st2022a.txt",
+          "bytes": 10731,
+          "sha256": "c973dde1f227de2c825ac0ce20b604979291080c7a1f70e9c953bf5a13980790"
+        },
+        {
+          "url": "https://www2.census.gov/econ/bps/County/co2023a.txt",
+          "bytes": 374707,
+          "sha256": "fab11d759e905ff61838b8dfa41c0f2082e150cad07a20c65ddd620a007aa158"
+        },
+        {
+          "url": "https://www2.census.gov/econ/bps/State/st2023a.txt",
+          "bytes": 10676,
+          "sha256": "c3915919cc2b58ccb2be6c9e6000f064236aeaa9d032f9352d60c0f484b4a583"
+        },
+        {
+          "url": "https://www2.census.gov/econ/bps/County/co2024a.txt",
+          "bytes": 375214,
+          "sha256": "a64c2dd19be96c469763c10d637575a584ef16a6878f451bba80c847bcafc8c6"
+        },
+        {
+          "url": "https://www2.census.gov/econ/bps/State/st2024a.txt",
+          "bytes": 10681,
+          "sha256": "8dd34fb3bc362a0d6c1e6832161432dd833aff9be49ebebc128335635c59e7d0"
+        },
+        {
+          "url": "https://www2.census.gov/econ/bps/County/co2025a.txt",
+          "bytes": 375314,
+          "sha256": "5d523b1ff172c886ee7f2bc770c82c8c5470b5aaaec5f63441a18c621c80b30e"
+        },
+        {
+          "url": "https://www2.census.gov/econ/bps/State/st2025a.txt",
+          "bytes": 10744,
+          "sha256": "eab29258ada8389b9f469c566eb6eb074cf128aa94c471e89f818a20a4d83afb"
+        }
+      ],
+      "file": "census_bps.csv",
+      "fileSha256": "90cbcf0562ed9ed4eb36242633e7e4bce4c6fece01dbe06670e49b5ceb5b9074",
+      "rows": 30
+    },
+    "fhfa_hpi": {
+      "dataset": "fhfa_hpi",
+      "agency": "Federal Housing Finance Agency",
+      "title": "House Price Index (all-transactions), annual, counties and states — 2000 base",
+      "retrievedAt": "2026-10-16T14:25:52.215Z",
+      "files": [
+        {
+          "url": "https://www.fhfa.gov/hpi/download/annual/hpi_at_county.csv",
+          "bytes": 5334194,
+          "sha256": "534e9fd3224c4d9365300cc1be471bcfe4455b72311263a35e9cb50adf79afd1"
+        },
+        {
+          "url": "https://www.fhfa.gov/hpi/download/annual/hpi_at_state.csv",
+          "bytes": 156520,
+          "sha256": "5b42f6c0c73b33421ac379ae243f9eaa6f7cc6967c17d5137d3341987a1a7c81"
+        }
+      ],
+      "file": "fhfa_hpi.csv",
+      "fileSha256": "1271184ba675e59157bc3feb6bc91e7ba11604bc64d4dcf6e9d64677663f2345",
+      "rows": 131
+    }
+  }
+}

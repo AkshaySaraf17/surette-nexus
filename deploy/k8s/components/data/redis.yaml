@@ -1,0 +1,32 @@
+# Single Valkey (BSD-licensed, Redis-compatible) for rate limits + shared cache — both degrade
+# gracefully without it. For HA use Valkey Sentinel or a managed service; data here is disposable.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  labels: { app.kubernetes.io/name: redis }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app.kubernetes.io/name: redis } }
+  template:
+    metadata:
+      labels: { app.kubernetes.io/name: redis }
+    spec:
+      securityContext: { runAsNonRoot: true, runAsUser: 999, seccompProfile: { type: RuntimeDefault } }
+      containers:
+        - name: redis
+          image: valkey/valkey:8.1-alpine
+          command: ["valkey-server"]
+          args: ["--maxmemory", "256mb", "--maxmemory-policy", "allkeys-lru", "--save", ""]
+          ports: [{ name: redis, containerPort: 6379 }]
+          resources: { requests: { cpu: 50m, memory: 128Mi }, limits: { memory: 320Mi } }
+          readinessProbe: { exec: { command: ["valkey-cli", "ping"] }, periodSeconds: 10 }
+          securityContext: { allowPrivilegeEscalation: false, capabilities: { drop: [ALL] } }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+spec:
+  selector: { app.kubernetes.io/name: redis }
+  ports: [{ name: redis, port: 6379, targetPort: redis }]

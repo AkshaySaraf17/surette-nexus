@@ -1,0 +1,32 @@
+{
+  "expo": {
+    "name": "Surette",
+    "slug": "surette-nexus",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": { "image": "./assets/splash-icon.png", "resizeMode": "contain", "backgroundColor": "#15130F" },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.surette.nexus",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Choose listing photos to upload to the Surette website.",
+        "NSCameraUsageDescription": "Take listing photos on site.",
+        "NSLocationWhenInUseUsageDescription": "Place a new listing on the map using your current location."
+      }
+    },
+    "android": {
+      "adaptiveIcon": { "backgroundColor": "#15130F", "foregroundImage": "./assets/android-icon-foreground.png" },
+      "package": "com.surette.nexus",
+      "permissions": ["CAMERA", "ACCESS_FINE_LOCATION"]
+    },
+    "web": { "favicon": "./assets/favicon.png", "bundler": "metro", "name": "Surette" },
+    "plugins": [
+      "expo-secure-store",
+      ["expo-image-picker", { "photosPermission": "Choose listing photos to upload to the Surette website.", "cameraPermission": "Take listing photos on site." }],
+      ["expo-location", { "locationWhenInUsePermission": "Place a new listing on the map using your current location." }]
+    ],
+    "scheme": "surette"
+  }
+}

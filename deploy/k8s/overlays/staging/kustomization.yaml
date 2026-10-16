@@ -1,0 +1,60 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: surette-staging
+resources:
+  - ../../base
+  - migrate-job.yaml
+components:
+  - ../../components/data
+patches:
+  - target: { kind: Namespace, name: surette }
+    patch: |-
+      - op: replace
+        path: /metadata/name
+        value: surette-staging
+  - target: { kind: Deployment, name: web }
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 1
+  - target: { kind: HorizontalPodAutoscaler, name: web }
+    patch: |-
+      - op: replace
+        path: /spec/minReplicas
+        value: 1
+      - op: replace
+        path: /spec/maxReplicas
+        value: 3
+  - target: { kind: PodDisruptionBudget, name: web }
+    patch: |-
+      - op: replace
+        path: /spec/minAvailable
+        value: 0
+  - target: { kind: Deployment, name: worker }
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 1
+  - target: { kind: PodDisruptionBudget, name: worker }
+    patch: |-
+      - op: replace
+        path: /spec/minAvailable
+        value: 0
+  - target: { kind: Cluster, name: surette-db }
+    patch: |-
+      - op: replace
+        path: /spec/instances
+        value: 1
+  - target: { kind: ConfigMap, name: surette-config }
+    patch: |-
+      - op: replace
+        path: /data/PUBLIC_SITE_URL
+        value: https://staging.nexus.example.com
+  - target: { kind: Ingress, name: surette }
+    patch: |-
+      - op: replace
+        path: /spec/tls/0/hosts/0
+        value: staging.nexus.example.com
+      - op: replace
+        path: /spec/rules/0/host
+        value: staging.nexus.example.com

@@ -1,0 +1,761 @@
+diff --git a/.env.example b/.env.example
+index d4a7992..094189f 100644
+--- a/.env.example
++++ b/.env.example
+@@ -1,3 +1,15 @@
+ GEMINI_API_KEY=
+ SUPABASE_URL=
+ SUPABASE_KEY=
++
++# --- Website integration ---
++# Browser origins allowed to call the API (comma-separated, no wildcards).
++ALLOWED_ORIGINS=https://www.surettere.com,https://surettere.com
++# Shared secret the website sends as X-Dispatcher-Key on server-to-server calls (compliance feed).
++DISPATCHER_API_KEY=
++# Vendor portal page on the website that contractors open from the dispatch email.
++VENDOR_PORTAL_URL=https://www.surettere.com/vendor-portal/confirm
++# Signs the portal links (32+ random characters: openssl rand -hex 32).
++VENDOR_LINK_SECRET=
++# Max seconds to wait on Supabase before falling back (keeps the website fast).
++DB_TIMEOUT_SECONDS=4
+diff --git a/README.md b/README.md
+index a07fa9c..f7c443e 100644
+--- a/README.md
++++ b/README.md
+@@ -34,10 +34,26 @@ Returns the ticket reference, triage result, tenant/property (if known), matched
+ 
+ `GET /health` – liveness check.
+ 
++## Website integration
++
++The brokerage website (Surette Nexus) talks to this service in three ways:
++
++| Endpoint | Caller | Purpose |
++| --- | --- | --- |
++| `POST /api/v1/tenant-alert` | Website maintenance form (via its server, or directly from the browser) | Same pipeline as SMS. Send `"source": "website"`. |
++| `GET /api/v1/vendors/compliance` | Website server (`X-Dispatcher-Key`) | Every vendor with COI status: `Compliant`, `Expiring` (≤ 30 days), `Expired`, `Missing COI`, `Inactive`. |
++| `POST /api/v1/tickets/{ticket_ref}/acknowledge` | Website vendor portal | A contractor confirms receipt from the signed link in their email (`{vendor, sig, eta?}`). |
++
++- **CORS**: only origins in `ALLOWED_ORIGINS` may call the API from a browser (defaults to `http://localhost:3000` for development). Wildcards are ignored.
++- **Errors**: every error keeps FastAPI's `detail` and adds `{"error": {"code", "message", "fields"}}`. Malformed JSON → `400`; invalid fields → `422` with a message per field (e.g. a phone number without 10–15 digits); missing Gemini key → `503`.
++- **Never slows the website down**: Supabase calls are capped at `DB_TIMEOUT_SECONDS` (default 4 s) and fall back to the mock vendor / unpersisted ticket, exactly like when Supabase is unconfigured.
++- **Vendor portal link**: with `VENDOR_PORTAL_URL` and `VENDOR_LINK_SECRET` set, each dispatch email includes `…/vendor-portal/confirm?ticket=T-…&vendor=…&sig=<HMAC-SHA256>`; the signature binds the ticket to the vendor, so links can't be forged or reused for other jobs.
++- Re-run `supabase_schema.sql` to add `acknowledged_at`, `vendor_eta` and `source` to `maintenance_tickets`.
++
+ ## Tests
+ 
+ ```bash
+ pytest
+ ```
+ 
+-Tests stub Gemini and run without Supabase, so no keys are needed.
++Tests stub Gemini and run without Supabase, so no keys are needed. `tests/test_website_integration.py` covers CORS, error shapes, the compliance feed, portal links and database timeouts.
+diff --git a/app/main.py b/app/main.py
+index 3b45562..94351d3 100644
+--- a/app/main.py
++++ b/app/main.py
+@@ -3,13 +3,20 @@ import logging
+ import os
+ import uuid
+ from contextlib import asynccontextmanager
++from datetime import datetime, timezone
++from typing import Any, Optional
+ 
+ from dotenv import load_dotenv
+-from fastapi import FastAPI, HTTPException
++from fastapi import FastAPI, Header, HTTPException, Request
++from fastapi.exceptions import RequestValidationError
++from fastapi.middleware.cors import CORSMiddleware
++from fastapi.responses import JSONResponse
++from starlette.exceptions import HTTPException as StarletteHTTPException
+ 
+-from app.models.schemas import TenantAlertResponse, TenantMessage
++from app.models.schemas import AckRequest, AckResponse, ComplianceReport, TenantAlertResponse, TenantMessage
+ from app.services import database
+ from app.services.notifications import build_vendor_email
++from app.services.portal import allowed_origins, api_key_ok, verify_ack
+ from app.services.triage import TriageError, triage_tenant_message
+ 
+ # Load GEMINI_API_KEY, SUPABASE_URL and SUPABASE_KEY from .env at startup.
+@@ -18,22 +25,85 @@ load_dotenv()
+ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+ logger = logging.getLogger("dispatcher")
+ 
++# Supabase calls are synchronous; each runs in a worker thread with this ceiling so a
++# slow or unreachable database can never stall the website that called us.
++DB_TIMEOUT_SECONDS = float(os.getenv("DB_TIMEOUT_SECONDS", "4"))
++
+ 
+ @asynccontextmanager
+ async def lifespan(_: FastAPI):
+     if not os.getenv("GEMINI_API_KEY", "").strip():
+         logger.warning("GEMINI_API_KEY is not set; /api/v1/tenant-alert will return 503.")
+     database.get_supabase_client()  # Initialise early; logs if unconfigured or wrong key type.
++    logger.info("CORS allowed origins: %s", ", ".join(allowed_origins()))
+     yield
+ 
+ 
+-app = FastAPI(title="Landlord Maintenance Dispatcher", version="0.2.0", lifespan=lifespan)
++app = FastAPI(title="Landlord Maintenance Dispatcher", version="0.3.0", lifespan=lifespan)
++
++# Browsers on the client's website may call the API directly; only listed origins are allowed.
++app.add_middleware(
++    CORSMiddleware,
++    allow_origins=allowed_origins(),
++    allow_credentials=False,
++    allow_methods=["GET", "POST", "OPTIONS"],
++    allow_headers=["Content-Type", "X-Dispatcher-Key"],
++    max_age=600,
++)
++
++
++# ---------------------------------------------------------------------------
++# Error responses. Every error keeps FastAPI's `detail` (backward compatible) and adds
++#   "error": {"code": ..., "message": ..., "fields": {...}}
++# so web forms can show messages under the right field.
++# ---------------------------------------------------------------------------
++
++def _error(status: int, code: str, message: str, fields: Optional[dict[str, str]] = None, detail: Any = None) -> JSONResponse:
++    body: dict[str, Any] = {"detail": detail if detail is not None else message, "error": {"code": code, "message": message}}
++    if fields:
++        body["error"]["fields"] = fields
++    return JSONResponse(status_code=status, content=body)
++
++
++@app.exception_handler(RequestValidationError)
++async def validation_error_handler(_: Request, exc: RequestValidationError) -> JSONResponse:
++    errors = exc.errors()
++    # Malformed JSON / wrong content type → 400; well-formed but invalid fields → 422.
++    if any(e.get("type") in ("json_invalid", "model_attributes_type") or e.get("loc", [None])[-1] == "body" and e.get("type") == "missing" for e in errors):
++        return _error(400, "BAD_REQUEST", "Send a JSON object with phone_number and message_body.", detail=jsonable(errors))
++    fields: dict[str, str] = {}
++    for e in errors:
++        loc = [str(p) for p in e.get("loc", []) if p != "body"]
++        key = ".".join(loc) or "body"
++        message = str(e.get("msg", "Invalid value")).removeprefix("Value error, ")
++        fields.setdefault(key, message)
++    return _error(422, "VALIDATION_ERROR", "Please fix the highlighted fields.", fields, detail=jsonable(errors))
++
++
++@app.exception_handler(StarletteHTTPException)
++async def http_error_handler(_: Request, exc: StarletteHTTPException) -> JSONResponse:
++    codes = {400: "BAD_REQUEST", 401: "UNAUTHORIZED", 403: "FORBIDDEN", 404: "NOT_FOUND", 405: "METHOD_NOT_ALLOWED", 502: "UPSTREAM_ERROR", 503: "SERVICE_UNAVAILABLE"}
++    return _error(exc.status_code, codes.get(exc.status_code, "ERROR"), str(exc.detail))
++
++
++def jsonable(errors: list[dict[str, Any]]) -> list[dict[str, Any]]:
++    """Validation errors without non-JSON values (e.g. exception objects in ctx)."""
++    return [{k: (v if k != "ctx" else {ck: str(cv) for ck, cv in v.items()}) for k, v in e.items() if k != "input"} for e in errors]
+ 
+ 
+ def _mask_phone(phone: str) -> str:
+     return f"***{phone[-4:]}" if len(phone) > 4 else "***"
+ 
+ 
++async def _db(fn, *args, fallback):
++    """Run a synchronous Supabase helper off the event loop, bounded by DB_TIMEOUT_SECONDS."""
++    try:
++        return await asyncio.wait_for(asyncio.to_thread(fn, *args), timeout=DB_TIMEOUT_SECONDS)
++    except asyncio.TimeoutError:
++        logger.warning("Database call %s timed out after %.1fs; using fallback.", fn.__name__, DB_TIMEOUT_SECONDS)
++        return fallback() if callable(fallback) else fallback
++
++
+ @app.get("/health")
+ def health() -> dict[str, str]:
+     return {"status": "healthy"}
+@@ -47,14 +117,13 @@ async def tenant_alert(payload: TenantMessage) -> TenantAlertResponse:
+     except TriageError as exc:
+         raise HTTPException(status_code=exc.status_code, detail=str(exc)) from exc
+ 
+-    # supabase-py is synchronous, so DB calls run off the event loop.
+     # 2. Identify the tenant, property and unit from the phone number (optional)
+-    context = await asyncio.to_thread(database.get_tenant_context, payload.phone_number)
++    context = await _db(database.get_tenant_context, payload.phone_number, fallback=None)
+     tenant = (context or {}).get("tenant")
+     prop = (context or {}).get("property")
+ 
+     # 3. Match an active vendor with a valid, unexpired COI (mock fallback)
+-    vendor = await asyncio.to_thread(database.get_vendor_by_trade, triage.trade_required)
++    vendor = await _db(database.get_vendor_by_trade, triage.trade_required, fallback=lambda: database.mock_vendor_for(triage.trade_required))
+ 
+     # 4. Create and log the ticket
+     ticket_ref = f"T-{uuid.uuid4().hex[:8].upper()}"
+@@ -71,11 +140,13 @@ async def tenant_alert(payload: TenantMessage) -> TenantAlertResponse:
+         "vendor_id": vendor.get("id"),
+         "vendor_name": vendor.get("name"),
+         "status": "open",
++        "source": payload.source,
+     }
+-    ticket = await asyncio.to_thread(database.create_ticket, ticket_data)
++    ticket = await _db(database.create_ticket, ticket_data, fallback=lambda: {**ticket_data, "persisted": False})
+     logger.info(
+-        "TICKET | ref=%s trade=%s urgency=%s vendor=%s%s tenant=%s known_tenant=%s persisted=%s",
++        "TICKET | ref=%s source=%s trade=%s urgency=%s vendor=%s%s tenant=%s known_tenant=%s persisted=%s",
+         ticket_ref,
++        payload.source,
+         triage.trade_required,
+         triage.urgency,
+         vendor.get("name"),
+@@ -85,7 +156,7 @@ async def tenant_alert(payload: TenantMessage) -> TenantAlertResponse:
+         ticket.get("persisted"),
+     )
+ 
+-    # 5. Dispatch email for the landlord to send
++    # 5. Dispatch email for the landlord to send (with the vendor-portal confirmation link)
+     vendor_email = build_vendor_email(
+         ticket_ref=ticket_ref,
+         triage=triage,
+@@ -104,3 +175,40 @@ async def tenant_alert(payload: TenantMessage) -> TenantAlertResponse:
+         ticket=ticket,
+         vendor_email=vendor_email,
+     )
++
++
++@app.get("/api/v1/vendors/compliance", response_model=ComplianceReport)
++async def vendor_compliance(x_dispatcher_key: Optional[str] = Header(default=None)) -> ComplianceReport:
++    """Every vendor with its COI status (Compliant / Expiring / Expired / Missing COI / Inactive),
++    for the brokerage website's internal vendor dashboard. Requires X-Dispatcher-Key when
++    DISPATCHER_API_KEY is set."""
++    if not api_key_ok(x_dispatcher_key):
++        raise HTTPException(status_code=401, detail="Missing or invalid X-Dispatcher-Key.")
++
++    def mock() -> tuple[list[dict[str, Any]], bool]:
++        client, database._client = database._client, None
++        try:
++            return database.list_vendor_compliance()
++        finally:
++            database._client = client
++
++    vendors, is_mock = await _db(database.list_vendor_compliance, fallback=mock)
++    return ComplianceReport(vendors=vendors, mock=is_mock, generated_at=datetime.now(timezone.utc).isoformat())
++
++
++@app.post("/api/v1/tickets/{ticket_ref}/acknowledge", response_model=AckResponse)
++async def acknowledge(ticket_ref: str, payload: AckRequest) -> AckResponse:
++    """Called by the website's vendor portal when a contractor clicks the signed link in
++    their dispatch email to confirm receipt (optionally with an ETA)."""
++    ticket_ref = ticket_ref.strip().upper()
++    if not verify_ack(ticket_ref, payload.vendor, payload.sig):
++        raise HTTPException(status_code=403, detail="This confirmation link is invalid.")
++    try:
++        row = await asyncio.wait_for(asyncio.to_thread(database.acknowledge_ticket, ticket_ref, payload.vendor, payload.eta), timeout=DB_TIMEOUT_SECONDS)
++    except (database.DatabaseUnavailable, asyncio.TimeoutError) as exc:
++        raise HTTPException(status_code=503, detail="Confirmations are temporarily unavailable. Please reply to the email instead.") from exc
++    if row is None:
++        raise HTTPException(status_code=404, detail="Ticket not found for this vendor.")
++    acknowledged_at = str(row.get("acknowledged_at") or datetime.now(timezone.utc).isoformat())
++    logger.info("ACK | ref=%s vendor=%s eta=%s", ticket_ref, payload.vendor, bool(payload.eta))
++    return AckResponse(ticket_ref=ticket_ref, acknowledged_at=acknowledged_at)
+diff --git a/app/models/schemas.py b/app/models/schemas.py
+index 9e4ba4b..87e5fca 100644
+--- a/app/models/schemas.py
++++ b/app/models/schemas.py
+@@ -1,5 +1,7 @@
+ """Pydantic schemas shared across the dispatcher."""
+ 
++import re
++from datetime import date
+ from typing import Any, Literal, Optional
+ 
+ from pydantic import BaseModel, ConfigDict, Field, field_validator
+@@ -40,7 +42,11 @@ def normalize_trade(value: str) -> str:
+ 
+ 
+ class TenantMessage(BaseModel):
+-    """Inbound maintenance complaint (or forwarded alert) from a tenant."""
++    """Inbound maintenance complaint (or forwarded alert) from a tenant.
++
++    Arrives from the SMS gateway or the website's maintenance form. Phone numbers are
++    accepted in any common US format and must contain 10–15 digits.
++    """
+ 
+     model_config = ConfigDict(str_strip_whitespace=True)
+ 
+@@ -50,6 +56,26 @@ class TenantMessage(BaseModel):
+     message_body: str = Field(
+         ..., min_length=1, max_length=2000, description="Tenant's raw maintenance complaint."
+     )
++    source: Literal["sms", "website", "email", "other"] = Field(
++        "sms", description="Where the message came from (the website widget sends 'website')."
++    )
++
++    @field_validator("phone_number")
++    @classmethod
++    def _valid_phone(cls, value: str) -> str:
++        if not re.fullmatch(r"[0-9+()\-.\s]+", value):
++            raise ValueError("Phone number may only contain digits, spaces and + ( ) - .")
++        digits = re.sub(r"\D", "", value)
++        if not 10 <= len(digits) <= 15:
++            raise ValueError("Phone number must have 10 to 15 digits.")
++        return value
++
++    @field_validator("message_body")
++    @classmethod
++    def _meaningful_message(cls, value: str) -> str:
++        if len(re.sub(r"\W", "", value)) < 3:
++            raise ValueError("Please describe the problem in a few words.")
++        return value
+ 
+ 
+ class TriageResult(BaseModel):
+@@ -106,6 +132,45 @@ class VendorEmail(BaseModel):
+     to: Optional[str] = None
+     subject: str
+     body: str
++    portal_link: Optional[str] = None
++
++
++ComplianceStatus = Literal["Compliant", "Expiring", "Expired", "Missing COI", "Inactive"]
++
++
++class VendorCompliance(BaseModel):
++    """A vendor with its certificate-of-insurance status, for the website's vendor dashboard."""
++
++    id: Optional[str] = None
++    name: str
++    trade: str
++    email: Optional[str] = None
++    phone: Optional[str] = None
++    is_active: bool
++    insurance_expiry: Optional[date] = None
++    days_until_expiry: Optional[int] = None
++    status: ComplianceStatus
++
++
++class ComplianceReport(BaseModel):
++    vendors: list[VendorCompliance]
++    mock: bool
++    generated_at: str
++
++
++class AckRequest(BaseModel):
++    """A contractor confirming receipt via the signed vendor-portal link."""
++
++    model_config = ConfigDict(str_strip_whitespace=True)
++
++    vendor: str = Field(..., min_length=1, max_length=80)
++    sig: str = Field(..., pattern=r"^[a-f0-9]{64}$")
++    eta: Optional[str] = Field(None, max_length=200)
++
++
++class AckResponse(BaseModel):
++    ticket_ref: str
++    acknowledged_at: str
+ 
+ 
+ class TenantAlertResponse(BaseModel):
+diff --git a/app/services/database.py b/app/services/database.py
+index 9562a8a..2a525d4 100644
+--- a/app/services/database.py
++++ b/app/services/database.py
+@@ -11,7 +11,7 @@ import json
+ import logging
+ import os
+ import re
+-from datetime import date
++from datetime import date, datetime, timezone
+ from typing import Any, Optional
+ 
+ from supabase import Client, create_client
+@@ -184,3 +184,112 @@ def create_ticket(ticket_data: dict[str, Any]) -> dict[str, Any]:
+         logger.exception("Failed to insert ticket %s.", ticket_data.get("ticket_ref"))
+ 
+     return {**ticket_data, "persisted": False}
++
++
++# ---------------------------------------------------------------------------
++# Website integration: vendor compliance feed and vendor acknowledgements
++# ---------------------------------------------------------------------------
++
++EXPIRING_WITHIN_DAYS = 30
++
++
++class DatabaseUnavailable(Exception):
++    """Raised when a write that must persist cannot reach Supabase."""
++
++
++def compliance_status(vendor: dict[str, Any], today: Optional[date] = None) -> tuple[str, Optional[int]]:
++    """Classify a vendor's certificate of insurance: (status, days until expiry)."""
++    today = today or date.today()
++    raw = vendor.get("insurance_expiry")
++    expiry: Optional[date] = None
++    if isinstance(raw, date):
++        expiry = raw
++    elif isinstance(raw, str) and raw:
++        try:
++            expiry = date.fromisoformat(raw[:10])
++        except ValueError:
++            expiry = None
++    days = (expiry - today).days if expiry else None
++    if not vendor.get("is_active", True):
++        return "Inactive", days
++    if expiry is None:
++        return "Missing COI", None
++    if days is not None and days < 0:
++        return "Expired", days
++    if days is not None and days <= EXPIRING_WITHIN_DAYS:
++        return "Expiring", days
++    return "Compliant", days
++
++
++def list_vendor_compliance() -> tuple[list[dict[str, Any]], bool]:
++    """All vendors with their COI status, worst first. Returns (vendors, is_mock).
++
++    Falls back to the default mock vendors (is_mock=True) when Supabase is
++    unavailable, so the website's dashboard always renders.
++    """
++    client = get_supabase_client()
++    rows: list[dict[str, Any]] = []
++    mock = False
++    if client is not None:
++        try:
++            response = client.table(VENDORS_TABLE).select("id,name,trade,email,phone,is_active,insurance_expiry").order("name").execute()
++            rows = list(response.data or [])
++        except Exception:
++            logger.exception("Vendor compliance query failed; serving mock vendors.")
++            client = None
++    if client is None:
++        mock = True
++        rows = [
++            {**v, "is_active": True, "insurance_expiry": (date.today().replace(year=date.today().year + 1)).isoformat()}
++            for v in MOCK_VENDORS.values()
++        ]
++
++    order = {"Expired": 0, "Missing COI": 1, "Expiring": 2, "Inactive": 3, "Compliant": 4}
++    vendors = []
++    for row in rows:
++        status, days = compliance_status(row)
++        vendors.append(
++            {
++                "id": str(row["id"]) if row.get("id") else None,
++                "name": row.get("name") or "Unnamed vendor",
++                "trade": normalize_trade(row.get("trade") or ""),
++                "email": row.get("email"),
++                "phone": row.get("phone"),
++                "is_active": bool(row.get("is_active", True)),
++                "insurance_expiry": (row.get("insurance_expiry") or None),
++                "days_until_expiry": days,
++                "status": status,
++            }
++        )
++    vendors.sort(key=lambda v: (order[v["status"]], v["name"]))
++    return vendors, mock
++
++
++def acknowledge_ticket(ticket_ref: str, vendor: str, eta: Optional[str]) -> Optional[dict[str, Any]]:
++    """Mark a ticket as acknowledged by its vendor. Returns the updated row, or None if
++    the ticket doesn't exist or isn't assigned to that vendor. Raises DatabaseUnavailable
++    when Supabase can't be reached (an acknowledgement must not be silently dropped)."""
++    client = get_supabase_client()
++    if client is None:
++        raise DatabaseUnavailable("Supabase is not configured.")
++    try:
++        found = client.table(TICKETS_TABLE).select("id,ticket_ref,vendor_id,vendor_name,status").eq("ticket_ref", ticket_ref).limit(1).execute()
++    except Exception as exc:
++        logger.exception("Ticket lookup failed for %s.", ticket_ref)
++        raise DatabaseUnavailable(str(exc)) from exc
++    if not found.data:
++        return None
++    ticket = found.data[0]
++    if vendor not in {str(ticket.get("vendor_id") or ""), str(ticket.get("vendor_name") or "")}:
++        return None
++    try:
++        updated = (
++            client.table(TICKETS_TABLE)
++            .update({"status": "acknowledged", "acknowledged_at": datetime.now(timezone.utc).isoformat(), "vendor_eta": eta})
++            .eq("ticket_ref", ticket_ref)
++            .execute()
++        )
++    except Exception as exc:
++        logger.exception("Could not record acknowledgement for %s.", ticket_ref)
++        raise DatabaseUnavailable(str(exc)) from exc
++    return (updated.data or [ticket])[0]
+diff --git a/app/services/notifications.py b/app/services/notifications.py
+index d889d34..3948ed2 100644
+--- a/app/services/notifications.py
++++ b/app/services/notifications.py
+@@ -3,6 +3,7 @@
+ from typing import Any, Optional
+ 
+ from app.models.schemas import TriageResult, VendorEmail
++from app.services.portal import vendor_portal_link
+ 
+ 
+ def _location_line(prop: Optional[dict[str, Any]], tenant: Optional[dict[str, Any]]) -> str:
+@@ -54,6 +55,11 @@ def build_vendor_email(
+             "to arrange access."
+         )
+ 
++    portal_link = vendor_portal_link(ticket_ref, vendor)
++    confirm = (
++        f"Confirm you've received this job (and share your ETA):\n{portal_link}\n\n" if portal_link else ""
++    )
++
+     body = (
+         f"Hello {vendor_name},\n"
+         f"\n"
+@@ -67,10 +73,11 @@ def build_vendor_email(
+         f"\n"
+         f"{action}\n"
+         f"\n"
++        f"{confirm}"
+         f"Please include a current certificate of insurance on file with any invoice.\n"
+         f"\n"
+         f"Thank you,\n"
+         f"Property Management"
+     )
+ 
+-    return VendorEmail(to=vendor.get("email"), subject=subject, body=body)
++    return VendorEmail(to=vendor.get("email"), subject=subject, body=body, portal_link=portal_link)
+diff --git a/app/services/portal.py b/app/services/portal.py
+new file mode 100644
+index 0000000..4e2e55d
+--- /dev/null
++++ b/app/services/portal.py
+@@ -0,0 +1,72 @@
++"""Website integration helpers: allowed CORS origins, the server-to-server API key,
++and signed vendor-portal links that let a contractor confirm receipt of a job."""
++
++import hashlib
++import hmac
++import logging
++import os
++from typing import Optional
++from urllib.parse import urlencode
++
++logger = logging.getLogger(__name__)
++
++_DEV_ORIGINS = ("http://localhost:3000", "http://127.0.0.1:3000")
++
++
++def allowed_origins() -> list[str]:
++    """Browser origins allowed to call the API (ALLOWED_ORIGINS, comma-separated).
++
++    Defaults to local development origins only; production sites must be listed
++    explicitly (e.g. "https://www.surettere.com,https://surettere.com").
++    """
++    raw = os.getenv("ALLOWED_ORIGINS", "")
++    origins = [o.strip().rstrip("/") for o in raw.split(",") if o.strip()]
++    for origin in origins:
++        if origin == "*":
++            logger.warning("ALLOWED_ORIGINS contains '*'; ignoring it. List the website origins explicitly.")
++    return [o for o in origins if o != "*"] or list(_DEV_ORIGINS)
++
++
++def api_key_ok(provided: Optional[str]) -> bool:
++    """True when no DISPATCHER_API_KEY is configured, or the provided key matches it."""
++    expected = os.getenv("DISPATCHER_API_KEY", "").strip()
++    if not expected:
++        return True
++    return bool(provided) and hmac.compare_digest(provided.encode(), expected.encode())
++
++
++def _link_secret() -> Optional[bytes]:
++    secret = os.getenv("VENDOR_LINK_SECRET", "").strip()
++    return secret.encode() if len(secret) >= 32 else None
++
++
++def vendor_key(vendor: dict) -> str:
++    """Stable identifier for a vendor in links: its id, or its name for mock vendors."""
++    return str(vendor.get("id") or vendor.get("name") or "vendor")[:80]
++
++
++def sign_ack(ticket_ref: str, vendor: str) -> Optional[str]:
++    secret = _link_secret()
++    if secret is None:
++        return None
++    return hmac.new(secret, f"{ticket_ref}:{vendor}".encode(), hashlib.sha256).hexdigest()
++
++
++def verify_ack(ticket_ref: str, vendor: str, signature: str) -> bool:
++    expected = sign_ack(ticket_ref, vendor)
++    return expected is not None and hmac.compare_digest(expected, signature or "")
++
++
++def vendor_portal_link(ticket_ref: str, vendor: dict) -> Optional[str]:
++    """Link to the website's vendor portal confirming receipt, or None if not configured.
++
++    Needs VENDOR_PORTAL_URL (e.g. https://www.surettere.com/vendor-portal/confirm) and a
++    VENDOR_LINK_SECRET of at least 32 characters.
++    """
++    base = os.getenv("VENDOR_PORTAL_URL", "").strip()
++    key = vendor_key(vendor)
++    signature = sign_ack(ticket_ref, key)
++    if not base or not signature:
++        return None
++    separator = "&" if "?" in base else "?"
++    return f"{base}{separator}{urlencode({'ticket': ticket_ref, 'vendor': key, 'sig': signature})}"
+diff --git a/supabase_schema.sql b/supabase_schema.sql
+index f541fc3..75ae19f 100644
+--- a/supabase_schema.sql
++++ b/supabase_schema.sql
+@@ -85,3 +85,10 @@ insert into tenants (name, phone_number, property_id, unit)
+ select 'Sample Tenant', '+12075550123', (select id from p), '2B'
+ where exists (select 1 from p)
+ on conflict (phone_number) do nothing;
++
++-- ---------------------------------------------------------------------------
++-- Website integration (Surette Nexus): vendor acknowledgements via the portal link.
++-- ---------------------------------------------------------------------------
++alter table maintenance_tickets add column if not exists acknowledged_at timestamptz;
++alter table maintenance_tickets add column if not exists vendor_eta text;
++alter table maintenance_tickets add column if not exists source text not null default 'sms';
+diff --git a/tests/test_website_integration.py b/tests/test_website_integration.py
+new file mode 100644
+index 0000000..c2e1597
+--- /dev/null
++++ b/tests/test_website_integration.py
+@@ -0,0 +1,152 @@
++"""Website integration: CORS, error shapes, vendor compliance feed, portal links, timeouts."""
++
++import time
++from datetime import date, timedelta
++from urllib.parse import parse_qs, urlparse
++
++import pytest
++from fastapi.testclient import TestClient
++
++import app.main as main
++from app.models.schemas import TriageResult
++from app.services import database
++from app.services.portal import sign_ack
++
++SECRET = "x" * 40
++
++
++@pytest.fixture(autouse=True)
++def env(monkeypatch):
++    monkeypatch.setenv("SUPABASE_URL", "")
++    monkeypatch.setenv("SUPABASE_KEY", "")
++    monkeypatch.setattr(database, "_client", None)
++    monkeypatch.setenv("VENDOR_PORTAL_URL", "https://www.example-brokerage.com/vendor-portal/confirm")
++    monkeypatch.setenv("VENDOR_LINK_SECRET", SECRET)
++    monkeypatch.delenv("DISPATCHER_API_KEY", raising=False)
++
++
++@pytest.fixture
++def client():
++    with TestClient(main.app) as c:
++        yield c
++
++
++def _stub_triage(monkeypatch):
++    async def fake(_message: str) -> TriageResult:
++        return TriageResult(trade_required="Plumbing", urgency="Standard", clean_summary="Kitchen sink is leaking.")
++
++    monkeypatch.setattr(main, "triage_tenant_message", fake)
++
++
++def test_cors_preflight_allows_listed_origin(client):
++    response = client.options(
++        "/api/v1/tenant-alert",
++        headers={"Origin": "http://localhost:3000", "Access-Control-Request-Method": "POST", "Access-Control-Request-Headers": "content-type"},
++    )
++    assert response.status_code == 200
++    assert response.headers["access-control-allow-origin"] == "http://localhost:3000"
++
++
++def test_cors_preflight_rejects_unknown_origin(client):
++    response = client.options(
++        "/api/v1/tenant-alert",
++        headers={"Origin": "https://evil.example", "Access-Control-Request-Method": "POST"},
++    )
++    assert "access-control-allow-origin" not in response.headers
++
++
++def test_malformed_json_is_400(client):
++    response = client.post("/api/v1/tenant-alert", content="{not json", headers={"Content-Type": "application/json"})
++    assert response.status_code == 400
++    assert response.json()["error"]["code"] == "BAD_REQUEST"
++
++
++def test_invalid_fields_are_422_with_field_messages(client):
++    response = client.post("/api/v1/tenant-alert", json={"phone_number": "12", "message_body": "!!"})
++    assert response.status_code == 422
++    body = response.json()
++    assert body["error"]["code"] == "VALIDATION_ERROR"
++    assert "10 to 15 digits" in body["error"]["fields"]["phone_number"]
++    assert "few words" in body["error"]["fields"]["message_body"]
++    assert "detail" in body  # backward compatible
++
++
++def test_missing_gemini_key_is_clean_503(client, monkeypatch):
++    monkeypatch.setenv("GEMINI_API_KEY", "")
++    monkeypatch.setattr("app.services.triage._client", None)
++    response = client.post("/api/v1/tenant-alert", json={"phone_number": "+12075550123", "message_body": "sink leaking", "source": "website"})
++    assert response.status_code == 503
++    assert response.json()["error"]["code"] == "SERVICE_UNAVAILABLE"
++
++
++def test_email_contains_signed_portal_link(client, monkeypatch):
++    _stub_triage(monkeypatch)
++    response = client.post("/api/v1/tenant-alert", json={"phone_number": "(207) 555-0123", "message_body": "sink leaking", "source": "website"})
++    assert response.status_code == 200
++    data = response.json()
++    link = data["vendor_email"]["portal_link"]
++    assert link and link in data["vendor_email"]["body"]
++    query = parse_qs(urlparse(link).query)
++    assert query["ticket"] == [data["ticket_ref"]]
++    assert query["sig"] == [sign_ack(data["ticket_ref"], query["vendor"][0])]
++    assert data["ticket"]["source"] == "website"
++
++
++def test_no_portal_link_without_secret(client, monkeypatch):
++    _stub_triage(monkeypatch)
++    monkeypatch.setenv("VENDOR_LINK_SECRET", "")
++    data = client.post("/api/v1/tenant-alert", json={"phone_number": "2075550123", "message_body": "sink leaking"}).json()
++    assert data["vendor_email"]["portal_link"] is None
++    assert "Confirm you've received" not in data["vendor_email"]["body"]
++
++
++def test_compliance_feed_falls_back_to_mock(client):
++    response = client.get("/api/v1/vendors/compliance")
++    assert response.status_code == 200
++    data = response.json()
++    assert data["mock"] is True
++    assert {v["status"] for v in data["vendors"]} == {"Compliant"}
++    assert len(data["vendors"]) == 6
++
++
++def test_compliance_requires_key_when_configured(client, monkeypatch):
++    monkeypatch.setenv("DISPATCHER_API_KEY", "k" * 32)
++    assert client.get("/api/v1/vendors/compliance").status_code == 401
++    assert client.get("/api/v1/vendors/compliance", headers={"X-Dispatcher-Key": "k" * 32}).status_code == 200
++
++
++def test_compliance_status_rules():
++    today = date(2026, 10, 14)
++    assert database.compliance_status({"is_active": True, "insurance_expiry": "2027-01-01"}, today)[0] == "Compliant"
++    assert database.compliance_status({"is_active": True, "insurance_expiry": (today + timedelta(days=10)).isoformat()}, today) == ("Expiring", 10)
++    assert database.compliance_status({"is_active": True, "insurance_expiry": "2026-10-13"}, today) == ("Expired", -1)
++    assert database.compliance_status({"is_active": True, "insurance_expiry": None}, today) == ("Missing COI", None)
++    assert database.compliance_status({"is_active": False, "insurance_expiry": "2027-01-01"}, today)[0] == "Inactive"
++
++
++def test_acknowledge_rejects_bad_signature(client):
++    response = client.post("/api/v1/tickets/T-ABCDEF12/acknowledge", json={"vendor": "v1", "sig": "0" * 64})
++    assert response.status_code == 403
++
++
++def test_acknowledge_without_database_is_503(client):
++    sig = sign_ack("T-ABCDEF12", "v1")
++    response = client.post("/api/v1/tickets/T-ABCDEF12/acknowledge", json={"vendor": "v1", "sig": sig, "eta": "4pm"})
++    assert response.status_code == 503
++
++
++def test_slow_database_falls_back_quickly(client, monkeypatch):
++    _stub_triage(monkeypatch)
++    monkeypatch.setattr(main, "DB_TIMEOUT_SECONDS", 0.2)
++
++    def slow(*_args):
++        time.sleep(2)
++        return None
++
++    monkeypatch.setattr(database, "get_tenant_context", slow)
++    monkeypatch.setattr(database, "get_vendor_by_trade", slow)
++    started = time.monotonic()
++    response = client.post("/api/v1/tenant-alert", json={"phone_number": "+12075550123", "message_body": "sink leaking"})
++    assert response.status_code == 200
++    assert response.json()["vendor"]["is_mock"] is True
++    assert time.monotonic() - started < 1.5

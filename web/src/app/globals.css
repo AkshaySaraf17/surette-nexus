@@ -1,0 +1,285 @@
+@import "tailwindcss";
+
+/*
+ * Surette Nexus design tokens.
+ *
+ * Editorial luxury (gallery whitespace, a high-contrast serif for display, a
+ * neutral grotesk for UI) with Apple-style material and motion. Every color is
+ * a token here and is redefined for dark mode.
+ *
+ * Scroll-reactive color: the page background (--tone-bg), ink (--tone-ink) and
+ * the cursor glare (--glare-*) are driven by <ScrollTone/> as sections enter
+ * the viewport, so the palette shifts as you scroll.
+ */
+:root {
+  --ivory: #f7f4ee;
+  --paper: #fffdf9;
+  --ink: #15130f;
+  --ink-2: #5d574d;
+  --ink-3: #6b655a; /* ≥ 4.5:1 on every light surface (WCAG AA) */
+  --line: rgb(21 19 15 / 0.1);
+  --line-strong: rgb(21 19 15 / 0.22);
+  --fill: rgb(21 19 15 / 0.05);
+  --gold: #86602a; /* text-safe gold: ≥ 4.5:1 on light surfaces, white text on it 5.6:1 */
+  --gold-soft: #d9b98a;
+  --navy: #0f1a24;
+  --pine: #1f3a32;
+  --danger: #b42318;
+  --danger-bg: #fdecea;
+  --success: #1e6b3a;
+  --success-bg: #e8f5ec;
+  --warn: #8a5300;
+  --warn-bg: #fff4e0;
+  --glass: rgb(255 253 249 / 0.7);
+  --scrim: rgb(10 9 7 / 0.5);
+  --shadow-lg: 0 30px 80px -20px rgb(21 19 15 / 0.28), 0 2px 8px rgb(21 19 15 / 0.05);
+  --shadow-sm: 0 2px 14px rgb(21 19 15 / 0.07);
+
+  --tone-bg: var(--ivory);
+  --tone-ink: var(--ink);
+  --glare-a: rgb(217 185 138 / 0.35);
+  --glare-b: rgb(255 255 255 / 0);
+  --glare-x: 50vw;
+  --glare-y: 30vh;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ivory: #0d0c0a;
+    --paper: #16140f;
+    --ink: #f3efe7;
+    --ink-2: #b5ad9f;
+    --ink-3: #8a8377;
+    --line: rgb(243 239 231 / 0.1);
+    --line-strong: rgb(243 239 231 / 0.24);
+    --fill: rgb(243 239 231 / 0.06);
+    --gold: #d2a965;
+    --gold-soft: #8d6a35;
+    --danger: #ff8a80;
+    --danger-bg: rgb(255 80 60 / 0.14);
+    --success: #6fd394;
+    --success-bg: rgb(60 200 110 / 0.14);
+    --warn: #ffc266;
+    --warn-bg: rgb(255 170 40 / 0.14);
+    --glass: rgb(22 20 15 / 0.7);
+    --scrim: rgb(0 0 0 / 0.65);
+    --shadow-lg: 0 30px 80px -20px rgb(0 0 0 / 0.8);
+    --shadow-sm: 0 0 0 1px rgb(243 239 231 / 0.06);
+    --glare-a: rgb(210 169 101 / 0.22);
+    color-scheme: dark;
+  }
+}
+
+@theme inline {
+  --animate-kenburns: kenburns 9s ease-out both;
+  --font-sans: var(--font-inter), -apple-system, BlinkMacSystemFont, "Helvetica Neue", system-ui, sans-serif;
+  --font-serif: var(--font-cormorant), "Cormorant Garamond", "Iowan Old Style", Georgia, serif;
+  --color-ivory: var(--ivory);
+  --color-paper: var(--paper);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-fill: var(--fill);
+  --color-gold: var(--gold);
+  --color-gold-soft: var(--gold-soft);
+  --color-navy: var(--navy);
+  --color-pine: var(--pine);
+  --color-danger: var(--danger);
+  --color-danger-bg: var(--danger-bg);
+  --color-success: var(--success);
+  --color-success-bg: var(--success-bg);
+  --color-warn: var(--warn);
+  --color-warn-bg: var(--warn-bg);
+  --color-glass: var(--glass);
+  --color-scrim: var(--scrim);
+  --color-tone: var(--tone-bg);
+  --color-tone-ink: var(--tone-ink);
+  --shadow-lg: var(--shadow-lg);
+  --shadow-sm: var(--shadow-sm);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-rendering: optimizeLegibility;
+  scroll-padding-top: 5rem;
+}
+
+body {
+  background: var(--tone-bg);
+  color: var(--tone-ink);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.6;
+  letter-spacing: -0.006em;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 900ms var(--ease-out-expo), color 900ms var(--ease-out-expo);
+}
+
+/* Editorial type scale: serif display with optical tightening as size grows. */
+.type-hero {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: clamp(3.25rem, 9vw, 8.5rem);
+  line-height: 0.94;
+  letter-spacing: -0.03em;
+}
+.type-display {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: clamp(2.5rem, 5.5vw, 5rem);
+  line-height: 1;
+  letter-spacing: -0.025em;
+}
+.type-title {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: clamp(1.75rem, 3vw, 2.75rem);
+  line-height: 1.08;
+  letter-spacing: -0.018em;
+}
+.type-headline {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: 1.5rem;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+.type-lede {
+  font-size: clamp(1.125rem, 1.6vw, 1.375rem);
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+}
+.type-eyebrow {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+.type-caption {
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Translucent material: content scrolls beneath it. */
+.material {
+  background: var(--glass);
+  -webkit-backdrop-filter: saturate(180%) blur(22px);
+  backdrop-filter: saturate(180%) blur(22px);
+}
+
+/* Instant press feedback on pointer-down (Apple: respond on press, not release). */
+.pressable {
+  transition: transform 110ms ease-out, background-color 160ms ease, opacity 160ms ease, border-color 160ms ease;
+}
+.pressable:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+/* Global cursor glare: a soft light that follows the pointer and tints with scroll. */
+.cursor-glare {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  background: radial-gradient(
+    600px circle at var(--glare-x) var(--glare-y),
+    var(--glare-a),
+    var(--glare-b) 60%
+  );
+  mix-blend-mode: soft-light;
+  transition: opacity 400ms ease;
+}
+
+/* Per-card specular highlight, positioned by <GlareCard/>. */
+.glare-surface {
+  position: relative;
+  isolation: isolate;
+}
+.glare-surface::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(
+    420px circle at var(--card-x, 50%) var(--card-y, 0%),
+    rgb(255 255 255 / 0.28),
+    transparent 55%
+  );
+  opacity: var(--card-glare, 0);
+  transition: opacity 300ms ease;
+  mix-blend-mode: overlay;
+  z-index: 2;
+}
+
+.hairline {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--line-strong), transparent);
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+}
+
+/* MapLibre popups in our palette. */
+.maplibregl-popup-content {
+  background: var(--paper) !important;
+  color: var(--ink) !important;
+  border-radius: 14px !important;
+  padding: 0 !important;
+  box-shadow: var(--shadow-lg) !important;
+  overflow: hidden;
+}
+.maplibregl-popup-tip {
+  border-top-color: var(--paper) !important;
+  border-bottom-color: var(--paper) !important;
+}
+.maplibregl-ctrl-attrib {
+  font-size: 10px;
+}
+
+/* Slow zoom for hero photos (transform only). */
+@keyframes kenburns {
+  from { transform: scale(1.02); }
+  to { transform: scale(1.1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pressable:active:not(:disabled) {
+    transform: none;
+  }
+  body {
+    transition: none;
+  }
+  .cursor-glare {
+    display: none;
+  }
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .material {
+    background: var(--paper);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}

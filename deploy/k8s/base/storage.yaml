@@ -1,0 +1,9 @@
+# Listing photos and deal documents. ReadWriteMany so every web replica sees every file.
+# For larger scale, move STORAGE_DIR to S3/R2 + CDN (see docs/system-design.md) and drop this.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: surette-storage
+spec:
+  accessModes: [ReadWriteMany]
+  resources: { requests: { storage: 50Gi } }

@@ -1,0 +1,19 @@
+# Ships container logs (JSON lines from the app, worker, realtime server and nginx) to Loki,
+# promoting a few fields to labels. requestId stays in the line: search it with
+# {service="surette-web"} | json | requestId="<id>"
+server: { http_listen_port: 9080 }
+positions: { filename: /tmp/positions.yaml }
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+scrape_configs:
+  - job_name: containers
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 10s
+    relabel_configs:
+      - source_labels: [__meta_docker_container_label_com_docker_compose_service]
+        target_label: compose_service
+    pipeline_stages:
+      - json:
+          expressions: { level: level, service: service, component: component }
+      - labels: { level: "", service: "", component: "" }

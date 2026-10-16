@@ -1,0 +1,21 @@
+# Surette Nexus on Kubernetes — base. Apply an overlay, not this directly:
+#   kubectl apply -k deploy/k8s/overlays/staging
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: surette
+labels:
+  - pairs: { app.kubernetes.io/part-of: surette-nexus }
+    includeSelectors: false
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - storage.yaml
+  - web.yaml
+  - worker.yaml
+  - realtime.yaml
+  - ingress.yaml
+  - network-policy.yaml
+images:
+  - name: surette-nexus
+    newName: ghcr.io/OWNER/surette-nexus   # CI sets the real image + digest per deploy
+    newTag: latest

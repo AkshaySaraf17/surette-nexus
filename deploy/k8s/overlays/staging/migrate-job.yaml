@@ -1,0 +1,22 @@
+# Run by CI before each rollout (kubectl apply → wait for completion → roll Deployments).
+# Migrations are forward-only and must stay compatible with the previous release
+# (expand → migrate → contract), so old and new pods can run side by side.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: migrate
+  labels: { app.kubernetes.io/component: migrate }
+spec:
+  backoffLimit: 2
+  ttlSecondsAfterFinished: 3600
+  template:
+    spec:
+      restartPolicy: Never
+      securityContext: { runAsNonRoot: true, runAsUser: 10001, seccompProfile: { type: RuntimeDefault } }
+      containers:
+        - name: migrate
+          image: surette-nexus
+          args: ["sh", "-c", "DATABASE_URL=$DATABASE_DIRECT_URL npm run db:migrate:prod"]
+          envFrom:
+            - secretRef: { name: surette-secrets }
+          securityContext: { allowPrivilegeEscalation: false, capabilities: { drop: [ALL] } }

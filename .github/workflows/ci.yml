@@ -1,0 +1,173 @@
+# Continuous integration: every push and pull request.
+#   quality  → lint, type-check (web + mobile), config checks
+#   test     → unit + database tests against a real Postgres (RLS, queue, outbox, idempotency)
+#   e2e      → Playwright against the app, worker and WebSocket server
+#   image    → build the container, scan it, push to GHCR on main
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: "22"
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: |
+            web/package-lock.json
+            mobile/package-lock.json
+      - run: npm ci
+        working-directory: web
+      - run: npm run lint
+        working-directory: web
+      - run: node ../scripts/sync-public.mjs && npx tsc --noEmit
+        working-directory: web
+      - run: npm ci && npx tsc --noEmit
+        working-directory: mobile
+      - name: Alert rules and dashboards in sync
+        run: node scripts/sync-alert-rules.mjs && git diff --exit-code deploy/k8s/monitoring
+
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: surette
+          POSTGRES_PASSWORD: surette
+          POSTGRES_DB: surette
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U surette" --health-interval 5s --health-retries 20
+    env:
+      DATABASE_URL: postgresql://surette:surette@localhost:5432/surette
+      JWT_SECRET: ci-only-secret-0123456789abcdefghijklmnopqrstuvwxyz
+      PUBLIC_SITE_URL: http://localhost:3100
+      SITE_TEAM_SLUG: surette
+      STORAGE_DIR: .storage
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "${{ env.NODE_VERSION }}", cache: npm, cache-dependency-path: web/package-lock.json }
+      - run: npm ci
+        working-directory: web
+      - name: Migrate and seed
+        working-directory: web
+        run: |
+          printf 'DATABASE_URL=%s\nJWT_SECRET=%s\n' "$DATABASE_URL" "$JWT_SECRET" > .env
+          npm run db:migrate
+          npm run db:seed
+      - run: npm test
+        working-directory: web
+
+  e2e:
+    runs-on: ubuntu-latest
+    needs: [quality]
+    services:
+      postgres:
+        image: postgres:17
+        env: { POSTGRES_USER: surette, POSTGRES_PASSWORD: surette, POSTGRES_DB: surette }
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U surette" --health-interval 5s --health-retries 20
+    env:
+      DATABASE_URL: postgresql://surette:surette@localhost:5432/surette
+      JWT_SECRET: ci-only-secret-0123456789abcdefghijklmnopqrstuvwxyz
+      PUBLIC_SITE_URL: http://localhost:3100
+      SITE_TEAM_SLUG: surette
+      STORAGE_DIR: .storage
+      NEXT_PUBLIC_REALTIME_URL: ws://localhost:3200/ws
+      NEXT_PUBLIC_ANALYTICS_PROJECT: nexus-site
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "${{ env.NODE_VERSION }}", cache: npm, cache-dependency-path: web/package-lock.json }
+      - run: npm ci
+        working-directory: web
+      - name: Database
+        working-directory: web
+        run: |
+          printf 'DATABASE_URL=%s\nJWT_SECRET=%s\nPUBLIC_SITE_URL=%s\nSTORAGE_DIR=.storage\n' "$DATABASE_URL" "$JWT_SECRET" "$PUBLIC_SITE_URL" > .env
+          npm run db:migrate && npm run db:seed
+      - name: Build and start web, worker and realtime
+        working-directory: web
+        run: |
+          npm run build
+          nohup npm start > web.log 2>&1 &
+          nohup npm run worker > worker.log 2>&1 &
+          nohup npm run realtime > realtime.log 2>&1 &
+          for url in http://localhost:3100/api/health/ready http://localhost:3200/healthz http://localhost:9464/readyz; do
+            for _ in $(seq 1 60); do curl -fsS "$url" > /dev/null && break; sleep 2; done
+            curl -fsS "$url" > /dev/null || { echo "$url never became ready"; exit 1; }
+          done
+      # Google Chrome is preinstalled on GitHub's Ubuntu runners (playwright.config uses channel "chrome").
+      - run: npx playwright test
+        working-directory: web
+        env: { E2E_BASE_URL: "http://localhost:3100" }
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-debug
+          path: |
+            web/test-results
+            web/*.log
+          retention-days: 7
+
+  image:
+    runs-on: ubuntu-latest
+    needs: [test, e2e]
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      digest: ${{ steps.build.outputs.digest }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        if: github.ref == 'refs/heads/main'
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=sha,format=long
+            type=raw,value=main,enable=${{ github.ref == 'refs/heads/main' }}
+      - id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: ${{ github.ref == 'refs/heads/main' }}
+          load: ${{ github.ref != 'refs/heads/main' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: NEXT_PUBLIC_REALTIME_URL=/ws
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Vulnerability scan (fails on fixable critical issues)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: ghcr.io/${{ github.repository }}:sha-${{ github.sha }}
+          severity: CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"

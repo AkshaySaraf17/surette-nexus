@@ -1,0 +1,16 @@
+# Scale workers on queue depth (KEDA, Apache-2.0): ~50 ready jobs per worker, 2–10 workers.
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: worker
+spec:
+  scaleTargetRef: { name: worker }
+  minReplicaCount: 2
+  maxReplicaCount: 10
+  cooldownPeriod: 300
+  triggers:
+    - type: postgresql
+      metadata:
+        connectionFromEnv: DATABASE_DIRECT_URL
+        query: "SELECT count(*) FROM jobs WHERE status = 'queued' AND run_at <= now()"
+        targetQueryValue: "50"

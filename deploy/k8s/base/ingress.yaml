@@ -1,0 +1,33 @@
+# ingress-nginx is the API gateway in Kubernetes: TLS (cert-manager), per-IP rate limits,
+# WebSocket + SSE timeouts and upload size. It adds X-Request-ID itself (generate-request-id
+# is on by default). Snippet annotations are avoided (disabled by default for security):
+# security headers come from the app (next.config.ts) and /api/metrics requires
+# METRICS_TOKEN in production, with Prometheus scraping pods directly.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: surette
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+    nginx.ingress.kubernetes.io/proxy-body-size: 1200m
+    nginx.ingress.kubernetes.io/proxy-request-buffering: "off"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/limit-rps: "20"
+    nginx.ingress.kubernetes.io/limit-burst-multiplier: "3"
+    nginx.ingress.kubernetes.io/limit-connections: "40"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts: [nexus.example.com]
+      secretName: surette-tls
+  rules:
+    - host: nexus.example.com
+      http:
+        paths:
+          - path: /ws
+            pathType: Exact
+            backend: { service: { name: realtime, port: { name: http } } }
+          - path: /
+            pathType: Prefix
+            backend: { service: { name: web, port: { name: http } } }

@@ -1,0 +1,16 @@
+**/node_modules
+**/.next
+.git
+.pgdata
+web/.storage
+web/.env
+web/.env.*
+!web/.env.example
+web/test-results
+web/playwright-report
+mobile
+integrations
+deploy
+docs
+web/public/sdk
+web/public/demo-site

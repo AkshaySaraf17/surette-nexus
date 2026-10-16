@@ -1,0 +1,43 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: surette-web
+  labels: { release: kube-prometheus-stack }
+spec:
+  selector: { matchLabels: { app.kubernetes.io/name: web } }
+  endpoints:
+    - port: http
+      path: /api/metrics
+      interval: 15s
+      authorization:
+        credentials: { name: surette-secrets, key: METRICS_TOKEN }
+      relabelings:
+        - { targetLabel: job, replacement: surette-web }
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: surette-worker
+  labels: { release: kube-prometheus-stack }
+spec:
+  selector: { matchLabels: { app.kubernetes.io/name: worker } }
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 15s
+      relabelings:
+        - { targetLabel: job, replacement: surette-worker }
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: surette-realtime
+  labels: { release: kube-prometheus-stack }
+spec:
+  selector: { matchLabels: { app.kubernetes.io/name: realtime } }
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 15s
+      relabelings:
+        - { targetLabel: job, replacement: surette-realtime }

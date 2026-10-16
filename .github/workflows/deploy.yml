@@ -1,0 +1,75 @@
+# Continuous delivery to Kubernetes.
+#   - main → staging automatically after CI passes
+#   - production → manual "Run workflow" (choose the image sha), gated by the
+#     "production" GitHub Environment's required reviewers
+# Each deploy: run migrations (Job) → roll out web/worker/realtime → wait → smoke test
+# → automatic rollback of the Deployments if anything fails.
+name: Deploy
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        type: choice
+        options: [staging, production]
+        default: staging
+      sha:
+        description: Image commit sha (defaults to the latest main build)
+        required: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-${{ github.event.inputs.environment || 'staging' }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'staging' }}
+    env:
+      TARGET: ${{ github.event.inputs.environment || 'staging' }}
+      SHA: ${{ github.event.inputs.sha || github.event.workflow_run.head_sha || github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-kubectl@v4
+      - name: Kubeconfig
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBECONFIG }}" > ~/.kube/config
+          chmod 600 ~/.kube/config
+      - name: Render manifests with the pinned image
+        run: |
+          echo "NS=$([ "$TARGET" = production ] && echo surette || echo surette-staging)" >> "$GITHUB_ENV"
+          # kubectl's built-in kustomize; swap the placeholder image for this commit's image.
+          kubectl kustomize "deploy/k8s/overlays/$TARGET" \
+            | sed "s#ghcr.io/OWNER/surette-nexus:latest#ghcr.io/${{ github.repository }}:sha-${SHA}#g" > /tmp/manifests.yaml
+          grep -q "sha-${SHA}" /tmp/manifests.yaml
+      - name: Migrate (expand-only migrations run before new pods start)
+        run: |
+          kubectl create namespace "$NS" --dry-run=client -o yaml | kubectl apply -f -
+          kubectl -n "$NS" delete job migrate --ignore-not-found --wait=true
+          kubectl apply -f /tmp/manifests.yaml -l app.kubernetes.io/component=migrate
+          kubectl -n "$NS" wait --for=condition=complete job/migrate --timeout=300s
+      - name: Roll out
+        run: |
+          kubectl apply -f /tmp/manifests.yaml
+          for d in web worker realtime; do kubectl -n "$NS" rollout status deploy/$d --timeout=300s; done
+      - name: Smoke test
+        run: |
+          HOST=$(kubectl -n "$NS" get ingress surette -o jsonpath='{.spec.rules[0].host}')
+          for _ in $(seq 1 20); do
+            curl -fsS "https://$HOST/api/health/ready" && exit 0
+            sleep 6
+          done
+          echo "readiness never passed" && exit 1
+      - name: Roll back on failure
+        if: failure()
+        run: for d in web worker realtime; do kubectl -n "$NS" rollout undo deploy/$d || true; done

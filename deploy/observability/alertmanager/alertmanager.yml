@@ -1,0 +1,50 @@
+# Alertmanager routing. Fill in real receivers (they are placeholders) — e.g. a PagerDuty
+# or Opsgenie integration for "critical", and Slack/Teams/email for "warning".
+# Secrets go in files mounted next to this config, never in git.
+global:
+  resolve_timeout: 5m
+
+route:
+  receiver: team-email
+  group_by: [alertname, severity]
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  routes:
+    - matchers: [severity="critical"]
+      receiver: on-call
+      repeat_interval: 1h
+      continue: true
+    - matchers: [severity="critical"]
+      receiver: team-chat
+    - matchers: [severity="warning"]
+      receiver: team-chat
+
+inhibit_rules:
+  # If the whole service is down, don't also page for its symptoms.
+  - source_matchers: [alertname="SuretteTargetDown"]
+    target_matchers: [severity="warning"]
+    equal: [job]
+  - source_matchers: [alertname="PostgresDown"]
+    target_matchers: [alertname=~"SuretteDb.*|SuretteHighErrorRate|SuretteNotReady"]
+
+receivers:
+  - name: on-call
+    webhook_configs:
+      - url_file: /etc/alertmanager/secrets/oncall-webhook-url     # PagerDuty/Opsgenie events URL
+        send_resolved: true
+  - name: team-chat
+    slack_configs:
+      - api_url_file: /etc/alertmanager/secrets/slack-webhook-url
+        channel: "#surette-alerts"
+        send_resolved: true
+        title: '{{ .CommonLabels.severity | toUpper }}: {{ .CommonAnnotations.summary }}'
+        text: '{{ range .Alerts }}{{ .Annotations.summary }} — runbook: {{ .Annotations.runbook }}{{ "\n" }}{{ end }}'
+  - name: team-email
+    email_configs:
+      - to: ops@example.com
+        from: alerts@example.com
+        smarthost: smtp.example.com:587
+        auth_username: alerts@example.com
+        auth_password_file: /etc/alertmanager/secrets/smtp-password
+        send_resolved: true
