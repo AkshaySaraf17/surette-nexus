@@ -38,7 +38,10 @@ ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 PORT=3100 MIGRATIONS_DIR=/app/
 # inherits that ownership (uploads fail with EACCES otherwise). Kubernetes uses fsGroup instead.
 RUN groupadd --system --gid 10001 app && useradd --system --uid 10001 --gid app --home /app app \
  && mkdir -p /data/storage && chown app:app /data/storage \
- && apt-get update && apt-get install -y --no-install-recommends curl tini && rm -rf /var/lib/apt/lists/*
+ && apt-get update && apt-get upgrade -y --no-install-recommends \
+ && apt-get install -y --no-install-recommends curl tini && rm -rf /var/lib/apt/lists/*
+# (apt-get upgrade applies Debian security fixes released after the base image was built;
+#  the CI Trivy scan fails the build on fixable critical vulnerabilities.)
 WORKDIR /app
 COPY --from=build --chown=app:app /app/database database
 COPY --from=build --chown=app:app /app/data data
