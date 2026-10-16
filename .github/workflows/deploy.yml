@@ -52,7 +52,7 @@ jobs:
           echo "NS=$([ "$TARGET" = production ] && echo surette || echo surette-staging)" >> "$GITHUB_ENV"
           # kubectl's built-in kustomize; swap the placeholder image for this commit's image.
           kubectl kustomize "deploy/k8s/overlays/$TARGET" \
-            | sed "s#ghcr.io/OWNER/surette-nexus:latest#ghcr.io/${{ github.repository }}:sha-${SHA}#g" > /tmp/manifests.yaml
+            | sed "s#ghcr.io/OWNER/surette-nexus:latest#ghcr.io/${GITHUB_REPOSITORY,,}:sha-${SHA}#g" > /tmp/manifests.yaml
           grep -q "sha-${SHA}" /tmp/manifests.yaml
       - name: Migrate (expand-only migrations run before new pods start)
         run: |
