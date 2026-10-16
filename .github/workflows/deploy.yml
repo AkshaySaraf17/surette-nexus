@@ -31,7 +31,9 @@ concurrency:
 
 jobs:
   deploy:
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    # Automatic deploys after CI are opt-in: set the repository variable DEPLOY_ENABLED=true once
+    # hosting and the KUBECONFIG secret exist. Manual runs (workflow_dispatch) are always allowed.
+    if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && vars.DEPLOY_ENABLED == 'true')
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment || 'staging' }}
     env:
