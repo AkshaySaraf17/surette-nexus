@@ -1,0 +1,4 @@
+# Shell scripts must keep Unix line endings, or they fail on Windows checkouts (Git Bash/WSL/Docker).
+*.sh text eol=lf
+Dockerfile text eol=lf
+*.conf text eol=lf

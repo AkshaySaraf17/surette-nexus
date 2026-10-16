@@ -1,0 +1,76 @@
+{
+  // Run with: Terminal → Run Task… → "Start everything"  (or Cmd+Shift+B)
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Database",
+      "type": "shell",
+      "command": "scripts/db.sh start",
+      "presentation": { "group": "surette", "panel": "dedicated", "reveal": "silent" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Website + API (localhost:3100)",
+      "type": "shell",
+      "command": "npm run dev",
+      "options": { "cwd": "${workspaceFolder}/web", "env": { "NEXT_PUBLIC_REALTIME_URL": "ws://localhost:3200/ws" } },
+      "isBackground": true,
+      "presentation": { "group": "surette", "panel": "dedicated" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Background worker",
+      "type": "shell",
+      "command": "npm run worker",
+      "options": { "cwd": "${workspaceFolder}/web" },
+      "isBackground": true,
+      "presentation": { "group": "surette", "panel": "dedicated" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Live updates (WebSocket :3200)",
+      "type": "shell",
+      "command": "npm run realtime",
+      "options": { "cwd": "${workspaceFolder}/web" },
+      "isBackground": true,
+      "presentation": { "group": "surette", "panel": "dedicated" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Start everything",
+      "dependsOrder": "sequence",
+      "dependsOn": ["Database", "Start app processes"],
+      "group": { "kind": "build", "isDefault": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "Start app processes",
+      "dependsOrder": "parallel",
+      "dependsOn": ["Website + API (localhost:3100)", "Background worker", "Live updates (WebSocket :3200)"],
+      "problemMatcher": []
+    },
+    {
+      "label": "Mobile app (Expo)",
+      "type": "shell",
+      "command": "npx expo start",
+      "options": { "cwd": "${workspaceFolder}/mobile" },
+      "isBackground": true,
+      "presentation": { "panel": "dedicated" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Run all tests",
+      "type": "shell",
+      "command": "npm test && npm run test:e2e",
+      "options": { "cwd": "${workspaceFolder}/web" },
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "Full stack in Docker (localhost:8080)",
+      "type": "shell",
+      "command": "colima start && docker compose up -d && echo 'Open http://localhost:8080'",
+      "problemMatcher": []
+    }
+  ]
+}

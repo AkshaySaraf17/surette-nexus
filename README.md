@@ -44,17 +44,27 @@ surette-nexus/
 
 Requirements: Node 20+, PostgreSQL 16+ (`brew install postgresql@16`), Google Chrome for browser tests.
 
+**First time only**
+
 ```bash
-scripts/db.sh start                 # private Postgres on port 5434 (./.pgdata)
 cd web
 cp .env.example .env                # set JWT_SECRET (openssl rand -base64 48)
 npm install
-npm run db:migrate
-npm run db:seed                     # demo team, accounts, listings, leads and deals
-npm run dev                         # http://localhost:3100
-npm run worker                      # background jobs, webhooks, schedules (or EMBEDDED_WORKER=1)
-npm run realtime                    # optional WebSocket server on :3200
+cd .. && scripts/db.sh migrate      # create the local database and tables
+cd web && npm run db:seed           # demo team, accounts, listings, leads, deals, government data
 ```
+
+**Every day: start everything with one command**
+
+```bash
+scripts/dev.sh                      # database + website/API + worker + live updates; Ctrl+C stops them
+```
+
+Or in VS Code: **Terminal → Run Task… → Start everything** (or `Cmd+Shift+B`). Each part opens in its
+own terminal panel. Then open http://localhost:3100 (team portal: http://localhost:3100/portal/sign-in).
+
+On another computer, or to run everything in Docker with one command: see
+[docs/run-on-another-computer.md](docs/run-on-another-computer.md) (`scripts/docker-demo.sh`).
 
 Team app: `cd mobile && npm install && npx expo start` (it talks to port 3100).
 
