@@ -7,7 +7,18 @@
 set -euo pipefail
 cd "$(cd "$(dirname "$0")/.." && pwd)"
 
-if [ "${1:-}" = "stop" ]; then docker compose down; exit 0; fi
+# Find Docker Compose: the "docker compose" plugin, or the standalone "docker-compose" command
+# (Homebrew installs the latter; the plugin form also needs a setting in ~/.docker/config.json).
+if docker compose version >/dev/null 2>&1; then
+  compose() { docker compose "$@"; }
+elif command -v docker-compose >/dev/null 2>&1; then
+  compose() { docker-compose "$@"; }
+else
+  echo "Docker Compose isn't installed. On a Mac: brew install docker-compose" >&2
+  exit 1
+fi
+
+if [ "${1:-}" = "stop" ]; then compose down; exit 0; fi
 
 if ! docker info >/dev/null 2>&1; then
   echo "Docker isn't running. Start it first (Mac: 'colima start'; Windows: open Docker Desktop)." >&2
@@ -22,17 +33,17 @@ if [ ! -f .env ]; then
 fi
 
 echo "Building and starting (first time takes a few minutes)…"
-docker compose up -d --build
+compose up -d --build
 
 printf "Waiting for the app"
 until [ "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/api/health/ready 2>/dev/null)" = "200" ]; do printf "."; sleep 3; done
 echo " ready."
 
 # Load demo data once (only if there are no listings yet).
-count=$(docker compose exec -T db psql -U surette -d surette -Atc "SELECT count(*) FROM properties" 2>/dev/null || echo 0)
+count=$(compose exec -T db psql -U surette -d surette -Atc "SELECT count(*) FROM properties" 2>/dev/null || echo 0)
 if [ "${count:-0}" = "0" ]; then
   echo "Loading demo data (listings, photos, team, deals, government data)…"
-  docker compose run --rm -e ALLOW_DEMO_SEED=1 --no-deps web npx tsx --conditions=react-server scripts/seed.ts 2>&1 | grep -v "npm notice"
+  compose run --rm -e ALLOW_DEMO_SEED=1 --no-deps web npx tsx --conditions=react-server scripts/seed.ts 2>&1 | grep -v "npm notice"
 fi
 
 cat <<'MSG'
