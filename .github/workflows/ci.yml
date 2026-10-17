@@ -87,8 +87,15 @@ jobs:
         ports: ["5432:5432"]
         options: >-
           --health-cmd "pg_isready -U surette" --health-interval 5s --health-retries 20
+      # Test inbox: the browser tests read the confirmation and reset emails from it.
+      mailpit:
+        image: axllent/mailpit:v1.27
+        ports: ["1025:1025", "8025:8025"]
     env:
       DATABASE_URL: postgresql://surette:surette@localhost:5432/surette
+      SMTP_HOST: localhost
+      SMTP_PORT: "1025"
+      MAIL_FROM: "Surette Real Estate <no-reply@surette.test>"
       JWT_SECRET: ci-only-secret-0123456789abcdefghijklmnopqrstuvwxyz
       PUBLIC_SITE_URL: http://localhost:3100
       SITE_TEAM_SLUG: surette
