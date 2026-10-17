@@ -1,6 +1,6 @@
 # Market data
 
-`/market`, the portal dashboard's "Local market" card and the concierge read the series stored in
+`/market`, the portal dashboard's "Local market" card and the AI assistant read the series stored in
 `market_series` / `market_observations`. Every value carries its source and retrieval time; nothing
 is estimated or filled in.
 

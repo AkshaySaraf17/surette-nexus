@@ -84,8 +84,8 @@ async function main() {
         push("page_engagement", `/listings/${p.slug}`, { seconds: 20 + Math.floor(rand() * 220) });
         if (rand() < 0.25) push("property_save", `/listings/${p.slug}`, { property_id: p.id, saved: true });
         if (rand() < 0.3) {
-          const action = pick(["showing_request_start", "phone_click", "form_start", "concierge_open"]);
-          push(action, `/listings/${p.slug}`, action === "showing_request_start" ? { property_id: p.id } : action === "form_start" ? { form: "contact" } : action === "concierge_open" ? { surface: "floating" } : {});
+          const action = pick(["showing_request_start", "phone_click", "form_start", "assistant_open"]);
+          push(action, `/listings/${p.slug}`, action === "showing_request_start" ? { property_id: p.id } : action === "form_start" ? { form: "contact" } : action === "assistant_open" ? { surface: "floating" } : {});
           if (rand() < 0.4) push(action === "showing_request_start" ? "showing_request_submit" : "contact_submit", `/listings/${p.slug}`, action === "showing_request_start" ? { property_id: p.id, source: "website" } : { source: "contact_form" });
         }
       }

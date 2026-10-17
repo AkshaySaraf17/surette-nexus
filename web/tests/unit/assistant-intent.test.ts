@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { accumulate, describeCriteria, explainMatch, parseIntent } from "@/lib/server/concierge";
+import { accumulate, describeCriteria, explainMatch, parseIntent } from "@/lib/server/assistant";
 import type { ListingCard } from "@/lib/types";
 
 const cities = ["Oakland", "Waterville", "Winslow"];
 
-describe("concierge criteria extraction (deterministic)", () => {
+describe("AI assistant criteria extraction (deterministic)", () => {
   it("reads the master-prompt example request", () => {
     const i = parseIntent("I am looking for a three-bedroom house in Central Maine, preferably below $350,000, with a garage and a reasonable commute.", cities);
     expect(i.criteria.minBeds).toBe(3);

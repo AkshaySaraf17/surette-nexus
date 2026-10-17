@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { analyze, dualMoveInputSchema } from "@/lib/dual-move";
-import { contextFor, requireCustomer } from "@/lib/server/auth";
+import { contextFor, requireCustomer, assertEmailVerified } from "@/lib/server/auth";
 import { withDb } from "@/lib/server/db";
 import { handler, parseBody } from "@/lib/server/http";
 
@@ -17,6 +17,7 @@ const schema = z.object({ name: z.string().trim().min(1, "Name the scenario.").m
 
 export const POST = handler(async (request: Request) => {
   const viewer = await requireCustomer(request);
+  assertEmailVerified(viewer);
   const input = await parseBody(request, schema);
   const result = analyze(input.inputs);
   const row = await withDb(contextFor(viewer), (db) =>

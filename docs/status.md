@@ -8,12 +8,14 @@ recorded manual run, not just written.
 | Feature | How it was verified |
 | --- | --- |
 | Separate customer (`/sign-in`) and team (`/portal/sign-in`) logins; wrong-portal refusal; lockout | Playwright `auth.spec.ts`, API smoke run |
+| Customer email confirmation, forgot/reset password (emails via the worker to Mailpit) | `customer-auth.test.ts`, Playwright `account-recovery.spec.ts` |
+| Continue with Google: code is tested with locally signed tokens; needs your Google OAuth client ID/secret to go live | `google-oauth.test.ts`, `customer-auth.test.ts` |
 | Role boundaries (customer / agent / owner) | `rls.test.ts`, Playwright, API smoke run |
 | Leads: consent required, duplicate merge, routing, portal view | API smoke run, Playwright |
 | Deals: create, stage gates, rule-based deadlines, commission | `deal-rules.test.ts`, `rls.test.ts`, API smoke run |
 | Deal documents: content-type check, extraction with sources, verify and apply | `analytics-documents.test.ts`, API smoke run |
 | Drafts: approval required before "sent" | API smoke run |
-| Concierge: search with match reasons, relaxation, save search, fair-housing refusal | `concierge-intent.test.ts`, API smoke run |
+| AI assistant: search with match reasons, relaxation, save search, fair-housing refusal | `assistant-intent.test.ts`, API smoke run |
 | Dual-Move Copilot math and scenarios | `dual-move.test.ts` |
 | Market data from FRED (17 series) | Live refresh run |
 | Website analytics on the Surette Nexus site (`nexus-site`): consent, GPC, events stored as production | Playwright `analytics.spec.ts` |

@@ -77,7 +77,7 @@ export interface ShowingRequestInput {
   startsAt: string;
   durationMinutes: number;
   notes?: string | null;
-  source: "concierge" | "website" | "mobile";
+  source: "ai_assistant" | "website" | "mobile";
 }
 
 /**

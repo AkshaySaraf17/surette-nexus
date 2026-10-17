@@ -118,7 +118,7 @@ export default function AdminDashboard() {
       <div className="grid gap-6 xl:grid-cols-3">
         <section className="rounded-[24px] bg-paper p-6 ring-1 ring-line xl:col-span-2" aria-labelledby="leads-h">
           <div className="flex items-center justify-between"><h2 id="leads-h" className="type-headline">Latest leads</h2><Link href="/admin/leads" className="text-sm underline underline-offset-4">All leads</Link></div>
-          {d.recentLeads.length === 0 ? <p className="mt-3 text-sm text-ink-2">New inquiries from the website, concierge and showing requests land here.</p> : (
+          {d.recentLeads.length === 0 ? <p className="mt-3 text-sm text-ink-2">New inquiries from the website, AI assistant and showing requests land here.</p> : (
             <ul className="mt-4 divide-y divide-line text-sm">
               {d.recentLeads.map((l) => (
                 <li key={l.id}><Link href={`/admin/leads?open=${l.id}`} className="flex justify-between gap-3 py-2.5 hover:underline"><span><span className="font-medium">{l.contact_name}</span> <span className="text-ink-2">· {l.source.replace("_", " ")}{l.property ? ` · ${l.property}` : ""}</span></span><span className="shrink-0 text-ink-3">{l.status}</span></Link></li>

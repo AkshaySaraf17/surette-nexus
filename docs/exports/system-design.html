@@ -170,7 +170,7 @@ app adds security headers itself, so they are the same behind any gateway.</li>
 </tr>
 </tbody></table>
 <p>App limits (fixed window): login 20 per 15 min, sign-up 10 per hour, contact/leads 6 per hour,
-showings 8 per hour, concierge 30 per 10 min, ops assistant 60 per minute, Dual-Move share 5 per hour,
+showings 8 per hour, AI assistant 30 per 10 min, ops assistant 60 per minute, Dual-Move share 5 per hour,
 analytics 240 per minute, maintenance 5 per 15 min.</p>
 <ul>
 <li><strong>Store:</strong> Redis (<code>INCR</code> + <code>PEXPIRE</code>) when <code>REDIS_URL</code> is set; otherwise an UNLOGGED Postgres
@@ -237,6 +237,9 @@ re-queued with one SQL statement.</li>
 <li><strong>Dedupe keys:</strong> at most one queued or running job per key (for example one market refresh per day).</li>
 <li><strong>Wake-ups:</strong> <code>NOTIFY surette_jobs</code> starts work within milliseconds; polling every 2 s is the safety net.</li>
 <li><strong>Queues:</strong> <code>default</code>, <code>webhooks</code> and <code>maintenance</code> keep slow webhook receivers from starving other work.</li>
+<li><strong>Emails</strong> (<code>email.send</code>, 6 attempts): confirmation and password-reset emails are queued in the same
+transaction that creates the token, so a link is never emailed for a rolled-back sign-up, and a mail
+server outage only delays delivery.</li>
 <li><strong>Scheduler:</strong> the worker holding a Postgres advisory lock enqueues recurring jobs (hourly
 cleanup, daily analytics purge, daily market refresh, monthly government data refresh). Per-period dedupe keys make a split brain harmless.</li>
 </ul>
@@ -339,6 +342,18 @@ cool-down. <em>Half-open</em> lets one trial call through. Every call also gets 
 <td>5 / 60 s / 8 s</td>
 <td>Job retried later with backoff</td>
 </tr>
+<tr>
+<td>SMTP (account emails)</td>
+<td><code>smtp</code></td>
+<td>5 / 60 s / 20 s</td>
+<td>Email job retried later with backoff</td>
+</tr>
+<tr>
+<td>Google sign-in token exchange</td>
+<td><code>google</code></td>
+<td>5 / 60 s / 10 s</td>
+<td>Customer sees &quot;Google sign-in didn&#39;t complete&quot; and can use email</td>
+</tr>
 </tbody></table>
 <p>Other patterns:</p>
 <ul>
@@ -406,7 +421,7 @@ replica), add Redis pub/sub between the database listener and socket servers.</p
 <td>expression index <code>properties_city_idx (lower(city), status)</code></td>
 </tr>
 <tr>
-<td>Concierge fuzzy town match</td>
+<td>AI assistant fuzzy town match</td>
 <td>trigram GIN <code>properties_city_trgm_idx</code></td>
 </tr>
 <tr>

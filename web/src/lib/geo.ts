@@ -1,7 +1,7 @@
 /**
  * Local context for the Waterville, Maine market: schools, everyday
  * destinations and commute anchors used by the map layers, the walkability
- * estimate and the concierge.
+ * estimate and the AI assistant.
  *
  * Honesty notes (also shown in the map legend):
  *  - Coordinates are approximate (street level), compiled for this site.

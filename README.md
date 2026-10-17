@@ -4,7 +4,7 @@ The website, property-management portal and team app for **Surette Real Estate**
 
 - **Public site**: scroll-driven Apple-style design with full-screen photography, live listings, a map with school /
   commute / walkability layers, saved homes and comparisons, a **Dual-Move Copilot** (sell one home and buy
-  the next), a **market dashboard** from public data, and a **concierge** chatbot that searches live listings,
+  the next), a **market dashboard** from public data, and an **AI assistant** chatbot that searches live listings,
   books showings and hands off to an agent.
 - **Two sign-ins**: customers at `/sign-in` (saved homes, searches, Dual-Move plans, their deal's progress) and
   the property-management team at `/portal/sign-in`.

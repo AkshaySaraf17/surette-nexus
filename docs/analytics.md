@@ -23,7 +23,7 @@ this app and its database. No third-party analytics service is used.
 
 Page views, scroll depth (25/50/75/90%), engaged time, traffic source (referrer domain, UTM tags),
 device type, searches and filters (as counts and price bands, not free text), listing card clicks and
-views, saves, comparisons, map layer toggles, concierge use, Dual-Move calculations, and contact actions:
+views, saves, comparisons, map layer toggles, AI assistant use, Dual-Move calculations, and contact actions:
 phone/email link clicks, form start, form submit attempts, contact and showing-request submissions.
 
 **Never collected:** what anyone types into a form, names, emails, phone numbers, full IP addresses,

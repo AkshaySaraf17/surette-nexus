@@ -12,7 +12,7 @@
 
 ## Fair housing
 
-- The concierge declines requests to filter or describe areas by protected characteristics (race,
+- The AI assistant declines requests to filter or describe areas by protected characteristics (race,
   religion, national origin, familial status, disability, sex, etc.) and explains that it can't help with that.
 - Search, scoring and lead routing never use protected characteristics.
 - School-district, commute and walkability information is labeled as an estimate.

@@ -11,13 +11,13 @@ import { api, ApiClientError } from "@/lib/client-api";
 import { track } from "@/lib/analytics-client";
 import { formatPrice, formatRent } from "@/lib/money";
 import { CONTACT_CONSENT_TEXT } from "@/lib/privacy";
-import type { ConciergeEvent, ListingCard } from "@/lib/types";
+import type { AssistantEvent, ListingCard } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { ListingImage } from "./listing-image";
 import { useSaved } from "./saved-context";
 
 /**
- * The Lead Concierge: answers from live inventory (with match explanations, source and
+ * The AI assistant: answers from live inventory (with match explanations, source and
  * freshness), shares public market data, books showings, saves searches and hands off to
  * an agent — each hand-off only after the visitor fills a form and consents.
  */
@@ -30,7 +30,7 @@ interface Turn {
   listings?: ListingCard[];
   matches?: Matches;
   relaxed?: string | null;
-  market?: Extract<ConciergeEvent, { type: "market" }>["facts"];
+  market?: Extract<AssistantEvent, { type: "market" }>["facts"];
   links?: { label: string; href: string }[];
   followups?: string[];
   saveSearch?: { criteria: Record<string, unknown>; signedIn: boolean };
@@ -80,9 +80,9 @@ function ShowingBooking({ listing, slots }: { listing: ListingCard; slots: { sta
     setStatus("sending");
     setErrors({});
     try {
-      await api("/api/showings", { method: "POST", body: { propertyId: listing.id, contactName: name, contactEmail: email, contactPhone: phone || null, startsAt: slot, source: "concierge", consentContact: consent || undefined } });
+      await api("/api/showings", { method: "POST", body: { propertyId: listing.id, contactName: name, contactEmail: email, contactPhone: phone || null, startsAt: slot, source: "ai_assistant", consentContact: consent || undefined } });
       setStatus("done");
-      track("showing_request_submit", { property_id: listing.id, source: "concierge" });
+      track("showing_request_submit", { property_id: listing.id, source: "ai_assistant" });
       setMessage(`Requested for ${slotLabel(slot)}. The listing agent will confirm by email.`);
     } catch (error) {
       setStatus("idle");
@@ -152,17 +152,17 @@ function Handoff({ preferences, propertyId }: { preferences: string[]; propertyI
       await api("/api/leads", {
         method: "POST",
         body: {
-          source: "concierge",
+          source: "ai_assistant",
           contactName: name,
           contactEmail: email || null,
           contactPhone: phone || null,
-          message: note || "Requested help from the website concierge.",
+          message: note || "Requested help from the website AI assistant.",
           propertyId,
           preferences: preferences.length ? { stated: preferences } : undefined,
           consentContact: consent || undefined,
         },
       });
-      track("contact_submit", { source: "concierge" });
+      track("contact_submit", { source: "ai_assistant" });
       setState("done");
     } catch (error) {
       setState("idle");
@@ -181,7 +181,7 @@ function Handoff({ preferences, propertyId }: { preferences: string[]; propertyI
     );
   }
   return (
-    <form onSubmit={submit} className="mt-3 space-y-3 rounded-2xl border border-line bg-paper p-4" data-sa-form="concierge-handoff" aria-label="Contact an agent">
+    <form onSubmit={submit} className="mt-3 space-y-3 rounded-2xl border border-line bg-paper p-4" data-sa-form="assistant-handoff" aria-label="Contact an agent">
       <p className="flex items-center gap-2 text-sm font-medium"><UserRound className="size-4" aria-hidden /> Talk with an agent</p>
       {preferences.length > 0 && (
         <p className="text-[0.8125rem] text-ink-2">We&rsquo;ll include what you asked for: {preferences.join(", ")}. Nothing else from this chat is shared.</p>
@@ -235,7 +235,7 @@ function SaveSearch({ criteria, signedIn }: { criteria: Record<string, unknown>;
   );
 }
 
-export function Concierge() {
+export function Assistant() {
   const pathname = usePathname();
   const listingSlug = pathname.startsWith("/listings/") ? pathname.split("/")[2] : undefined;
   const [open, setOpen] = useState(false);
@@ -252,12 +252,12 @@ export function Concierge() {
   useEffect(() => {
     const onOpen = (e: Event) => {
       setOpen(true);
-      track("concierge_open", { surface: "button" });
+      track("assistant_open", { surface: "button" });
       const prompt = (e as CustomEvent<string | undefined>).detail;
       if (prompt) void send(prompt);
     };
-    window.addEventListener("concierge:open", onOpen);
-    return () => window.removeEventListener("concierge:open", onOpen);
+    window.addEventListener("assistant:open", onOpen);
+    return () => window.removeEventListener("assistant:open", onOpen);
   });
 
   async function send(text: string) {
@@ -273,7 +273,7 @@ export function Concierge() {
     const patch = (fn: (t: Turn) => Turn) => setTurns((all) => all.map((t) => (t.id === reply.id ? fn(t) : t)));
     let resultCount = 0;
     try {
-      const response = await fetch("/api/agent/concierge", {
+      const response = await fetch("/api/agent/assistant", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: history.filter((t) => t.text && !t.error).slice(-12).map((t) => ({ role: t.role, content: t.text.slice(0, 2000) })), listingSlug }),
@@ -281,7 +281,7 @@ export function Concierge() {
       });
       if (!response.ok || !response.body) {
         const body = (await response.json().catch(() => null)) as { error?: { message?: string } } | null;
-        throw new Error(body?.error?.message ?? "The concierge is unavailable right now.");
+        throw new Error(body?.error?.message ?? "The AI assistant is unavailable right now.");
       }
       const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
       let buffer = "";
@@ -294,7 +294,7 @@ export function Concierge() {
           const line = buffer.slice(0, nl).trim();
           buffer = buffer.slice(nl + 1);
           if (!line) continue;
-          const ev = JSON.parse(line) as ConciergeEvent;
+          const ev = JSON.parse(line) as AssistantEvent;
           if (ev.type === "text") patch((t) => ({ ...t, text: t.text + ev.delta }));
           else if (ev.type === "listings") {
             resultCount = ev.listings.length;
@@ -309,7 +309,7 @@ export function Concierge() {
           else if (ev.type === "error") patch((t) => ({ ...t, text: ev.message, error: true }));
         }
       }
-      track("concierge_message", { results: resultCount });
+      track("assistant_message", { results: resultCount });
     } catch (error) {
       if (!(error instanceof DOMException && error.name === "AbortError")) patch((t) => ({ ...t, text: error instanceof Error ? error.message : "Something went wrong.", error: true }));
     } finally {
@@ -329,12 +329,12 @@ export function Concierge() {
             transition={{ type: "spring", bounce: 0.25, duration: 0.5 }}
             onClick={() => {
               setOpen(true);
-              track("concierge_open", { surface: "floating" });
+              track("assistant_open", { surface: "floating" });
             }}
             className="pressable fixed bottom-5 right-5 z-40 flex items-center gap-2 rounded-full bg-ink px-5 py-3.5 text-sm font-medium text-paper shadow-lg sm:bottom-8 sm:right-8"
-            aria-label="Open the concierge"
+            aria-label="Open the AI assistant"
           >
-            <Sparkles className="size-4 text-gold-soft" aria-hidden /> Concierge
+            <Sparkles className="size-4 text-gold-soft" aria-hidden /> AI assistant
           </motion.button>
         )}
       </AnimatePresence>
@@ -343,7 +343,7 @@ export function Concierge() {
         {open && (
           <motion.section
             role="dialog"
-            aria-label="Surette concierge"
+            aria-label="Surette AI assistant"
             data-lenis-prevent
             initial={{ opacity: 0, y: 30, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -354,10 +354,10 @@ export function Concierge() {
           >
             <header className="flex items-center justify-between border-b border-line px-5 py-4">
               <div>
-                <p className="type-eyebrow text-gold">Surette Concierge</p>
+                <p className="type-eyebrow text-gold">Surette AI assistant</p>
                 <p className="text-sm text-ink-2">Live listings · market data · showings</p>
               </div>
-              <button type="button" onClick={() => setOpen(false)} className="pressable grid size-9 place-items-center rounded-full bg-fill" aria-label="Close the concierge">
+              <button type="button" onClick={() => setOpen(false)} className="pressable grid size-9 place-items-center rounded-full bg-fill" aria-label="Close the AI assistant">
                 <X className="size-4" />
               </button>
             </header>
@@ -375,7 +375,7 @@ export function Concierge() {
                     ))}
                   </div>
                   <p className="mt-6 text-[0.75rem] leading-relaxed text-ink-3">
-                    The concierge searches Surette&rsquo;s listing database. Nothing you type is sent to the team unless you choose to contact an agent or request a showing.
+                    The AI assistant searches Surette&rsquo;s listing database. Nothing you type is sent to the team unless you choose to contact an agent or request a showing.
                   </p>
                 </div>
               )}
@@ -470,9 +470,9 @@ export function Concierge() {
               }}
               className="flex items-end gap-2 border-t border-line p-3"
             >
-              <label htmlFor="concierge-input" className="sr-only">Message the concierge</label>
+              <label htmlFor="assistant-input" className="sr-only">Message the AI assistant</label>
               <textarea
-                id="concierge-input"
+                id="assistant-input"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => {
@@ -497,7 +497,7 @@ export function Concierge() {
   );
 }
 
-/** Open the concierge from anywhere (optionally with a first message). */
-export function openConcierge(prompt?: string) {
-  window.dispatchEvent(new CustomEvent("concierge:open", { detail: prompt }));
+/** Open the AI assistant from anywhere (optionally with a first message). */
+export function openAssistant(prompt?: string) {
+  window.dispatchEvent(new CustomEvent("assistant:open", { detail: prompt }));
 }

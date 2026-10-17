@@ -28,7 +28,8 @@ WORKDIR /app/web
 # NEXT_PUBLIC_* values are baked into the browser bundle at build time.
 ARG NEXT_PUBLIC_REALTIME_URL=/ws
 ARG NEXT_PUBLIC_ANALYTICS_PROJECT=nexus-site
-ENV NEXT_PUBLIC_REALTIME_URL=$NEXT_PUBLIC_REALTIME_URL NEXT_PUBLIC_ANALYTICS_PROJECT=$NEXT_PUBLIC_ANALYTICS_PROJECT
+ARG NEXT_PUBLIC_SITE_DEMO=true
+ENV NEXT_PUBLIC_REALTIME_URL=$NEXT_PUBLIC_REALTIME_URL NEXT_PUBLIC_ANALYTICS_PROJECT=$NEXT_PUBLIC_ANALYTICS_PROJECT NEXT_PUBLIC_SITE_DEMO=$NEXT_PUBLIC_SITE_DEMO
 RUN node scripts/copy-vendor.mjs && npm run build && npm prune --omit=dev --ignore-scripts
 
 # ---- runtime: small, non-root -----------------------------------------------------------

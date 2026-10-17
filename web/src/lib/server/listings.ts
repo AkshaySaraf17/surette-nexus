@@ -179,7 +179,7 @@ async function queryTeamMembers(context: DbContext): Promise<AgentCard[]> {
   return rows.map(toAgentCard);
 }
 
-/** Distinct towns with published listings, for filters and the concierge. */
+/** Distinct towns with published listings, for filters and the AI assistant. */
 export async function listCities(): Promise<string[]> {
   ensureLiveInvalidation();
   return cached("cities", { ttlMs: 60_000, tags: ["listings"] }, queryCities);

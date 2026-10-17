@@ -102,6 +102,8 @@ export interface Viewer {
   role: UserRole;
   teamId: string | null;
   assignedAgentId: string | null;
+  /** Customers must confirm their email before saving homes, searches and plans. */
+  emailVerified: boolean;
 }
 
 export interface Showing {
@@ -115,7 +117,7 @@ export interface Showing {
   startsAt: string;
   endsAt: string;
   status: ShowingStatus;
-  source: "concierge" | "website" | "agent" | "mobile";
+  source: "ai_assistant" | "website" | "agent" | "mobile";
   notes: string | null;
   agentName: string | null;
   createdAt: string;
@@ -167,8 +169,8 @@ export interface UtilityBill {
   createdAt: string;
 }
 
-/** Messages streamed by POST /api/agent/concierge (newline-delimited JSON). */
-export type ConciergeEvent =
+/** Messages streamed by POST /api/agent/assistant (newline-delimited JSON). */
+export type AssistantEvent =
   | { type: "text"; delta: string }
   | { type: "listings"; listings: ListingCard[]; matches: Record<string, { met: string[]; unmet: string[] }>; relaxed: string | null; criteria: string[] }
   | { type: "market"; facts: { label: string; value: string; source: string; period: string; retrievedAt: string }[] }

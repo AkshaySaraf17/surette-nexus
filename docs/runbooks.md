@@ -126,7 +126,7 @@ Domain events aren't being relayed, so webhooks and cache invalidation are delay
 ## Circuit breaker open
 
 A dependency kept failing, so calls to it fail fast and fallbacks are used.
-- `ollama`: the concierge uses built-in answers. Check the Ollama service.
+- `ollama`: the AI assistant uses built-in answers. Check the Ollama service.
 - `fred` / `census`: market pages show the last stored data with its date.
 - `dispatcher`: maintenance requests show "temporarily unavailable" with the office number.
 - `webhook:<host>`: deliveries to that receiver are retried later.

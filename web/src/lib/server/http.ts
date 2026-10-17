@@ -73,7 +73,7 @@ export function handler<Args extends unknown[]>(fn: (...args: Args) => Promise<R
     } catch {
       // immutable headers (e.g. redirects) — fine
     }
-    // Streaming responses (SSE, concierge) are logged when they start, not when they end.
+    // Streaming responses (SSE, AI assistant) are logged when they start, not when they end.
     const line = { requestId, method, route, status: response.status, ms: Math.round(seconds * 1000) };
     if (response.status >= 500) log.error(line, "request failed");
     else if (seconds > 2) log.warn(line, "slow request");

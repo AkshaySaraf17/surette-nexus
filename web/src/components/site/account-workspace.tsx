@@ -123,6 +123,7 @@ export function AccountWorkspace({ viewer }: { viewer: Viewer }) {
 
   return (
     <div>
+      <VerifyBanner viewer={viewer} />
       <div className="no-scrollbar flex gap-2 overflow-x-auto border-b border-line pb-3" role="tablist" aria-label="Account sections">
         {TABS.map((t) => (
           <button key={t.key} role="tab" aria-selected={tab === t.key} type="button" onClick={() => setTab(t.key)} className={cn("pressable shrink-0 rounded-full px-4 py-2 text-sm", tab === t.key ? "bg-ink text-paper" : "hover:bg-fill")}>
@@ -188,7 +189,7 @@ export function AccountWorkspace({ viewer }: { viewer: Viewer }) {
           <div className="grid gap-6 lg:grid-cols-2">
             <section className="rounded-[24px] bg-paper p-6 ring-1 ring-line">
               <h2 className="type-headline">Saved searches</h2>
-              {searches.length === 0 ? <p className="mt-2 text-sm text-ink-2">Ask the concierge for homes, then choose &ldquo;Save this search&rdquo;.</p> : (
+              {searches.length === 0 ? <p className="mt-2 text-sm text-ink-2">Ask the AI assistant for homes, then choose &ldquo;Save this search&rdquo;.</p> : (
                 <ul className="mt-3 divide-y divide-line text-sm">
                   {searches.map((s) => (
                     <li key={s.id} className="flex items-center justify-between gap-3 py-2.5">
@@ -199,7 +200,7 @@ export function AccountWorkspace({ viewer }: { viewer: Viewer }) {
                 </ul>
               )}
               <h2 className="type-headline mt-8">Comparisons</h2>
-              {comparisons.length === 0 ? <p className="mt-2 text-sm text-ink-2">Compare homes from any listing page or the concierge.</p> : (
+              {comparisons.length === 0 ? <p className="mt-2 text-sm text-ink-2">Compare homes from any listing page or the AI assistant.</p> : (
                 <ul className="mt-3 divide-y divide-line text-sm">
                   {comparisons.map((c) => <li key={c.id} className="py-2.5"><Link href={`/compare?ids=${c.propertyIds.join(",")}`} className="hover:underline">{c.name} · {c.propertyIds.length} homes</Link></li>)}
                 </ul>
@@ -210,7 +211,7 @@ export function AccountWorkspace({ viewer }: { viewer: Viewer }) {
                 <h2 className="type-headline">Recent searches</h2>
                 {history.length > 0 && <button type="button" onClick={async () => { await api("/api/account/history", { method: "DELETE" }); void load(); }} className="text-[0.8125rem] underline underline-offset-4">Clear history</button>}
               </div>
-              {history.length === 0 ? <p className="mt-2 text-sm text-ink-2">Searches you run with the concierge while signed in appear here. Only you can see them.</p> : (
+              {history.length === 0 ? <p className="mt-2 text-sm text-ink-2">Searches you run with the AI assistant while signed in appear here. Only you can see them.</p> : (
                 <ul className="mt-3 divide-y divide-line text-sm">
                   {history.map((h) => <li key={h.id} className="flex justify-between gap-3 py-2"><Link href={criteriaHref(h.criteria)} className="hover:underline">{criteriaLabel(h.criteria)}</Link><span className="shrink-0 text-ink-3">{h.resultCount} results</span></li>)}
                 </ul>
@@ -263,6 +264,35 @@ export function AccountWorkspace({ viewer }: { viewer: Viewer }) {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+/** Shown until the customer confirms their email (saving is locked until then). */
+function VerifyBanner({ viewer }: { viewer: Viewer }) {
+  const [state, setState] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [message, setMessage] = useState("");
+  if (viewer.role !== "client" || viewer.emailVerified) return null;
+  async function resend() {
+    setState("sending");
+    try {
+      await api("/api/auth/verify/resend", { method: "POST" });
+      setState("sent");
+    } catch (err) {
+      setState("error");
+      setMessage(err instanceof ApiClientError ? err.message : "Couldn't send. Please try again.");
+    }
+  }
+  return (
+    <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-warn-bg p-4 text-sm text-warn" role="status">
+      <p className="min-w-0">
+        <strong>Confirm your email</strong> — we sent a link to {viewer.email}. Saving homes, searches and plans unlocks once you click it.
+        {state === "sent" && " A new link is on its way."}
+        {state === "error" && ` ${message}`}
+      </p>
+      <Button type="button" size="sm" variant="outline" onClick={() => void resend()} disabled={state === "sending" || state === "sent"}>
+        {state === "sending" ? "Sending…" : state === "sent" ? "Sent" : "Resend link"}
+      </Button>
     </div>
   );
 }

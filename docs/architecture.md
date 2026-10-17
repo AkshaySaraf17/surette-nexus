@@ -14,7 +14,7 @@ flowchart LR
   subgraph Server["Next.js server (port 3100)"]
     API["API routes /api/*"]
     Proxy["proxy.ts<br/>CORS + CSRF origin check"]
-    Concierge["Concierge + Ops assistant"]
+    Assistant["AI assistant + Ops assistant"]
     Rules["Deterministic rules<br/>deal deadlines, Dual-Move math"]
   end
   PG[("PostgreSQL<br/>row-level security")]
@@ -28,8 +28,8 @@ flowchart LR
   SDK -->|batched events| API
   API --> PG
   API --> Disk
-  Concierge --> PG
-  Concierge -.->|if configured| Ollama
+  Assistant --> PG
+  Assistant -.->|if configured| Ollama
   API -->|daily refresh| FRED
   PG -->|LISTEN/NOTIFY| API -->|SSE /api/events| Portal
 ```

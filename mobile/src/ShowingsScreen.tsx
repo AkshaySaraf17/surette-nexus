@@ -6,7 +6,7 @@ import { Button, Eyebrow, haptic, serif } from "./ui";
 const when = (iso: string) =>
   new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(new Date(iso));
 
-/** Showing requests from the website and concierge. Confirm on the go; overlaps are rejected by the server. */
+/** Showing requests from the website and AI assistant. Confirm on the go; overlaps are rejected by the server. */
 export function ShowingsScreen() {
   const [showings, setShowings] = useState<Showing[]>([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -55,7 +55,7 @@ export function ShowingsScreen() {
       renderItem={({ item }) => (
         <View className="gap-2 rounded-3xl border border-line bg-paper p-4 dark:border-line-dark dark:bg-paper-dark">
           <Text className={`text-[12px] font-semibold uppercase tracking-[1.5px] ${item.status === "requested" ? "text-warn dark:text-warn-dark" : item.status === "confirmed" ? "text-success dark:text-success-dark" : "text-ink3 dark:text-ink3-dark"}`}>
-            {item.status} · via {item.source}
+            {item.status} · via {item.source === "ai_assistant" ? "AI assistant" : item.source}
           </Text>
           <Text className="text-[17px] font-semibold text-ink dark:text-ink-dark">{when(item.startsAt)}</Text>
           <Text className="text-[15px] text-ink dark:text-ink-dark">{item.propertyTitle}</Text>

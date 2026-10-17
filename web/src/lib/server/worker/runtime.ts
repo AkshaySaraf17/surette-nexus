@@ -1,6 +1,8 @@
 import { createServer, type Server } from "node:http";
 import { Client } from "pg";
 import { purgeExpired } from "../analytics";
+import { purgeExpiredTokens } from "../auth-tokens";
+import { sendEmail, type EmailMessage } from "../email";
 import { refreshGovData } from "../gov-data";
 import { invalidateTags } from "../cache";
 import { getPool, withSystemDb } from "../db";
@@ -33,6 +35,9 @@ const HANDLERS: Record<string, Handler> = {
     const list = Array.isArray(results) ? results : [];
     log.info({ ok: list.filter((r) => r.ok).length, failed: list.filter((r) => !r.ok).length }, "market data refreshed");
   },
+  "email.send": async (job) => {
+    await sendEmail(job.payload as unknown as EmailMessage);
+  },
   "govdata.refresh": async () => {
     log.info({ results: await refreshGovData() }, "government datasets refreshed");
   },
@@ -40,13 +45,14 @@ const HANDLERS: Record<string, Handler> = {
     log.info({ removed: await purgeExpired() }, "analytics events purged");
   },
   "maintenance.cleanup": async () => {
-    const [counters, keys, jobs, outbox] = await Promise.all([
+    const [counters, keys, jobs, outbox, tokens] = await Promise.all([
       purgeRateLimitCounters(),
       purgeIdempotencyKeys(),
       purgeFinishedJobs(7),
       withSystemDb(async (db) => (await db.query("DELETE FROM outbox_events WHERE published_at < now() - interval '7 days' RETURNING 1")).length),
+      purgeExpiredTokens(),
     ]);
-    log.info({ counters, keys, jobs, outbox }, "cleanup done");
+    log.info({ counters, keys, jobs, outbox, tokens }, "cleanup done");
   },
 };
 

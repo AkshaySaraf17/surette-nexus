@@ -9,7 +9,7 @@
 | Analytics shows "waiting for the first consented visit" | Visit the site, click **Allow** in the banner, browse a little; refresh Settings. Visitors with GPC/DNT, or who chose "No thanks", aren't counted. |
 | Analytics 403 from another domain | Add that origin to the `nexus-site` allowed origins in Settings |
 | Market page says a series is unavailable | FRED: `npm run market:refresh`. Government data: `npm run data:gov:import` (snapshots) or `npm run data:gov:download` (fresh). Check `/api/market/datasets`. |
-| Concierge says "built-in answers" | Expected without Ollama. To enable: install Ollama, `ollama pull llama3.2:3b`, set `OLLAMA_URL` |
+| AI assistant says "built-in answers" | Expected without Ollama. To enable: install Ollama, `ollama pull llama3.2:3b`, set `OLLAMA_URL` |
 | Map is blank | Check the browser console for blocked tile requests; the map uses OpenFreeMap tiles |
 | Mobile app can't reach the API | It uses port 3100 on the computer running Expo; or set `EXPO_PUBLIC_API_URL` in `mobile/.env` |
 | `next dev` complains about `public/sdk` | `node scripts/sync-public.mjs` from the repo root (runs automatically before dev/build) |

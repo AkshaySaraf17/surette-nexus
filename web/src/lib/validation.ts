@@ -34,7 +34,7 @@ export const leadRequestSchema = z
     contactPhone: e164.optional().nullable(),
     message: z.string().trim().max(4000).optional().nullable(),
     propertyId: z.uuid().optional().nullable(),
-    source: z.enum(["contact_form", "concierge", "dual_move"]).default("contact_form"),
+    source: z.enum(["contact_form", "ai_assistant", "dual_move"]).default("contact_form"),
     preferences: z.record(z.string(), z.union([z.string().max(200), z.number(), z.boolean(), z.array(z.string().max(60)).max(20)])).optional(),
     consentContact: consentToContact,
     website: z.string().max(0).optional(),
@@ -91,14 +91,17 @@ export const listingPatchSchema = z.object(
   ) as unknown as { [K in keyof typeof listingInputSchema.shape]: z.ZodOptional<z.ZodType<z.infer<typeof listingInputSchema>[K]>> },
 );
 
+/** Password rule shared by sign-up and password reset. */
+export const newPassword = z
+  .string()
+  .min(10, "Use at least 10 characters.")
+  .max(200)
+  .refine((p) => /[A-Za-z]/.test(p) && /\d/.test(p), "Include at least one letter and one number.");
+
 export const signupSchema = z.object({
   fullName: trimmed(1, 120, "Name"),
   email: z.email("Enter a valid email.").trim().toLowerCase(),
-  password: z
-    .string()
-    .min(10, "Use at least 10 characters.")
-    .max(200)
-    .refine((p) => /[A-Za-z]/.test(p) && /\d/.test(p), "Include at least one letter and one number."),
+  password: newPassword,
   phone: e164.optional(),
   acceptTerms: z.literal(true, { error: "Please accept the privacy notice to create an account." }),
 });
@@ -117,7 +120,7 @@ export const showingRequestSchema = z
     startsAt: z.iso.datetime({ offset: true, error: "Pick a time." }),
     durationMinutes: z.number().int().min(15).max(180).default(45),
     notes: z.string().trim().max(1000).optional().nullable(),
-    source: z.enum(["concierge", "website", "mobile"]).default("website"),
+    source: z.enum(["ai_assistant", "website", "mobile"]).default("website"),
     consentContact: consentToContact,
   })
   .refine((v) => new Date(v.startsAt).getTime() > Date.now() + 30 * 60_000, {
@@ -130,7 +133,7 @@ export const showingUpdateSchema = z.object({
   notes: z.string().trim().max(1000).optional().nullable(),
 });
 
-export const conciergeRequestSchema = z.object({
+export const assistantRequestSchema = z.object({
   messages: z
     .array(
       z.object({
@@ -218,3 +221,7 @@ export const dealCreateSchema = z.object({
   closingDate: z.iso.date().nullable().optional(),
   notes: z.string().trim().max(4000).nullable().optional(),
 });
+
+export const forgotPasswordSchema = z.object({ email: z.email("Enter a valid email.").trim().toLowerCase() });
+export const resetPasswordSchema = z.object({ token: z.string().min(20).max(100), password: newPassword });
+export const verifyEmailSchema = z.object({ token: z.string().min(20).max(100) });

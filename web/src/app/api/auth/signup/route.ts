@@ -3,6 +3,9 @@ import { withSystemDb } from "@/lib/server/db";
 import { ApiError, handler, parseBody, rateLimit } from "@/lib/server/http";
 import { getSiteTeam } from "@/lib/server/listings";
 import { ensureDefaultCollection } from "@/lib/server/collections";
+import { issueToken, siteUrl } from "@/lib/server/auth-tokens";
+import { queueEmail } from "@/lib/server/email";
+import { verifyEmailMessage } from "@/lib/server/email-templates";
 import { signupSchema } from "@/lib/validation";
 import type { Viewer } from "@/lib/types";
 import { PRIVACY_NOTICE_VERSION } from "@/lib/privacy";
@@ -11,6 +14,9 @@ import { PRIVACY_NOTICE_VERSION } from "@/lib/privacy";
  * Client sign-up (for Collections and showing history). New clients join the
  * site's team and are assigned to the team leader until an admin reassigns them.
  * Staff accounts are created by admins in the portal, never here.
+ *
+ * The account starts unverified: a confirmation email is queued in the same transaction,
+ * and saving homes/searches/plans unlocks once the link is clicked.
  */
 export const POST = handler(async (request: Request) => {
   await rateLimit(request, "signup", 10, 60 * 60_000);
@@ -31,6 +37,8 @@ export const POST = handler(async (request: Request) => {
       "INSERT INTO consent_records (team_id, user_id, purpose, granted, text_version) VALUES ($1, $2, 'data_storage', true, $3)",
       [team.id, row!.id, PRIVACY_NOTICE_VERSION],
     );
+    const raw = await issueToken(db, row!.id, "email_verify");
+    await queueEmail(db, verifyEmailMessage(input.email, input.fullName, `${siteUrl()}/verify-email?token=${raw}`));
     const v: Viewer = {
       id: row!.id,
       email: input.email,
@@ -38,6 +46,7 @@ export const POST = handler(async (request: Request) => {
       role: "client",
       teamId: team.id,
       assignedAgentId: leader?.id ?? null,
+      emailVerified: false,
     };
     return v;
   });

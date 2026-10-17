@@ -1,8 +1,8 @@
 import "server-only";
 import { childLogger } from "./logger";
 
-const log = childLogger("concierge");
-import type { ConciergeEvent, ListingCard, ListingDetail, Team, Viewer } from "@/lib/types";
+const log = childLogger("ai_assistant");
+import type { AssistantEvent, ListingCard, ListingDetail, Team, Viewer } from "@/lib/types";
 import { formatPrice } from "@/lib/money";
 import { formatBaths } from "@/lib/utils";
 import { COMMUTE_ANCHORS, DISTRICTS, SCHOOLS, estimateDriveMinutes, walkIndexLabel, type LngLat } from "@/lib/geo";
@@ -14,7 +14,7 @@ import { getListingBySlug, listCities, listListings, type ListingFilters } from 
 import { suggestSlots } from "./showings";
 
 /**
- * The Lead Concierge.
+ * The AI assistant.
  *
  * 1. Parse the message into explicit criteria (town, budget, beds, baths, type, garage,
  *    size, land, features) — deterministic regexes, never inferred personal attributes.
@@ -324,7 +324,7 @@ function deterministicAnswer(team: Team, intent: Intent, c: Criteria, results: {
 
 function systemPrompt(team: Team, facts: string, intent: Intent): string {
   const schools = SCHOOLS.filter((s) => s.level !== "College").map((s) => `${s.name} (${s.level}, ${DISTRICTS.find((d) => d.id === s.district)?.name})`).join("; ");
-  return `You are the client concierge for ${team.name} (${team.market}). Warm, concise, professional: 2-5 short sentences or a tight list. No emoji.
+  return `You are the client AI assistant for ${team.name} (${team.market}). Warm, concise, professional: 2-5 short sentences or a tight list. No emoji.
 Rules:
 - Mention ONLY homes and figures in FACTS. Never invent listings, prices, features, availability, rates or market statistics.
 - Commute times and Walk Index are estimates ("about"). Market figures are published averages, not forecasts.
@@ -343,7 +343,7 @@ function* chunk(text: string): Generator<string> {
   for (let i = 0; i < parts.length; i += 3) yield parts.slice(i, i + 3).join("");
 }
 
-export async function* runConcierge(team: Team, viewer: Viewer | null, messages: ChatMessage[], listingSlug?: string): AsyncGenerator<ConciergeEvent> {
+export async function* runAssistant(team: Team, viewer: Viewer | null, messages: ChatMessage[], listingSlug?: string): AsyncGenerator<AssistantEvent> {
   const latest = messages[messages.length - 1].content;
   const cities = await listCities();
   const intent = parseIntent(latest, cities);
@@ -381,7 +381,7 @@ export async function* runConcierge(team: Team, viewer: Viewer | null, messages:
 
   // Signed-in customers: remember the search (their own history) and offer to save it.
   if (viewer?.role === "client" && intent.isSearch && !intent.fairHousingConcern) {
-    await withDb(contextFor(viewer), (db) => db.query("INSERT INTO search_history (user_id, criteria, result_count) VALUES ($1, $2, $3)", [viewer.id, { ...criteria, source: "concierge" }, results.listings.length])).catch(() => undefined);
+    await withDb(contextFor(viewer), (db) => db.query("INSERT INTO search_history (user_id, criteria, result_count) VALUES ($1, $2, $3)", [viewer.id, { ...criteria, source: "ai_assistant" }, results.listings.length])).catch(() => undefined);
   }
 
   const facts = [

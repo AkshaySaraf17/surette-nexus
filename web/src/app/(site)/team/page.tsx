@@ -5,7 +5,7 @@ import { Mail, Phone } from "lucide-react";
 import { Reveal, RevealWords } from "@/components/motion/reveal";
 import { GlareCard } from "@/components/motion/glare-card";
 import { AgentPortrait } from "@/components/site/agent-portrait";
-import { ConciergeButton } from "@/components/site/concierge-button";
+import { AssistantButton } from "@/components/site/assistant-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TrackOnMount } from "@/components/site/analytics";
 import { getSiteTeam, listTeamMembers } from "@/lib/server/listings";
@@ -35,7 +35,7 @@ async function Directory() {
               <li><a href={`mailto:${leader.email}`} className="inline-flex items-center gap-2 hover:underline"><Mail className="size-4" aria-hidden />{leader.email}</a></li>
             </ul>
             <div className="mt-8">
-              <ConciergeButton variant="primary" prompt={`I'd like to talk with ${leader.fullName}.`}>Request a conversation</ConciergeButton>
+              <AssistantButton variant="primary" prompt={`I'd like to talk with ${leader.fullName}.`}>Request a conversation</AssistantButton>
             </div>
           </Reveal>
         </section>

@@ -6,7 +6,7 @@ import { Suspense } from "react";
 import { Bath, BedDouble, CalendarRange, Car, Footprints, GraduationCap, Maximize, Trees } from "lucide-react";
 import { Reveal } from "@/components/motion/reveal";
 import { AgentPortrait } from "@/components/site/agent-portrait";
-import { ConciergeButton } from "@/components/site/concierge-button";
+import { AssistantButton } from "@/components/site/assistant-button";
 import { Gallery } from "@/components/site/gallery";
 import { CompareToggle } from "@/components/site/compare-toggle";
 import { LiveRefresh } from "@/components/site/live-refresh";
@@ -183,11 +183,11 @@ async function ListingView({ params }: { params: PageProps<"/listings/[slug]">["
                 {listing.status === "active" ? (
                   <ShowingRequest propertyId={listing.id} title={listing.title} />
                 ) : (
-                  <p className="rounded-2xl bg-fill p-4 text-sm text-ink-2">This home is {STATUS_LABEL[listing.status].toLowerCase()}. Ask the concierge about similar homes.</p>
+                  <p className="rounded-2xl bg-fill p-4 text-sm text-ink-2">This home is {STATUS_LABEL[listing.status].toLowerCase()}. Ask the AI assistant about similar homes.</p>
                 )}
                 <CompareToggle propertyId={listing.id} />
                 <div className="[&>button]:w-full">
-                  <ConciergeButton prompt={`Tell me more about ${listing.title} — schools, commute and what's nearby.`}>Ask the concierge</ConciergeButton>
+                  <AssistantButton prompt={`Tell me more about ${listing.title} — schools, commute and what's nearby.`}>Ask the AI assistant</AssistantButton>
                 </div>
               </div>
             </div>

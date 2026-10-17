@@ -33,7 +33,7 @@ async function Results({ searchParams }: { searchParams: PageProps<"/listings">[
   return (
     <>
     <TrackOnMount key={`idx-${query}`} type="listing_index_view" props={{ results: listings.length }} />
-    <LiveListings key={query} initial={listings} query={query} showCount emptyMessage="No homes match these filters. Try widening your search — or ask the concierge." />
+    <LiveListings key={query} initial={listings} query={query} showCount emptyMessage="No homes match these filters. Try widening your search — or ask the AI assistant." />
     </>
   );
 }

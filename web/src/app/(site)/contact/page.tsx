@@ -14,7 +14,7 @@ export default function ContactPage() {
           <div><dt className="type-eyebrow text-ink-3">Phone</dt><dd className="mt-1"><a href="tel:+12076496893" className="underline-offset-4 hover:underline">(207) 649-6893</a></dd></div>
           <div><dt className="type-eyebrow text-ink-3">Email</dt><dd className="mt-1"><a href="mailto:jjolicoeur@surette-realestate.com" className="underline-offset-4 hover:underline">jjolicoeur@surette-realestate.com</a></dd></div>
         </dl>
-        <p className="mt-10 max-w-md text-sm text-ink-2">Prefer to chat? The concierge (bottom right) can search homes and connect you with an agent any time.</p>
+        <p className="mt-10 max-w-md text-sm text-ink-2">Prefer to chat? The AI assistant (bottom right) can search homes and connect you with an agent any time.</p>
       </div>
       <ContactForm />
     </div>

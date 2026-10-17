@@ -1,5 +1,6 @@
 "use client";
 
+import { SITE_NAME } from "@/lib/site";
 import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -52,7 +53,7 @@ export function SiteHeader() {
     <header className={cn("fixed inset-x-0 top-0 z-40 transition-colors duration-700", onDark ? "text-white" : "text-ink")}>
       <div className={cn("transition-[background-color,border-color] duration-700", onDark ? "border-b border-white/10 bg-black/15 backdrop-blur-xl" : "material border-b border-line")}>
         <nav aria-label="Main" className="mx-auto flex h-16 max-w-[1400px] items-center justify-between gap-6 px-5 sm:px-8">
-          <Link href="/" aria-label="Surette Real Estate home" className="shrink-0">
+          <Link href="/" aria-label={`${SITE_NAME} home`} className="shrink-0">
             <Wordmark />
           </Link>
           <ul className="hidden items-center gap-8 text-[0.8125rem] font-medium tracking-wide md:flex">

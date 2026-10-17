@@ -1,5 +1,5 @@
 import { after } from "next/server";
-import { contextFor, requireViewer } from "@/lib/server/auth";
+import { contextFor, requireViewer, assertEmailVerified } from "@/lib/server/auth";
 import { assertUuid, handler, parseBody } from "@/lib/server/http";
 import { getCollection, removeItem, upsertItem } from "@/lib/server/collections";
 import { emitWebhook } from "@/lib/server/webhooks";
@@ -10,6 +10,7 @@ export const POST = handler(async (request: Request, { params }: RouteContext<"/
   const { id } = await params;
   assertUuid(id, "Collection");
   const viewer = await requireViewer(request);
+  assertEmailVerified(viewer);
   const input = await parseBody(request, collectionItemSchema);
   const context = contextFor(viewer);
   await upsertItem(context, viewer, id, input);

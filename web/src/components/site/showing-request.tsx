@@ -90,7 +90,7 @@ export function ShowingRequest({ propertyId, title }: { propertyId: string; titl
               {slots === null ? (
                 <p className="text-sm text-ink-3">Finding open times…</p>
               ) : slots.length === 0 ? (
-                <p className="text-sm text-ink-2">No open times in the next three weeks. Ask the concierge and we&rsquo;ll arrange one.</p>
+                <p className="text-sm text-ink-2">No open times in the next three weeks. Ask the AI assistant and we&rsquo;ll arrange one.</p>
               ) : (
                 <div className="grid grid-cols-2 gap-2">
                   {slots.map((s) => (

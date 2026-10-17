@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { contextFor, requireViewer } from "@/lib/server/auth";
+import { contextFor, requireViewer, assertEmailVerified } from "@/lib/server/auth";
 import { withDb } from "@/lib/server/db";
 import { handler, parseBody } from "@/lib/server/http";
 import { ensureDefaultCollection, savedPropertyIds, upsertItem } from "@/lib/server/collections";
@@ -15,6 +15,7 @@ export const GET = handler(async (request: Request) => {
 /** POST /api/collections/save — one-tap heart: save to / remove from every collection of the viewer. */
 export const POST = handler(async (request: Request) => {
   const viewer = await requireViewer(request);
+  assertEmailVerified(viewer);
   const input = await parseBody(request, schema);
   const context = contextFor(viewer);
   if (input.saved) {

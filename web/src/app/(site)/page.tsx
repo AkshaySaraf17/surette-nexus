@@ -5,7 +5,7 @@ import { GraduationCap, Car, Footprints } from "lucide-react";
 import { Parallax } from "@/components/motion/parallax";
 import { Reveal, RevealWords } from "@/components/motion/reveal";
 import { AgentPortrait } from "@/components/site/agent-portrait";
-import { ConciergeButton } from "@/components/site/concierge-button";
+import { AssistantButton } from "@/components/site/assistant-button";
 import { Featured } from "@/components/site/featured";
 import { Hero } from "@/components/site/hero";
 import { LiveListings } from "@/components/site/live-listings";
@@ -32,7 +32,7 @@ async function FeaturedSection() {
 async function AvailableSection() {
   await connection();
   const listings = await listListings(ANONYMOUS, { sort: "featured", limit: 200 });
-  return <LiveListings initial={listings} emptyMessage="New homes are on their way. Ask the concierge to alert you." />;
+  return <LiveListings initial={listings} emptyMessage="New homes are on their way. Ask the AI assistant to alert you." />;
 }
 
 async function LeaderSection() {
@@ -61,7 +61,7 @@ async function LeaderSection() {
           <Link href="/team" className={buttonVariants({ variant: "primary", size: "lg" })}>
             Meet the team
           </Link>
-          <ConciergeButton prompt={`I'd like to speak with ${leader.fullName} about buying a home.`}>Ask for {leader.fullName.split(" ")[0]}</ConciergeButton>
+          <AssistantButton prompt={`I'd like to speak with ${leader.fullName} about buying a home.`}>Ask for {leader.fullName.split(" ")[0]}</AssistantButton>
         </div>
       </Reveal>
     </div>
@@ -184,11 +184,11 @@ export default function HomePage() {
         <div className="absolute inset-0 grid place-items-center bg-black/35 px-5 text-center text-white">
           <Reveal>
             <h2 className="type-display mx-auto max-w-3xl">Looking for something not yet listed?</h2>
-            <p className="type-lede mx-auto mt-5 max-w-xl text-white/85">Tell the concierge what you have in mind. Our team hears about homes before they reach the market.</p>
+            <p className="type-lede mx-auto mt-5 max-w-xl text-white/85">Tell the AI assistant what you have in mind. Our team hears about homes before they reach the market.</p>
             <div className="mt-9">
-              <ConciergeButton variant="gold" prompt="I'm looking for a home that isn't listed yet.">
+              <AssistantButton variant="gold" prompt="I'm looking for a home that isn't listed yet.">
                 Start a private search
-              </ConciergeButton>
+              </AssistantButton>
             </div>
           </Reveal>
         </div>

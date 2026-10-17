@@ -479,7 +479,7 @@ async function main() {
     const leads: [string, string, string, string | null, string, string | null, string, string][] = [
       ["contact_form", "Avery Demo", "avery.demo@example.com", "+12075550101", "Looking for a 3-bedroom near Colby, around $500K.", null, leaderId, "new"],
       ["showing_request", "Morgan Demo", "morgan.demo@example.com", null, "Private showing requested for the lake house.", lake, leaderId, "contacted"],
-      ["concierge", "Riley Demo", "riley.demo@example.com", "+12075550103", "Requested help from the website concierge.", redbarn, agentId, "qualified"],
+      ["ai_assistant", "Riley Demo", "riley.demo@example.com", "+12075550103", "Requested help from the website AI assistant.", redbarn, agentId, "qualified"],
     ];
     const leadIds: string[] = [];
     for (const [source, name, email, phone, message, propertyId, agent, status] of leads) {
@@ -515,6 +515,9 @@ async function main() {
       await db.query("INSERT INTO audit_log (team_id, actor_id, action, entity_type, entity_id, data) VALUES ($1, $2, 'deal.created', 'transaction', $3, '{\"seed\": true}')", [teamId, d.agent, row!.id]);
     }
   });
+
+  // Demo accounts are pre-verified (real sign-ups confirm their email first).
+  await withSystemDb((db) => db.query("UPDATE users SET email_verified_at = COALESCE(email_verified_at, now())"));
 
   // Real government data for the market dashboards (checked-in snapshots, checksum-verified).
   const gov = await importSnapshots();

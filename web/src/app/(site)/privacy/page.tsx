@@ -13,7 +13,7 @@ export default function PrivacyPage() {
     ["Anonymous analytics (only if you click Allow)", "Pages viewed, scroll depth, clicks on listings and buttons, referring site and campaign tags, device type. A random session id, and a random visitor id kept in your browser. Never form contents, names or emails.", "Understand which pages and homes help visitors, and fix what doesn't.", "Up to 13 months, then deleted automatically."],
     ["Account (if you create one)", "Name, email, optional phone, password (hashed), saved homes, searches, comparisons and sell-and-buy plans.", "Let you use your saved items on any device and share collections with your agent.", "Until you delete your account (Account → Privacy & data)."],
     ["Requests you send", "What you enter when you contact us, request a showing or send a plan to an agent, with the consent you gave.", "Respond to your request.", "Kept as a brokerage business record; ask the office to erase it."],
-    ["Concierge chats", "Messages are processed to search listings and are not stored, unless you're signed in (your own search history) or you send a request to an agent.", "Answer your question.", "Search history: until you clear it."],
+    ["AI assistant chats", "Messages are processed to search listings and are not stored, unless you're signed in (your own search history) or you send a request to an agent.", "Answer your question.", "Search history: until you clear it."],
   ];
   return (
     <div data-tone="paper" className="mx-auto max-w-4xl px-5 pb-32 pt-32 sm:px-8">

@@ -1,8 +1,8 @@
-# Concierge and AI
+# AI assistant and local AI
 
-## Website concierge (customers)
+## Website AI assistant (customers)
 
-Open with the **Concierge** button. It understands requests like
+Open with the **AI assistant** button. It understands requests like
 "3 bed under 400k in Waterville with a garage", then:
 
 - searches live listings, explaining why each matches, and relaxes the search step by step if nothing fits

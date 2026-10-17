@@ -137,11 +137,27 @@ flowchart TD
 - Cookie-authenticated writes from another website are refused (CSRF protection in `proxy.ts`).
 - Staff accounts are created only by the owner (Portal → Team) or `npm run admin:create`.
 
+### Customer email confirmation, password reset and Google
+
+```mermaid
+flowchart TD
+  S[Sign up] --> T1[(users + auth_tokens hash + email.send job, one transaction)]
+  T1 --> W[Worker] -->|SMTP| IN[Customer inbox]
+  IN -->|/verify-email?token| V[POST /api/auth/verify] --> OKV[email_verified_at set: saving unlocked]
+  FP[/forgot-password/] --> FR[POST /api/auth/password/forgot] -->|account exists| T2[(token + email job)] --> W
+  FR --> SAME[Same message either way]
+  IN -->|/reset-password?token| RP[POST /api/auth/password/reset] --> NV[new hash, session_version + 1: other sessions end]
+  G[Continue with Google] --> GS[/api/auth/google/start: state, nonce, PKCE in a signed cookie/] --> GG[Google]
+  GG --> GC[/api/auth/google/callback/] --> CHK{state, ID token signature, issuer, audience, nonce, email verified}
+  CHK -->|ok| LINK[find by Google id, else link same-email customer, else create] --> CK2[Session cookie]
+  CHK -->|fail| ERR[/sign-in?error=.../]
+```
+
 ---
 
 ## 4. A visitor becomes a lead
 
-Leads come from the contact page, showing requests, the concierge hand-off and Dual-Move "send
+Leads come from the contact page, showing requests, the AI assistant hand-off and Dual-Move "send
 to an agent".
 
 ```mermaid
@@ -174,7 +190,7 @@ and time. Never stored: anything inferred about the person.
 
 ---
 
-## 5. The concierge (chatbot)
+## 5. The AI assistant (chatbot)
 
 ```mermaid
 flowchart TD
@@ -202,7 +218,7 @@ flowchart TD
   OUT --> ACT[Offer: save search · book showing · talk to an agent]
 ```
 
-The concierge only mentions homes the database returned. AI is optional, runs on your own server
+The AI assistant only mentions homes the database returned. AI is optional, runs on your own server
 and never sees anything the deterministic answer didn't already contain.
 
 ---
@@ -332,7 +348,7 @@ flowchart TD
   GI --> PROV[/api/market/datasets/]
   API --> D1[Market dashboard]
   API --> D2[Portal 'Local market' card]
-  API --> D3[Concierge market answers]
+  API --> D3[AI assistant market answers]
 ```
 
 - **Downloads fail:** previous values stay, and the series records the error. Nothing is estimated.

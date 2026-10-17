@@ -32,8 +32,9 @@ export function verifyPassword(password: string, hash: string): Promise<boolean>
   return bcrypt.compare(password, hash);
 }
 
-export async function signSession(userId: string): Promise<string> {
-  return new SignJWT({})
+/** `sessionVersion` is bumped on password reset, which signs out every older session. */
+export async function signSession(userId: string, sessionVersion = 1): Promise<string> {
+  return new SignJWT({ sv: sessionVersion })
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(userId)
     .setIssuedAt()
@@ -74,20 +75,22 @@ function tokenFromRequest(request: Request): string | null {
 export async function viewerFromToken(token: string | null | undefined): Promise<Viewer | null> {
   if (!token) return null;
   let userId: string | undefined;
+  let version = 1;
   try {
     const { payload } = await jwtVerify(token, secretKey(), { algorithms: ["HS256"] });
     userId = payload.sub;
+    if (typeof payload.sv === "number") version = payload.sv;
   } catch {
     return null;
   }
   if (!userId) return null;
   const row = await withSystemDb((db) =>
-    db.one<{ id: string; email: string; full_name: string; role: UserRole; team_id: string | null; assigned_agent_id: string | null }>(
-      "SELECT id, email, full_name, role, team_id, assigned_agent_id FROM users WHERE id = $1 AND is_active",
+    db.one<{ id: string; email: string; full_name: string; role: UserRole; team_id: string | null; assigned_agent_id: string | null; session_version: number; email_verified_at: Date | null }>(
+      "SELECT id, email, full_name, role, team_id, assigned_agent_id, session_version, email_verified_at FROM users WHERE id = $1 AND is_active",
       [userId],
     ),
   );
-  if (!row) return null;
+  if (!row || row.session_version !== version) return null; // signed out by a password reset
   return {
     id: row.id,
     email: row.email,
@@ -95,6 +98,7 @@ export async function viewerFromToken(token: string | null | undefined): Promise
     role: row.role,
     teamId: row.team_id,
     assignedAgentId: row.assigned_agent_id,
+    emailVerified: Boolean(row.email_verified_at),
   };
 }
 
@@ -159,7 +163,7 @@ const LOCK_MINUTES = 15;
 let dummyHash: Promise<string> | null = null;
 const getDummyHash = () => (dummyHash ??= hashPassword(crypto.randomUUID()));
 
-export async function authenticate(email: string, password: string, audience: Audience): Promise<Viewer> {
+export async function authenticate(email: string, password: string, audience: Audience): Promise<Viewer & { sessionVersion: number }> {
   const row = await withSystemDb((db) =>
     db.one<{
       id: string;
@@ -168,16 +172,19 @@ export async function authenticate(email: string, password: string, audience: Au
       role: UserRole;
       team_id: string | null;
       assigned_agent_id: string | null;
-      password_hash: string;
+      password_hash: string | null;
       is_active: boolean;
       locked_until: Date | null;
+      session_version: number;
+      email_verified_at: Date | null;
     }>(
-      "SELECT id, email, full_name, role, team_id, assigned_agent_id, password_hash, is_active, locked_until FROM users WHERE email = $1",
+      "SELECT id, email, full_name, role, team_id, assigned_agent_id, password_hash, is_active, locked_until, session_version, email_verified_at FROM users WHERE email = $1",
       [email],
     ),
   );
-  // Always run bcrypt so timing doesn't reveal which emails exist.
-  const ok = await verifyPassword(password, row?.password_hash ?? (await getDummyHash()));
+  // Always run bcrypt so timing doesn't reveal which emails exist. Google-only accounts have no
+  // password; they get the same generic error (and can set one with "Forgot password").
+  const ok = (await verifyPassword(password, row?.password_hash ?? (await getDummyHash()))) && Boolean(row?.password_hash);
 
   if (row?.locked_until && row.locked_until > new Date()) {
     const minutes = Math.ceil((row.locked_until.getTime() - Date.now()) / 60_000);
@@ -207,7 +214,23 @@ export async function authenticate(email: string, password: string, audience: Au
   }
 
   await withSystemDb((db) => db.query("UPDATE users SET failed_logins = 0, locked_until = NULL, last_login_at = now() WHERE id = $1", [row.id]));
-  return { id: row.id, email: row.email, fullName: row.full_name, role: row.role, teamId: row.team_id, assignedAgentId: row.assigned_agent_id };
+  return {
+    id: row.id,
+    email: row.email,
+    fullName: row.full_name,
+    role: row.role,
+    teamId: row.team_id,
+    assignedAgentId: row.assigned_agent_id,
+    emailVerified: Boolean(row.email_verified_at),
+    sessionVersion: row.session_version,
+  };
+}
+
+/** Customers must confirm their email before saving data to their account. Staff are unaffected. */
+export function assertEmailVerified(viewer: Viewer): void {
+  if (viewer.role === "client" && !viewer.emailVerified) {
+    throw new ApiError(403, "EMAIL_NOT_VERIFIED", "Confirm your email first — we sent you a link. You can resend it from your account page.");
+  }
 }
 
 /** Owners/admins only. */

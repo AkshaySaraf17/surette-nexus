@@ -20,8 +20,8 @@ export const EVENT_RULES: Record<string, { category: EventCategory; props: Recor
   scroll_depth: { category: "engagement", props: { depth: n(0, 100) }, label: "Scroll depth" },
   page_engagement: { category: "engagement", props: { seconds: n(0, 1800) }, label: "Engaged time" },
   cta_click: { category: "engagement", props: { cta: s(60, slug) }, label: "Call to action" },
-  concierge_open: { category: "engagement", props: { surface: s(30, slug) }, label: "Concierge opened" },
-  concierge_message: { category: "engagement", props: { intent: s(30, slug), results: n(0, 200) }, label: "Concierge message" },
+  assistant_open: { category: "engagement", props: { surface: s(30, slug) }, label: "AI assistant opened" },
+  assistant_message: { category: "engagement", props: { intent: s(30, slug), results: n(0, 200) }, label: "AI assistant message" },
   dual_move_calculate: { category: "engagement", props: { scenarios: n(0, 10) }, label: "Dual-Move calculation" },
   market_view: { category: "engagement", props: { metric: s(40, slug) }, label: "Market dashboard" },
   search_submit: { category: "discovery", props: { surface: s(30, slug), fields_used: n(0, 20), has_city: b, price_band: s(20, /^[a-z0-9_]{1,20}$/i), min_beds: s(5, /^[a-z0-9]{1,5}$/i) }, label: "Search" },
@@ -53,7 +53,7 @@ export const FUNNEL_STAGES: { key: string; label: string; events: string[] }[] =
   { key: "visit", label: "Website visit", events: ["page_view"] },
   { key: "search", label: "Property search", events: ["search_submit", "filter_change", "listing_index_view"] },
   { key: "detail", label: "Property detail view", events: ["property_view"] },
-  { key: "contact_action", label: "Contact action", events: ["phone_click", "email_click", "form_start", "showing_request_start", "concierge_open", "contact_page_view", "agent_profile_view"] },
+  { key: "contact_action", label: "Contact action", events: ["phone_click", "email_click", "form_start", "showing_request_start", "assistant_open", "contact_page_view", "agent_profile_view"] },
   { key: "conversion", label: "Contact submitted / showing requested", events: ["contact_submit", "showing_request_submit"] },
 ];
 

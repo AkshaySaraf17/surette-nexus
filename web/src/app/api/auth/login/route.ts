@@ -14,6 +14,7 @@ export const POST = handler(async (request: Request) => {
   await rateLimit(request, "login", 20, 15 * 60_000);
   const input = await parseBody(request, schema);
   const user = await authenticate(input.email, input.password, input.audience);
-  const token = await signSession(user.id);
-  return Response.json({ token, user }, { headers: { "Set-Cookie": sessionCookie(token) } });
+  const { sessionVersion, ...viewer } = user;
+  const token = await signSession(user.id, sessionVersion);
+  return Response.json({ token, user: viewer }, { headers: { "Set-Cookie": sessionCookie(token) } });
 });

@@ -13,7 +13,7 @@ web/
 │   └── helpers/
 ├── e2e/                        Playwright (installed Google Chrome)
 │   ├── auth/                   the two sign-ins and role boundaries
-│   ├── site/                   public site: home media, market dashboard, concierge, Dual-Move
+│   ├── site/                   public site: home media, market dashboard, AI assistant, Dual-Move
 │   ├── portal/                 property-management portal: deals, listings
 │   ├── analytics/              consent, GPC, events stored with the right project/data class
 │   ├── platform/               health checks, metrics, request ids, idempotency, rate limits, WebSockets
@@ -33,7 +33,7 @@ REDIS_URL=redis://localhost:6379 npm run test:integration   # also runs the Valk
 npm run test:data
 npm run test:config
 npm run test:contract    # live: downloads from census.gov, bls.gov, fhfa.gov
-npm run test:e2e         # all browser tests (dev server on :3100; run `npm run worker` and `npm run realtime` too)
+npm run test:e2e         # all browser tests (dev server on :3100; run `npm run worker` and `npm run realtime` too, and Mailpit on :8025)
 npm run test:a11y
 npm run test:security
 npm run test:load        # against a production build: npm run build && npx next start -p 3300
@@ -46,13 +46,15 @@ cd ../mobile && npx tsc --noEmit
 | Area | Method | Files | Checks |
 | --- | --- | --- | --- |
 | Money, geo | Unit | `unit/money-geo` | Integer-cent parsing, commute and walk estimates |
-| Concierge | Unit + E2E | `unit/concierge-intent`, `e2e/site/concierge` | Parsing requests, fair-housing refusal, real listing links |
+| AI assistant | Unit + E2E | `unit/assistant-intent`, `e2e/site/assistant` | Parsing requests, fair-housing refusal, real listing links |
 | Dual-Move | Unit + E2E | `unit/dual-move`, `e2e/site/dual-move` | Math against hand calculations; nothing assumed until the visitor enters numbers |
 | Deals | Unit + Integration + E2E | `unit/deal-rules`, `integration/rls`, `e2e/portal/deals` | Deadlines, stage gates, commission; agents see only their deals; creating a deal in the UI |
 | Listings | Unit + E2E | `unit/validation`, `e2e/portal/listings` | Partial edits change only what was sent (regression); farmhouse cover photo |
 | Documents | Unit | `unit/documents` | File type from content; contract value extraction |
 | Analytics | Unit + E2E | `unit/analytics-allowlist`, `e2e/analytics/tracking` | No personal data stored; opt-in, decline and GPC respected; test traffic cleaned up |
 | Sign-in and roles | E2E | `e2e/auth/sign-in` | Two entrances, wrong-portal refusal, role boundaries |
+| Email confirmation, password reset | Integration + E2E (Mailpit) | `integration/customer-auth`, `e2e/auth/account-recovery` | Real emails read from Mailpit; saving blocked until confirmed; links work once and expire; reset signs out other sessions; same answer for unknown emails |
+| Continue with Google | Unit + Integration + E2E | `unit/google-oauth`, `integration/customer-auth` | PKCE; ID tokens with the wrong audience, issuer, nonce, key, expiry or unverified email are refused; account linking rules; hidden until configured |
 | Security | Integration + E2E | `integration/rls`, `e2e/security/api-security` | Row-level security, CSRF block, 401/403/404 boundaries, security headers |
 | Accessibility | E2E (axe-core) | `e2e/accessibility/a11y` | No serious or critical WCAG 2.1 AA violations on 15 pages; the home page is audited section by section as it scrolls |
 | Redis / Valkey | Integration | `integration/redis`, `integration/redis-outage` | Shared limits, shared cache and tag invalidation; site keeps working (≤ 1 s) when Redis is unreachable. Needs `REDIS_URL` |
@@ -70,8 +72,8 @@ cd ../mobile && npx tsc --noEmit
 
 ## Latest results (2026-10-16, this laptop)
 
-- Vitest: **89 passed** with `REDIS_URL` set (83 without Redis; the 4 live contract tests are skipped by default and pass when run).
-- Playwright: **51 passed** on the dev server. Against the Docker stack through nginx: site, accessibility,
+- Vitest: **100 passed**, 7 skipped (the live contract tests and the Redis tests, which need `REDIS_URL`).
+- Playwright: **55 passed** on the dev server (with the worker running and Mailpit receiving the emails). Against the Docker stack through nginx: site, accessibility,
   health, WebSocket and security tests pass (sign-in-heavy groups must be run a minute apart: the gateway allows
   10 sign-ins per minute per address, by design).
 - Load test against the production build (25 concurrent clients, 15 s each, Apple Silicon laptop,

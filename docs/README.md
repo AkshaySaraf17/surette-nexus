@@ -10,7 +10,7 @@
 | [api.md](api.md) | Every API route, grouped by area, with who may call it |
 | [analytics.md](analytics.md) | First-party tracking on the Surette Nexus website, consent, events, dashboards |
 | [deals-and-leads.md](deals-and-leads.md) | Lead routing, the deal board, deadlines, documents, drafts |
-| [concierge-and-ai.md](concierge-and-ai.md) | The website chatbot, the portal assistant, local AI (Ollama) and fallbacks |
+| [ai-assistant.md](ai-assistant.md) | The website chatbot, the portal assistant, local AI (Ollama) and fallbacks |
 | [market-data.md](market-data.md) | FRED / Census sources, refresh, provenance |
 | [privacy-and-security.md](privacy-and-security.md) | Privacy, fair housing, security controls |
 | [deployment.md](deployment.md) | Running locally, Docker, production checklist |

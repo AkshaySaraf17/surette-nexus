@@ -1,16 +1,19 @@
 import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, Inter } from "next/font/google";
 import { MotionProvider } from "@/components/motion/provider";
+import { DEMO, SITE_NAME } from "@/lib/site";
 import "./globals.css";
 
 const serif = Cormorant_Garamond({ subsets: ["latin"], weight: ["300", "400", "500", "600"], style: ["normal", "italic"], variable: "--font-cormorant", display: "swap" });
 const sans = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 
 export const metadata: Metadata = {
-  title: { default: "Surette Real Estate — Waterville & Central Maine", template: "%s · Surette Real Estate" },
+  title: { default: `${SITE_NAME} — Waterville & Central Maine`, template: `%s · ${SITE_NAME}` },
   description: "Homes, lake houses and land across Waterville and Central Maine, with live availability, private showings and a team that knows every road.",
   metadataBase: new URL(process.env.PUBLIC_SITE_URL ?? "http://localhost:3000"),
-  openGraph: { type: "website", siteName: "Surette Real Estate", images: ["/media/brand/hero/colonial.webp"] },
+  // A demo must not show up in search results as if it were the official site.
+  robots: DEMO ? { index: false, follow: false } : undefined,
+  openGraph: { type: "website", siteName: SITE_NAME, images: ["/media/brand/hero/colonial.webp"] },
 };
 
 export const viewport: Viewport = {

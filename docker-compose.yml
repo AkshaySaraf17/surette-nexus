@@ -10,7 +10,7 @@
 #   printf "JWT_SECRET=%s\nMETRICS_TOKEN=%s\n" "$(openssl rand -hex 32)" "$(openssl rand -hex 16)" > .env
 x-build: &build
   context: .
-  args: { NEXT_PUBLIC_REALTIME_URL: /ws }
+  args: { NEXT_PUBLIC_REALTIME_URL: /ws, NEXT_PUBLIC_SITE_DEMO: "${SITE_DEMO:-true}" }
 
 x-app: &app
   image: surette-nexus:local
@@ -29,6 +29,14 @@ x-app: &app
     OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.2:3b}
     CENSUS_API_KEY: ${CENSUS_API_KEY:-}
     EMBEDDED_WORKER: "0"
+    # Email: Mailpit (free test inbox, http://localhost:8025) unless real SMTP settings are given.
+    SMTP_HOST: ${SMTP_HOST:-mailpit}
+    SMTP_PORT: ${SMTP_PORT:-1025}
+    SMTP_USER: ${SMTP_USER:-}
+    SMTP_PASS: ${SMTP_PASS:-}
+    MAIL_FROM: ${MAIL_FROM:-Surette Real Estate <no-reply@localhost>}
+    GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+    GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
   volumes: [storage:/data/storage]
   restart: unless-stopped
   depends_on:
@@ -57,6 +65,12 @@ services:
       test: ["CMD", "valkey-cli", "ping"]
       interval: 5s
       retries: 20
+
+  mailpit:
+    # Free local email inbox: catches verification and password-reset emails so nobody real is emailed.
+    image: axllent/mailpit:v1.27
+    ports: ["8025:8025"]
+    restart: unless-stopped
 
   migrate:
     image: surette-nexus:local

@@ -2,7 +2,7 @@
 
 ## Leads
 
-Leads come from the contact page, showing requests, the concierge hand-off and Dual-Move "share with an
+Leads come from the contact page, showing requests, the AI assistant hand-off and Dual-Move "share with an
 agent". Each requires the visitor's explicit consent to be contacted (stored in `consent_records`).
 
 - **Routing:** listing agent → the customer's assigned agent → the team leader.

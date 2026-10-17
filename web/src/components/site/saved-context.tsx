@@ -1,7 +1,8 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { api } from "@/lib/client-api";
+import Link from "next/link";
+import { api, ApiClientError } from "@/lib/client-api";
 import { useLiveEvents } from "@/lib/use-live";
 import { useViewer } from "@/lib/use-viewer";
 import type { Viewer } from "@/lib/types";
@@ -26,6 +27,7 @@ const SavedContext = createContext<SavedState>({
 export function SavedProvider({ children }: { children: ReactNode }) {
   const { viewer, refresh } = useViewer();
   const [saved, setSaved] = useState<Set<string>>(new Set());
+  const [notice, setNotice] = useState("");
 
   const load = useCallback(async () => {
     if (!viewer) {
@@ -62,7 +64,11 @@ export function SavedProvider({ children }: { children: ReactNode }) {
       try {
         const { propertyIds } = await api<{ propertyIds: string[] }>("/api/collections/save", { method: "POST", body: { propertyId, saved: next } });
         setSaved(new Set(propertyIds));
-      } catch {
+      } catch (error) {
+        if (error instanceof ApiClientError && error.code === "EMAIL_NOT_VERIFIED") {
+          setNotice(error.message);
+          window.setTimeout(() => setNotice(""), 8000);
+        }
         void load();
       }
     },
@@ -70,7 +76,16 @@ export function SavedProvider({ children }: { children: ReactNode }) {
   );
 
   const value = useMemo(() => ({ saved, signedIn: Boolean(viewer), viewer, toggle, refreshViewer: refresh }), [saved, viewer, toggle, refresh]);
-  return <SavedContext.Provider value={value}>{children}</SavedContext.Provider>;
+  return (
+    <SavedContext.Provider value={value}>
+      {children}
+      {notice && (
+        <div role="status" className="fixed inset-x-4 bottom-24 z-50 mx-auto max-w-md rounded-2xl bg-ink px-4 py-3 text-sm text-paper shadow-lg">
+          {notice} <Link href="/account" className="underline underline-offset-4">Go to your account</Link>
+        </div>
+      )}
+    </SavedContext.Provider>
+  );
 }
 
 export const useSaved = () => useContext(SavedContext);

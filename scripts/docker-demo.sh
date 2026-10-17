@@ -52,5 +52,6 @@ Surette Nexus is running:
   Website ............. http://localhost:8080
   Team portal ......... http://localhost:8080/portal/sign-in   (owner@surette.test / surette-owner-2026)
   Customer sign-in .... http://localhost:8080/sign-in          (client@surette.test / surette-client-2026)
+  Test email inbox .... http://localhost:8025                  (verification and password-reset emails)
 Stop it with: scripts/docker-demo.sh stop
 MSG

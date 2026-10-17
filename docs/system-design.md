@@ -157,7 +157,7 @@ Two layers:
 | Precise | App (`lib/server/limiter.ts`) | endpoint + user id (signed in) or IP | Business limits, shared across all replicas |
 
 App limits (fixed window): login 20 per 15 min, sign-up 10 per hour, contact/leads 6 per hour,
-showings 8 per hour, concierge 30 per 10 min, ops assistant 60 per minute, Dual-Move share 5 per hour,
+showings 8 per hour, AI assistant 30 per 10 min, ops assistant 60 per minute, Dual-Move share 5 per hour,
 analytics 240 per minute, maintenance 5 per 15 min.
 
 - **Store:** Redis (`INCR` + `PEXPIRE`) when `REDIS_URL` is set; otherwise an UNLOGGED Postgres
@@ -219,6 +219,9 @@ A durable queue on PostgreSQL (`lib/server/jobs.ts`, table `jobs`):
 - **Dedupe keys:** at most one queued or running job per key (for example one market refresh per day).
 - **Wake-ups:** `NOTIFY surette_jobs` starts work within milliseconds; polling every 2 s is the safety net.
 - **Queues:** `default`, `webhooks` and `maintenance` keep slow webhook receivers from starving other work.
+- **Emails** (`email.send`, 6 attempts): confirmation and password-reset emails are queued in the same
+  transaction that creates the token, so a link is never emailed for a rolled-back sign-up, and a mail
+  server outage only delays delivery.
 - **Scheduler:** the worker holding a Postgres advisory lock enqueues recurring jobs (hourly
   cleanup, daily analytics purge, daily market refresh, monthly government data refresh). Per-period dedupe keys make a split brain harmless.
 
@@ -265,6 +268,8 @@ cool-down. *Half-open* lets one trial call through. Every call also gets a timeo
 | Census ACS | `census` | 5 / 5 min / 20 s | Same |
 | Landlord dispatcher | `dispatcher` | 4 / 30 s / 12 s | "Temporarily unavailable — call the office" (4xx answers don't count as failures) |
 | Each webhook host | `webhook:<host>` | 5 / 60 s / 8 s | Job retried later with backoff |
+| SMTP (account emails) | `smtp` | 5 / 60 s / 20 s | Email job retried later with backoff |
+| Google sign-in token exchange | `google` | 5 / 60 s / 10 s | Customer sees "Google sign-in didn't complete" and can use email |
 
 Other patterns:
 - **Bulkheads:** background work runs in a separate process, and webhooks have their own queue.
@@ -301,7 +306,7 @@ replica), add Redis pub/sub between the database listener and socket servers.
 | Public listing grid (status, featured, newest) | `properties_public_idx (status, is_featured DESC, published_at DESC)` |
 | Filters (type, beds, price) | `properties_filter_idx`, partial `properties_price_idx … WHERE status='active'` |
 | City filter `lower(city) = lower($1)` | expression index `properties_city_idx (lower(city), status)` |
-| Concierge fuzzy town match | trigram GIN `properties_city_trgm_idx` |
+| AI assistant fuzzy town match | trigram GIN `properties_city_trgm_idx` |
 | Keyword search | GIN on `search_vector` |
 | Deadline agenda (open items by due date) | partial `… WHERE completed_at IS NULL` / `WHERE status='open'` |
 | Lead duplicate check (email/phone within 24 h) | partial `leads_email_idx`, `leads_phone_idx` |

@@ -18,7 +18,7 @@ async function Comparison({ searchParams }: { searchParams: PageProps<"/compare"
   const list = (typeof ids === "string" ? ids.split(",") : []).filter((x) => /^[0-9a-f-]{36}$/i.test(x)).slice(0, 4);
   const homes = (await Promise.all(list.map((id) => getListingById(ANONYMOUS, id)))).filter((x) => x !== null);
   if (homes.length < 2) {
-    return <p className="rounded-[24px] bg-paper p-8 text-ink-2 ring-1 ring-line">Choose at least two homes to compare — use &ldquo;Compare&rdquo; on listing pages or ask the concierge. <Link href="/listings" className="underline">Browse homes →</Link></p>;
+    return <p className="rounded-[24px] bg-paper p-8 text-ink-2 ring-1 ring-line">Choose at least two homes to compare — use &ldquo;Compare&rdquo; on listing pages or ask the AI assistant. <Link href="/listings" className="underline">Browse homes →</Link></p>;
   }
   const rows: [string, (h: (typeof homes)[number]) => string][] = [
     ["Price", (h) => (h.listingType === "rent" ? formatRent(h.priceCents) : formatPrice(h.priceCents))],

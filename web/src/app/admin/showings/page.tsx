@@ -13,7 +13,7 @@ const when = (iso: string) =>
   new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(new Date(iso));
 const TONE: Record<ShowingStatus, "warn" | "success" | "neutral" | "danger"> = { requested: "warn", confirmed: "success", completed: "neutral", cancelled: "danger" };
 
-/** Showing requests from the website, concierge and mobile app. Confirming checks for overlaps in the database. */
+/** Showing requests from the website, AI assistant and mobile app. Confirming checks for overlaps in the database. */
 export default function ShowingsPage() {
   const [showings, setShowings] = useState<Showing[] | null>(null);
   const [error, setError] = useState("");
@@ -56,7 +56,7 @@ export default function ShowingsPage() {
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <Badge tone={TONE[s.status]}>{s.status}</Badge>
-                  <span className="text-[0.75rem] uppercase tracking-[0.1em] text-ink-3">via {s.source}</span>
+                  <span className="text-[0.75rem] uppercase tracking-[0.1em] text-ink-3">via {s.source === "ai_assistant" ? "AI assistant" : s.source}</span>
                 </div>
                 <p className="mt-2 font-medium">{when(s.startsAt)} · <Link href={`/listings/${s.propertySlug}`} className="underline underline-offset-4">{s.propertyTitle}</Link></p>
                 <p className="text-sm text-ink-2">

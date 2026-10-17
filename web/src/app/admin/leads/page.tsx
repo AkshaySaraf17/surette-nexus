@@ -35,6 +35,7 @@ interface Detail { lead: Lead; notes: { id: string; body: string; author: string
 
 const STATUSES = ["new", "contacted", "qualified", "nurturing", "converted", "lost"] as const;
 const TONE: Record<string, "warn" | "success" | "neutral" | "danger" | "gold"> = { new: "warn", contacted: "gold", qualified: "success", nurturing: "neutral", converted: "success", lost: "danger" };
+const SOURCE_LABEL: Record<string, string> = { ai_assistant: "AI assistant", contact_form: "Contact form", showing_request: "Showing request", dual_move: "Dual-Move", signup: "Sign-up", manual: "Manual", import: "Import" };
 
 function LeadsPage() {
   const viewer = useStaff();
@@ -108,7 +109,7 @@ function LeadsPage() {
       </div>
       <div className="mt-6 overflow-hidden rounded-[24px] bg-paper ring-1 ring-line">
         {leads === null ? <div className="p-6"><Skeleton className="h-40" /></div> : visible.length === 0 ? (
-          <p className="p-10 text-center text-ink-2">No leads here. Inquiries from the contact form, concierge, showing requests and Dual-Move plans appear automatically.</p>
+          <p className="p-10 text-center text-ink-2">No leads here. Inquiries from the contact form, AI assistant, showing requests and Dual-Move plans appear automatically.</p>
         ) : (
           <table className="w-full text-left text-sm">
             <thead className="border-b border-line text-[0.75rem] uppercase tracking-[0.1em] text-ink-3"><tr><th className="px-5 py-3 font-medium">Contact</th><th className="hidden px-5 py-3 font-medium md:table-cell">Source</th><th className="hidden px-5 py-3 font-medium lg:table-cell">Home</th><th className="hidden px-5 py-3 font-medium sm:table-cell">Agent</th><th className="px-5 py-3 font-medium">Status</th></tr></thead>
@@ -116,7 +117,7 @@ function LeadsPage() {
               {visible.map((l) => (
                 <tr key={l.id} className="cursor-pointer hover:bg-fill/50" onClick={() => router.push(`/admin/leads?open=${l.id}`)}>
                   <td className="px-5 py-3"><button type="button" className="text-left font-medium hover:underline">{l.contactName}</button><span className="block text-ink-3">{new Date(l.createdAt).toLocaleDateString("en-US")}{l.nextFollowUpOn ? ` · follow up ${l.nextFollowUpOn}` : ""}</span></td>
-                  <td className="hidden px-5 py-3 capitalize md:table-cell">{l.source.replace("_", " ")}</td>
+                  <td className="hidden px-5 py-3 md:table-cell">{SOURCE_LABEL[l.source] ?? l.source}</td>
                   <td className="hidden px-5 py-3 lg:table-cell">{l.property?.title ?? "—"}</td>
                   <td className="hidden px-5 py-3 sm:table-cell">{l.agent?.name ?? <span className="text-warn">Unassigned</span>}</td>
                   <td className="px-5 py-3"><Badge tone={TONE[l.status]}>{l.status}</Badge></td>
@@ -133,7 +134,7 @@ function LeadsPage() {
             <div>
               <DialogTitle>{detail.lead.contactName}</DialogTitle>
               <DialogDescription>
-                {detail.lead.source.replace("_", " ")} · {new Date(detail.lead.createdAt).toLocaleString("en-US")}
+                {SOURCE_LABEL[detail.lead.source] ?? detail.lead.source} · {new Date(detail.lead.createdAt).toLocaleString("en-US")}
                 {detail.lead.property && <> · <Link href={`/listings/${detail.lead.property.slug}`} target="_blank" className="underline">{detail.lead.property.title}</Link></>}
               </DialogDescription>
               <div className="mt-5 flex flex-wrap gap-4 text-sm">

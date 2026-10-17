@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { contextFor, requireCustomer } from "@/lib/server/auth";
+import { contextFor, requireCustomer, assertEmailVerified } from "@/lib/server/auth";
 import { withDb } from "@/lib/server/db";
 import { assertUuid, handler, notFound, parseBody } from "@/lib/server/http";
 
@@ -15,6 +15,7 @@ export const GET = handler(async (request: Request) => {
 
 export const POST = handler(async (request: Request) => {
   const viewer = await requireCustomer(request);
+  assertEmailVerified(viewer);
   const input = await parseBody(request, schema);
   const row = await withDb(contextFor(viewer), (db) =>
     db.one<{ id: string }>(

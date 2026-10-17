@@ -47,7 +47,7 @@ groups:
           runbook: docs/runbooks.md#high-error-rate
       - alert: SuretteSlowRequests
         expr: |
-          histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket{route!~"/api/events|/api/agent/concierge|/api/properties/upload"}[10m]))) > 1.5
+          histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket{route!~"/api/events|/api/agent/assistant|/api/properties/upload"}[10m]))) > 1.5
         for: 10m
         labels: { severity: warning }
         annotations:

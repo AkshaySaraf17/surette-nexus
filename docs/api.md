@@ -22,6 +22,12 @@ with status 400/401/403/404/409/413/415/422/429. Authentication is the `sn_sessi
 | `POST /auth/login` | public | `{ email, password, audience: "customer" \| "staff" }` |
 | `POST /auth/signup` | public | Customer account (requires privacy acknowledgement) |
 | `POST /auth/logout`, `GET /auth/me`, `GET /auth/session` | any | Session management |
+| `POST /auth/verify` | public | `{ token }` from the confirmation email |
+| `POST /auth/verify/resend` | customer | New confirmation link (3 per hour) |
+| `POST /auth/password/forgot` | public | `{ email }`; always the same answer |
+| `POST /auth/password/reset` | public | `{ token, password }`; signs out other sessions |
+| `GET /auth/providers` | public | `{ google: boolean }` |
+| `GET /auth/google/start`, `GET /auth/google/callback` | public | Continue with Google (redirects) |
 
 ## Listings, showings, collections
 | Route | Access | Purpose |
@@ -56,10 +62,10 @@ with status 400/401/403/404/409/413/415/422/429. Authentication is the `sn_sessi
 | `POST /dual-move/analyze` | public | Dual-Move calculation (+ optional local-AI explanation) |
 | `/dual-move/scenarios…`, `POST /dual-move/share` | customer | Save scenarios; share with an agent |
 
-## Concierge, market, analytics
+## AI assistant, market, analytics
 | Route | Access | Purpose |
 | --- | --- | --- |
-| `POST /agent/concierge` | public | Streaming concierge |
+| `POST /agent/assistant` | public | Streaming AI assistant |
 | `POST /agent/ops` | staff | Portal assistant |
 | `GET /market` | public | Market series with provenance (FRED + government datasets, with margins of error) |
 | `GET /market/datasets` | public | Government dataset provenance: agency, source file URLs, SHA-256, retrieval time |

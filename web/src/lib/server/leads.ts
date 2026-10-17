@@ -6,7 +6,7 @@ import { publishEvent } from "./events";
 
 /**
  * Lead intake. Leads are created only after a person explicitly asks for help
- * (contact form, showing request, concierge hand-off, Dual-Move "send to agent")
+ * (contact form, showing request, AI assistant hand-off, Dual-Move "send to agent")
  * and ticks the contact-consent box. Anonymous browsing is never attached.
  *
  * Duplicate protection: the same email (or phone) asking about the same property
@@ -14,7 +14,7 @@ import { publishEvent } from "./events";
  * creating another one, so agents don't receive duplicate leads.
  */
 
-export type LeadSource = "concierge" | "contact_form" | "showing_request" | "dual_move" | "signup" | "manual" | "import";
+export type LeadSource = "ai_assistant" | "contact_form" | "showing_request" | "dual_move" | "signup" | "manual" | "import";
 
 export interface LeadInput {
   source: LeadSource;
