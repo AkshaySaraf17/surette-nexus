@@ -41,6 +41,8 @@ docker compose exec web npm run admin:create -- --email you@example.com --name "
   and put receiver secrets in `deploy/observability/alertmanager/secrets/`.
 - `--profile ai`: Ollama. Set `OLLAMA_URL=http://ollama:11434` and pull a model with
   `docker compose exec ollama ollama pull llama3.2:3b`.
+- No email provider (demo): set `ACCOUNT_EMAILS=off` in `.env`. Sign-ups are confirmed at once and
+  "Forgot password?" is hidden.
 - Email: the stack includes Mailpit (test inbox at http://localhost:8025). For real delivery set `SMTP_HOST`,
   `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_SECURE` and `MAIL_FROM` (any SMTP provider; in production the
   worker refuses to send without `SMTP_HOST`).

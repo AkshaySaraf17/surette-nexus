@@ -43,10 +43,11 @@ export function AuthForm() {
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [google, setGoogle] = useState(false);
+  const [emailOn, setEmailOn] = useState(true);
   const googleError = GOOGLE_ERRORS[params.get("error") ?? ""];
 
   useEffect(() => {
-    api<{ google: boolean }>("/api/auth/providers").then((p) => setGoogle(p.google)).catch(() => undefined);
+    api<{ google: boolean; email: boolean }>("/api/auth/providers").then((p) => { setGoogle(p.google); setEmailOn(p.email); }).catch(() => undefined);
   }, []);
   const nextParam = params.get("next");
   const googleHref = `/api/auth/google/start${nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//") ? `?next=${encodeURIComponent(nextParam)}` : ""}`;
@@ -129,7 +130,7 @@ export function AuthForm() {
         <Field label="Password" htmlFor="a-password" error={errors.password} hint={mode === "signup" ? "At least 10 characters, with a letter and a number." : undefined}>
           <Input id="a-password" type="password" value={form.password} onChange={set("password")} autoComplete={mode === "signin" ? "current-password" : "new-password"} required aria-invalid={Boolean(errors.password)} />
         </Field>
-        {mode === "signin" && (
+        {mode === "signin" && emailOn && (
           <p className="-mt-1 text-right text-[0.8125rem]">
             <Link href="/forgot-password" className="underline underline-offset-4">Forgot password?</Link>
           </p>

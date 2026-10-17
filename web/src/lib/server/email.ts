@@ -18,6 +18,21 @@ import { childLogger, mask } from "./logger";
  */
 const log = childLogger("email");
 
+/**
+ * Whether the site sends account emails (sign-up confirmation, password reset).
+ * ACCOUNT_EMAILS=off switches them off (e.g. a demo with no mail provider): new customers are
+ * confirmed straight away and "Forgot password?" is hidden. Unset, emails are on in development
+ * (Mailpit) and in production only when SMTP_HOST is configured.
+ */
+export function accountEmailsEnabled(): boolean {
+  const flag = process.env.ACCOUNT_EMAILS?.trim().toLowerCase();
+  if (flag === "off") return false;
+  if (flag === "on") return true;
+  return process.env.NODE_ENV !== "production" || Boolean(process.env.SMTP_HOST?.trim());
+}
+
+export const EMAIL_OFF_MESSAGE = "Password reset by email isn't available on this demo site. Contact the office and we'll reset it for you.";
+
 export interface EmailMessage {
   to: string;
   subject: string;

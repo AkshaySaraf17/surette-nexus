@@ -50,6 +50,11 @@ link cancels older ones. Emails are queued in the same database transaction and 
 SMTP (with retries). Locally they land in **Mailpit** at http://localhost:8025 (free, `brew install mailpit`
 or the `mailpit` service in Docker Compose).
 
+**Running without email (demo):** set `ACCOUNT_EMAILS=off`. New customers are confirmed at once,
+"Forgot password?" is hidden (the API answers `503 EMAIL_OFF`, the same for every email), and the owner
+resets customer passwords if needed. In production, emails are also off automatically when no
+`SMTP_HOST` is configured.
+
 ### Setting up "Continue with Google" (free)
 
 1. Google Cloud Console → APIs & Services → **OAuth consent screen**: External, app name "Surette Real Estate",

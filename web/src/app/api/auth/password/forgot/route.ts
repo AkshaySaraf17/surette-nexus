@@ -1,8 +1,8 @@
 import { issueToken, siteUrl } from "@/lib/server/auth-tokens";
 import { withSystemDb } from "@/lib/server/db";
-import { queueEmail } from "@/lib/server/email";
+import { accountEmailsEnabled, EMAIL_OFF_MESSAGE, queueEmail } from "@/lib/server/email";
 import { passwordResetMessage } from "@/lib/server/email-templates";
-import { handler, parseBody, rateLimit } from "@/lib/server/http";
+import { ApiError, handler, parseBody, rateLimit } from "@/lib/server/http";
 import { hit } from "@/lib/server/limiter";
 import { forgotPasswordSchema } from "@/lib/validation";
 
@@ -12,6 +12,8 @@ import { forgotPasswordSchema } from "@/lib/validation";
  * used to discover who's registered. Team accounts are reset by the owner in Portal → Team.
  */
 export const POST = handler(async (request: Request) => {
+  // Same answer for every email, so this reveals nothing about who has an account.
+  if (!accountEmailsEnabled()) throw new ApiError(503, "EMAIL_OFF", EMAIL_OFF_MESSAGE);
   await rateLimit(request, "password-forgot", 5, 60 * 60_000);
   const { email } = await parseBody(request, forgotPasswordSchema);
   // At most 3 emails per address per hour. Over the limit we quietly skip sending (a 429 here

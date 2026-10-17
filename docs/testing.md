@@ -54,6 +54,7 @@ cd ../mobile && npx tsc --noEmit
 | Analytics | Unit + E2E | `unit/analytics-allowlist`, `e2e/analytics/tracking` | No personal data stored; opt-in, decline and GPC respected; test traffic cleaned up |
 | Sign-in and roles | E2E | `e2e/auth/sign-in` | Two entrances, wrong-portal refusal, role boundaries |
 | Email confirmation, password reset | Integration + E2E (Mailpit) | `integration/customer-auth`, `e2e/auth/account-recovery` | Real emails read from Mailpit; saving blocked until confirmed; links work once and expire; reset signs out other sessions; same answer for unknown emails |
+| Emails switched off | Unit + E2E | `unit/account-emails`, `e2e/auth/account-recovery` | `ACCOUNT_EMAILS=off`: sign-up confirmed at once, no emails sent, Forgot password hidden, reset API refuses |
 | Continue with Google | Unit + Integration + E2E | `unit/google-oauth`, `integration/customer-auth` | PKCE; ID tokens with the wrong audience, issuer, nonce, key, expiry or unverified email are refused; account linking rules; hidden until configured |
 | Security | Integration + E2E | `integration/rls`, `e2e/security/api-security` | Row-level security, CSRF block, 401/403/404 boundaries, security headers |
 | Accessibility | E2E (axe-core) | `e2e/accessibility/a11y` | No serious or critical WCAG 2.1 AA violations on 15 pages; the home page is audited section by section as it scrolls |
@@ -72,7 +73,7 @@ cd ../mobile && npx tsc --noEmit
 
 ## Latest results (2026-10-16, this laptop)
 
-- Vitest: **100 passed**, 7 skipped (the live contract tests and the Redis tests, which need `REDIS_URL`).
+- Vitest: **103 passed**, 7 skipped (the live contract tests and the Redis tests, which need `REDIS_URL`).
 - Playwright: **55 passed** on the dev server (with the worker running and Mailpit receiving the emails). Against the Docker stack through nginx: site, accessibility,
   health, WebSocket and security tests pass (sign-in-heavy groups must be run a minute apart: the gateway allows
   10 sign-ins per minute per address, by design).

@@ -45,6 +45,11 @@ async function anyPropertyId() {
 const save = (page: Page, propertyId: string) => page.request.post("/api/collections/save", { data: { propertyId, saved: true }, headers });
 
 test.describe.serial("email verification and password reset", () => {
+  test.beforeAll(async ({ request }) => {
+    const providers = await (await request.get("/api/auth/providers")).json();
+    test.skip(!providers.email, "Account emails are switched off on this server (ACCOUNT_EMAILS=off)");
+  });
+
   test("sign-up sends a confirmation link; saving unlocks after clicking it", async ({ page }) => {
     await page.goto("/sign-in?mode=signup");
     await page.getByLabel("Full name").fill(NEW_USER.name);
@@ -110,6 +115,18 @@ test.describe.serial("email verification and password reset", () => {
     await page.getByRole("button", { name: "Email me a reset link" }).click();
     await expect(page.getByRole("status")).toContainText("If an account exists");
   });
+});
+
+test("with account emails off, sign-up is confirmed at once and Forgot password is hidden", async ({ page, request }) => {
+  const providers = await (await request.get("/api/auth/providers")).json();
+  test.skip(providers.email, "Account emails are on on this server");
+  await page.goto("/sign-in");
+  await expect(page.getByRole("button", { name: "Sign in", exact: true })).toBeVisible();
+  await page.waitForLoadState("networkidle");
+  await expect(page.getByRole("link", { name: "Forgot password?" })).toHaveCount(0);
+  const res = await request.post("/api/auth/password/forgot", { data: { email: "someone@example.com" }, headers });
+  expect(res.status()).toBe(503);
+  expect((await res.json()).error.code).toBe("EMAIL_OFF");
 });
 
 test("Google sign-in stays hidden and refuses to start until it's configured", async ({ page, request }) => {

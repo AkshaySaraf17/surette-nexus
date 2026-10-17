@@ -30,6 +30,7 @@ x-app: &app
     CENSUS_API_KEY: ${CENSUS_API_KEY:-}
     EMBEDDED_WORKER: "0"
     # Email: Mailpit (free test inbox, http://localhost:8025) unless real SMTP settings are given.
+    ACCOUNT_EMAILS: ${ACCOUNT_EMAILS:-on}
     SMTP_HOST: ${SMTP_HOST:-mailpit}
     SMTP_PORT: ${SMTP_PORT:-1025}
     SMTP_USER: ${SMTP_USER:-}
