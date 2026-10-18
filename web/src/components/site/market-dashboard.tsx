@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/client-api";
 import { track } from "@/lib/analytics-client";
 import { cn } from "@/lib/utils";
+import { MarketLab } from "./market-lab";
 
 /**
  * Customer market intelligence. Every chart is drawn from stored public observations:
@@ -270,6 +271,8 @@ export function MarketDashboard() {
           <p className="mt-3 text-sm text-ink-2">Not loaded yet. No estimates are shown in its place.</p>
         )}
       </section>
+
+      <MarketLab />
 
       {datasets.length > 0 && (
         <section className="rounded-[28px] bg-paper p-6 ring-1 ring-line" aria-labelledby="sources-h">

@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { closeDb, db } from "../helpers";
+import { closeDb, db, ownClientIp } from "../helpers";
 
 /** Retries never duplicate (Idempotency-Key) and abuse is throttled (429 + Retry-After). */
 const RUN = Date.now().toString(36);
@@ -10,7 +10,8 @@ test.afterAll(async () => {
 });
 
 test("a repeated Idempotency-Key replays the first response instead of creating a duplicate", async ({ request }) => {
-  const headers = { "Idempotency-Key": `e2e-${RUN}-lead`, "X-Real-IP": `10.1.${RUN.length}.1`, Origin: "http://localhost:3100" };
+  // A fresh address each run: the contact form allows 6 leads per hour per address.
+  const headers = { "Idempotency-Key": `e2e-${RUN}-lead`, ...ownClientIp(1), Origin: "http://localhost:3100" };
   const data = { source: "contact_form", contactName: `E2E ${RUN} idem`, contactEmail: `e2e+${RUN}@example.com`, message: "Idempotency test", consentContact: true };
   const first = await request.post("/api/leads", { data, headers });
   const second = await request.post("/api/leads", { data, headers });

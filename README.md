@@ -33,7 +33,7 @@ surette-nexus/
 ├── deploy/               nginx gateway · Kubernetes (kustomize) · Prometheus, Alertmanager, Grafana, Loki
 ├── demo-site/            Fictional brokerage used to test analytics (served at /demo-site/, synthetic data)
 ├── docs/                 Documentation
-├── ml/                   AI service (Python: FastAPI + LlamaIndex): RAG, embeddings, evaluation
+├── ml/                   Python: AI service (FastAPI + LlamaIndex RAG), Market Lab (pandas, scikit-learn, MLflow, Streamlit), notebooks
 ├── integrations/         Patch for the FastAPI landlord-dispatcher (not applied automatically)
 ├── mobile/               Expo team app
 ├── scripts/              dev.sh (start everything), db.sh (local Postgres), ml-setup.sh (AI service), docker-demo.sh

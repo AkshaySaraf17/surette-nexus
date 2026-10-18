@@ -11,6 +11,12 @@ pythonpath = ["."]
 [tool.ruff]
 line-length = 200
 target-version = "py312"
+# Generated, executed report notebooks (see notebooks/build_notebooks.py) use notebook style.
+extend-exclude = ["notebooks/*.ipynb"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP"]
+
+[tool.ruff.lint.per-file-ignores]
+# Notebook cell sources and prose live in long string literals.
+"notebooks/build_notebooks.py" = ["E501"]

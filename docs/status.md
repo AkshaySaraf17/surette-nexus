@@ -17,6 +17,7 @@ recorded manual run, not just written.
 | Drafts: approval required before "sent" | API smoke run |
 | AI assistant: search with match reasons, relaxation, save search, fair-housing refusal | `assistant-intent.test.ts`, API smoke run |
 | Meaning-based listing search (pgvector + local embeddings, fused with keywords) | `ml/eval/retrieval_eval.py` (nDCG@5 0.87 on 15 labelled queries), `ai-search.test.ts`, live assistant runs |
+| Market Lab on /market: similar towns, value vs incomes and rents, price-index outlook (529 Maine towns, Census + FHFA) | `ml/tests/test_market_lab.py`, `market-lab.test.ts`, nested cross-validation and backtests in `docs/market-lab.md` |
 | Ask the documents (RAG with page citations and answer checks) on deal pages | `ml/tests`, `ai-search.test.ts`, Playwright `ask-documents.spec.ts` (real pipeline, local models) |
 | Dual-Move Copilot math and scenarios | `dual-move.test.ts` |
 | Market data from FRED (17 series) | Live refresh run |

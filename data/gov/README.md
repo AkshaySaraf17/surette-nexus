@@ -6,8 +6,9 @@ API keys. They are U.S. Government works, so public domain.
 | File | Agency | What | Geographies |
 | --- | --- | --- | --- |
 | `acs5.csv` | U.S. Census Bureau | American Community Survey 2020–2024 5-year estimates: population, median household income, median home value, median gross rent, homeownership rate, each with its margin of error | U.S., Maine, Kennebec and Somerset counties, Waterville, Augusta, Winslow, Oakland, Sidney, Belgrade, Fairfield |
-| `bls_laus.csv` | U.S. Bureau of Labor Statistics | Local Area Unemployment Statistics, monthly unemployment rate (not seasonally adjusted), last 10 years | U.S., Maine, Kennebec and Somerset counties |
+| `bls_laus.csv` | U.S. Bureau of Labor Statistics | Local Area Unemployment Statistics, monthly unemployment rate, last 10 years (counties and U.S. not seasonally adjusted; the statewide Maine series `LASST…` is seasonally adjusted) | U.S., Maine, Kennebec and Somerset counties |
 | `census_bps.csv` | U.S. Census Bureau | Building Permits Survey: new housing units authorized per year, last 10 years | Maine, Kennebec and Somerset counties |
+| `acs5_maine_towns.csv` | U.S. Census Bureau | ACS 2020–2024 5-year estimates for all 529 Maine county subdivisions: population, income, home value, rent, tenure, vacancy, median age, median year built (raw, with Census codes). Used by the Market Lab models (`ml/market_lab`) | Every Maine town |
 | `fhfa_hpi.csv` | Federal Housing Finance Agency | Annual House Price Index (all-transactions, 2000 = 100) | Maine, Kennebec and Somerset counties |
 
 `manifest.json` records, for each dataset, every source file that was downloaded (URL, size,

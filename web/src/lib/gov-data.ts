@@ -99,7 +99,8 @@ const bls = LAUS.map<GovSeriesDef>((l) => ({
   source: "U.S. Bureau of Labor Statistics",
   originalSource: `Local Area Unemployment Statistics (${l.seriesId})`,
   sourceUrl: `https://data.bls.gov/timeseries/${l.seriesId}`,
-  notes: "Not seasonally adjusted, so compare the same month across years. The latest month is preliminary and is revised. October 2025 was never collected (federal government shutdown), so that month is blank.",
+  // BLS series ids: LAU…/LNU… are not seasonally adjusted; LAS… (the statewide series) is.
+  notes: `${l.seriesId.startsWith("LAS") ? "Seasonally adjusted by BLS (the county and U.S. lines are not), so it doesn't show Maine's winter rise." : "Not seasonally adjusted, so compare the same month across years."} The latest month is preliminary and is revised. October 2025 was never collected (federal government shutdown), so that month is blank.`,
 }));
 
 export const BPS_GEOS = [

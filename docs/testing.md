@@ -59,6 +59,7 @@ cd ../mobile && npx tsc --noEmit
 | Emails switched off | Unit + E2E | `unit/account-emails`, `e2e/auth/account-recovery` | `ACCOUNT_EMAILS=off`: sign-up confirmed at once, no emails sent, Forgot password hidden, reset API refuses |
 | Ask the documents (RAG) | Python unit + Integration + E2E | `ml/tests`, `integration/ai-search`, `e2e/portal/ask-documents` | Chunking keeps pages; answers must cite real passages and only use numbers found in them; prompt-injection text ignored; model failure shows passages; agents can't retrieve other agents' passages; customers refused. The E2E test runs the real pipeline (worker → embeddings → pgvector → local model) and skips where the AI service isn't configured |
 | Semantic listing search | Evaluation + Integration | `ml/eval/retrieval_eval.py`, `integration/ai-search` | Recall@3, MRR and nDCG@5 on 15 hand-labelled queries (chose the embedding model); draft listings hidden from search; re-embedding only on change |
+| Market Lab | Python unit + Unit | `ml/tests/test_market_lab.py`, `unit/market-lab` | Cleaning rules (Census codes, tiny places, unreliable estimates), features, forecasts use only past data, neighbours exclude the town itself, BM25 and ranking metrics; the results file matches the page's schema; "higher/lower" only beyond the model's typical error |
 | Continue with Google | Unit + Integration + E2E | `unit/google-oauth`, `integration/customer-auth` | PKCE; ID tokens with the wrong audience, issuer, nonce, key, expiry or unverified email are refused; account linking rules; hidden until configured |
 | Security | Integration + E2E | `integration/rls`, `e2e/security/api-security` | Row-level security, CSRF block, 401/403/404 boundaries, security headers |
 | Accessibility | E2E (axe-core) | `e2e/accessibility/a11y` | No serious or critical WCAG 2.1 AA violations on 15 pages; the home page is audited section by section as it scrolls |
@@ -77,9 +78,9 @@ cd ../mobile && npx tsc --noEmit
 
 ## Latest results (2026-10-16, this laptop)
 
-- Vitest: **108 passed**, 7 skipped (the live contract tests and the Redis tests, which need `REDIS_URL`).
+- Vitest: **111 passed**, 7 skipped (the live contract tests and the Redis tests, which need `REDIS_URL`).
 - Playwright: **57 passed** on the dev server (with the worker, the AI service and Ollama running, and Mailpit receiving the emails).
-- AI service (Python): **18 passed** (`cd ml && .venv/bin/python -m pytest`). Against the Docker stack through nginx: site, accessibility,
+- Python (`ml/`): **25 passed** (`cd ml && .venv/bin/python -m pytest`). Against the Docker stack through nginx: site, accessibility,
   health, WebSocket and security tests pass (sign-in-heavy groups must be run a minute apart: the gateway allows
   10 sign-ins per minute per address, by design).
 - Load test against the production build (25 concurrent clients, 15 s each, Apple Silicon laptop,

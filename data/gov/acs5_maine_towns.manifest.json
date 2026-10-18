@@ -1,0 +1,56 @@
+{
+  "dataset": "acs5_maine_towns",
+  "title": "American Community Survey 2020\u20132024 5-year estimates, all Maine county subdivisions",
+  "publisher": "U.S. Census Bureau (public domain)",
+  "retrieved_at": "2026-10-18T22:54:15+00:00",
+  "notes": "Raw values as published. Negative numbers are Census codes for 'not available' and are cleaned in market_lab/data.py, never here.",
+  "sources": [
+    {
+      "url": "https://www2.census.gov/programs-surveys/acs/summary_file/2024/table-based-SF/documentation/Geos20245YR.txt",
+      "bytes": 90707242,
+      "sha256": "b87a1d1a4db9f826d0d133d20cbf7d011932f9ec2cfa74eacf8c9cf387aea344"
+    },
+    {
+      "url": "https://www2.census.gov/programs-surveys/acs/summary_file/2024/table-based-SF/data/5YRData/acsdt5y2024-b01003.dat",
+      "bytes": 18313708,
+      "sha256": "38d1a992bb058d184009b10b9b34987279aee575e4323165cfb5706c69b6ca90"
+    },
+    {
+      "url": "https://www2.census.gov/programs-surveys/acs/summary_file/2024/table-based-SF/data/5YRData/acsdt5y2024-b19013.dat",
+      "bytes": 17917916,
+      "sha256": "b25a176b0e6c339b6f3a2a0d3d8446bf06f5f080b4395993ec9a8313efb1c229"
+    },
+    {
+      "url": "https://www2.census.gov/programs-surveys/acs/summary_file/2024/table-based-SF/data/5YRData/acsdt5y2024-b25077.dat",
+      "bytes": 18496426,
+      "sha256": "89eb2153764a2330b23959d8bbc29b3a8f3016f087b990f2a8ea0d5096d9a816"
+    },
+    {
+      "url": "https://www2.census.gov/programs-surveys/acs/summary_file/2024/table-based-SF/data/5YRData/acsdt5y2024-b25064.dat",
+      "bytes": 17272062,
+      "sha256": "b36e6dc1fcef36b8b307d31b37517b64c80d8b9c70d48c9b1894242860f42eb0"
+    },
+    {
+      "url": "https://www2.census.gov/programs-surveys/acs/summary_file/2024/table-based-SF/data/5YRData/acsdt5y2024-b25003.dat",
+      "bytes": 26901770,
+      "sha256": "68e963e1ed60fcf6b0658579cefc6498b7a9eb780b9f3e87fd1b9775c4d4ac6c"
+    },
+    {
+      "url": "https://www2.census.gov/programs-surveys/acs/summary_file/2024/table-based-SF/data/5YRData/acsdt5y2024-b25002.dat",
+      "bytes": 23400695,
+      "sha256": "eb98debfe8e8533e9a8e647a8c5dca5dbe11401c4de4e4449b4a2ba7dc75620f"
+    },
+    {
+      "url": "https://www2.census.gov/programs-surveys/acs/summary_file/2024/table-based-SF/data/5YRData/acsdt5y2024-b01002.dat",
+      "bytes": 26666521,
+      "sha256": "04784637609550868d9da7321e7a947b34e0a10b654dbf6d344599f97f8de7f8"
+    },
+    {
+      "url": "https://www2.census.gov/programs-surveys/acs/summary_file/2024/table-based-SF/data/5YRData/acsdt5y2024-b25035.dat",
+      "bytes": 15421817,
+      "sha256": "a08e68670c401abd470fc8084efc3718eba9b5cb52ff612c2442d67d5665971b"
+    }
+  ],
+  "csv_sha256": "0a77a0b58a96fc70e4ade18e27df2132ed3d944fb11c9b25edfca7885925856c",
+  "rows": 529
+}

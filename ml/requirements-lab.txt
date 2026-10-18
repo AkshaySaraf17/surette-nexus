@@ -1,0 +1,16 @@
+# Market Lab and evaluation (analysis only; not installed in the service image)
+numpy==2.3.5
+pandas==2.3.3
+psycopg==3.2.13
+psycopg-binary==3.2.13
+scikit-learn==1.7.2
+scipy==1.18.1
+matplotlib==3.10.9
+seaborn==0.13.2
+plotly==6.3.1
+mlflow==3.4.0
+SQLAlchemy==2.0.55
+streamlit==1.50.0
+nbformat==5.10.4
+nbclient==0.10.4
+ipykernel==6.30.1
