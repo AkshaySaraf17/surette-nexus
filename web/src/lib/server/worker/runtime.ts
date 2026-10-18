@@ -1,5 +1,6 @@
 import { createServer, type Server } from "node:http";
 import { Client } from "pg";
+import { runAiIndex } from "../ai-index";
 import { purgeExpired } from "../analytics";
 import { purgeExpiredTokens } from "../auth-tokens";
 import { sendEmail, type EmailMessage } from "../email";
@@ -44,6 +45,9 @@ const HANDLERS: Record<string, Handler> = {
   "analytics.purge": async () => {
     log.info({ removed: await purgeExpired() }, "analytics events purged");
   },
+  "ai.index": async () => {
+    await runAiIndex();
+  },
   "maintenance.cleanup": async () => {
     const [counters, keys, jobs, outbox, tokens] = await Promise.all([
       purgeRateLimitCounters(),
@@ -59,6 +63,8 @@ const HANDLERS: Record<string, Handler> = {
 /** Recurring work: [type, every N ms, dedupe period ms]. */
 const SCHEDULES: { type: string; everyMs: number; queue?: string }[] = [
   { type: "maintenance.cleanup", everyMs: 60 * 60_000, queue: "maintenance" },
+  // Embeds new documents and changed listings (cheap when nothing changed: hashes are compared first).
+  { type: "ai.index", everyMs: 5 * 60_000 },
   { type: "analytics.purge", everyMs: 24 * 60 * 60_000, queue: "maintenance" },
   { type: "market.refresh", everyMs: 24 * 60 * 60_000, queue: "maintenance" },
   // Census, BLS, FHFA publish monthly/annually; a monthly check is plenty and polite.

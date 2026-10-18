@@ -129,6 +129,13 @@ export function findCandidates(pages: { page: number; text: string }[]): Extract
   return out;
 }
 
+/** Text of a document by page (PDF and plain text; images have no text in this version). */
+export async function documentPages(mime: string, buf: Buffer): Promise<{ page: number; text: string }[]> {
+  if (mime === "application/pdf") return pdfText(buf);
+  if (mime === "text/plain") return [{ page: 1, text: buf.toString("utf8").replace(/\s+/g, " ") }];
+  return [];
+}
+
 export async function extractCandidates(mime: string, buf: Buffer): Promise<Extracted[]> {
   try {
     if (mime === "application/pdf") return findCandidates(await pdfText(buf));

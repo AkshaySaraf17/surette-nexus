@@ -28,7 +28,7 @@ fi
 # Local secrets for this computer only (never committed).
 if [ ! -f .env ]; then
   rnd() { openssl rand -hex "$1" 2>/dev/null || head -c "$1" /dev/urandom | od -An -tx1 | tr -d ' \n'; }
-  printf "JWT_SECRET=%s\nMETRICS_TOKEN=%s\nPOSTGRES_PASSWORD=%s\n" "$(rnd 32)" "$(rnd 16)" "$(rnd 12)" > .env
+  printf "JWT_SECRET=%s\nMETRICS_TOKEN=%s\nPOSTGRES_PASSWORD=%s\nML_SERVICE_TOKEN=%s\n" "$(rnd 32)" "$(rnd 16)" "$(rnd 12)" "$(rnd 32)" > .env
   echo "Created .env with random local secrets."
 fi
 

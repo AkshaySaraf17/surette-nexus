@@ -1,0 +1,20 @@
+{
+  "description": "Hand-labelled evaluation set for listing search. Each query lists the listings a person would expect, judged only from the listing text (title, description, features). Demo listings; update when real inventory replaces them.",
+  "queries": [
+    { "q": "somewhere peaceful near water where I can kayak", "relevant": ["messalonskee-lake-house-oakland", "snow-pond-shingle-style-oakland"] },
+    { "q": "room for horses and a big vegetable garden", "relevant": ["orchard-hill-farmhouse-sidney"] },
+    { "q": "walk to coffee shops and restaurants downtown", "relevant": ["silver-street-italianate-waterville", "kennebec-federal-colonial-waterville", "riverwalk-loft-waterville"] },
+    { "q": "historic home with original details and fireplaces", "relevant": ["kennebec-federal-colonial-waterville", "silver-street-italianate-waterville", "queen-anne-on-park-street-waterville"] },
+    { "q": "a garage for my cars and space for woodworking", "relevant": ["red-barn-retreat-winslow"] },
+    { "q": "apartment to rent without a car, laundry in the unit", "relevant": ["riverwalk-loft-waterville"] },
+    { "q": "sunset views over a lake", "relevant": ["messalonskee-lake-house-oakland"] },
+    { "q": "family neighborhood close to an elementary school", "relevant": ["queen-anne-on-park-street-waterville"] },
+    { "q": "lots of land, privacy and mountain views", "relevant": ["orchard-hill-farmhouse-sidney"] },
+    { "q": "Victorian with a turret and a big porch", "relevant": ["queen-anne-on-park-street-waterville"] },
+    { "q": "move-in ready, recently updated", "relevant": ["red-barn-retreat-winslow", "silver-street-italianate-waterville"] },
+    { "q": "big house with lots of bedrooms for a large family", "relevant": ["silver-street-italianate-waterville", "kennebec-federal-colonial-waterville"] },
+    { "q": "close to Colby College", "relevant": ["queen-anne-on-park-street-waterville", "kennebec-federal-colonial-waterville"] },
+    { "q": "boat access for my motorboat", "relevant": ["snow-pond-shingle-style-oakland", "messalonskee-lake-house-oakland"] },
+    { "q": "rental income from an in-law apartment", "relevant": ["silver-street-italianate-waterville"] }
+  ]
+}

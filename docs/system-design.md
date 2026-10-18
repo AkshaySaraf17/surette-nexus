@@ -44,10 +44,11 @@ flowchart LR
     WEB["web — Next.js<br/>pages + REST API + SSE"]
     RT["realtime — WebSocket server"]
     WK["worker — outbox relay,<br/>job queue, scheduler"]
+    ML["ml — AI service (Python)<br/>chunking · embeddings · checked answers"]
   end
   subgraph Data
     PGB[PgBouncer<br/>transaction pooling]
-    PG[(PostgreSQL primary<br/>RLS · outbox · jobs)]
+    PG[(PostgreSQL primary<br/>RLS · outbox · jobs · pgvector)]
     PGR[(Read replicas)]
     R[(Redis<br/>rate limits · cache)]
     S[(Object/volume storage<br/>photos · documents)]
@@ -79,6 +80,8 @@ flowchart LR
   WEB -- LISTEN --> PG
   PG -. streaming replication .-> PGR
   WEB -. circuit breakers .-> O & D
+  WEB & WK -. circuit breakers .-> ML
+  ML --> O
   P -. scrape .-> WEB & RT & WK
   G --> P & L
 ```
@@ -91,6 +94,7 @@ flowchart LR
 | **gateway** | TLS, routing, rate limits, micro-cache, request ids | cache (disposable) | Cloud LB / ingress controller replicas |
 | **PostgreSQL** | Source of truth, RLS, outbox, queue, idempotency keys | durable | Vertical first; read replicas; partitioning for analytics |
 | **PgBouncer** | Connection pooling (transaction mode) | none | 2 replicas |
+| **ml** (FastAPI + LlamaIndex) | Chunking, embeddings, cited answers with checks; holds no data, never sees rows the user can't | none | Replicas behind a Service; CPU-bound on the model server (Ollama), which scales separately |
 | **Redis** (optional) | Shared rate-limit counters, shared cache, invalidation pub/sub | disposable | Single node is plenty; managed Redis for HA |
 
 Code map: `web/src/lib/server/*` (one module per concern, named below), `web/scripts/worker.ts`,
@@ -268,6 +272,7 @@ cool-down. *Half-open* lets one trial call through. Every call also gets a timeo
 | Census ACS | `census` | 5 / 5 min / 20 s | Same |
 | Landlord dispatcher | `dispatcher` | 4 / 30 s / 12 s | "Temporarily unavailable — call the office" (4xx answers don't count as failures) |
 | Each webhook host | `webhook:<host>` | 5 / 60 s / 8 s | Job retried later with backoff |
+| AI service (`ml/`) | `ml:/v1/embed`, `ml:/v1/chunk`, `ml:/v1/answer` | 4 / 30 s / 60–90 s | Keyword search; documents show the most relevant passages instead of an answer |
 | SMTP (account emails) | `smtp` | 5 / 60 s / 20 s | Email job retried later with backoff |
 | Google sign-in token exchange | `google` | 5 / 60 s / 10 s | Customer sees "Google sign-in didn't complete" and can use email |
 

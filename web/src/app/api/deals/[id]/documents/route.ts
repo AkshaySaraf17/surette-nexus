@@ -3,6 +3,7 @@ import { withDb } from "@/lib/server/db";
 import { MAX_DOCUMENT_BYTES, documentKey, extractCandidates, sniffType, storeDocument, deleteDocument } from "@/lib/server/documents";
 import { ApiError, assertUuid, handler, notFound } from "@/lib/server/http";
 import { multipartFingerprint, withIdempotency } from "@/lib/server/idempotency";
+import { enqueueNow } from "@/lib/server/jobs";
 
 /** POST /api/deals/:id/documents — multipart { file, label, extract? } (PDF, JPEG, PNG or text, ≤ 25 MB). */
 export const POST = handler(async (request: Request, { params }: RouteContext<"/api/deals/[id]/documents">) => {
@@ -47,6 +48,8 @@ export const POST = handler(async (request: Request, { params }: RouteContext<"/
       await deleteDocument(key);
       throw error;
     }
+    // Make it searchable in "Ask the documents" within seconds (deduped: one pending index job at a time).
+    await enqueueNow("ai.index", {}, { dedupeKey: "ai.index" }).catch(() => undefined);
     return Response.json({ id: docId, extracted }, { status: 201 });
   });
 });

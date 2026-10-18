@@ -36,6 +36,12 @@ export async function waitFor<T>(fn: () => Promise<T>, ok: (v: T) => boolean, ms
 }
 
 export const BASE = process.env.E2E_BASE_URL ?? "http://localhost:3100";
+
+/**
+ * A separate client address for a spec file (use with test.use({ extraHTTPHeaders })), so its sign-ins
+ * don't use up the per-address login limit (20 per 15 min) shared by the rest of the suite.
+ */
+export const ownClientIp = (subnet: number) => ({ "X-Real-IP": `10.${subnet}.${Math.floor(Math.random() * 250)}.${Math.floor(Math.random() * 250)}` });
 export const ACCOUNTS = {
   owner: { email: "owner@surette.test", password: "surette-owner-2026", audience: "staff" },
   agent: { email: "agent@surette.test", password: "surette-agent-2026", audience: "staff" },

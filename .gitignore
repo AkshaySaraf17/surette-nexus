@@ -30,3 +30,4 @@ deploy/observability/alertmanager/secrets/*
 # Local AI-assistant tooling config (kept out of the repository)
 /CLAUDE.md
 /.claude/
+oracle-ssh-key.pub.txt

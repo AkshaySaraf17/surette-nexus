@@ -1,0 +1,16 @@
+[project]
+name = "surette-ml"
+version = "1.0.0"
+description = "Surette Nexus AI service: RAG, embeddings, data analysis and models"
+requires-python = ">=3.12"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 200
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]

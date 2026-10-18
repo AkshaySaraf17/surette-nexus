@@ -16,6 +16,8 @@ recorded manual run, not just written.
 | Deal documents: content-type check, extraction with sources, verify and apply | `analytics-documents.test.ts`, API smoke run |
 | Drafts: approval required before "sent" | API smoke run |
 | AI assistant: search with match reasons, relaxation, save search, fair-housing refusal | `assistant-intent.test.ts`, API smoke run |
+| Meaning-based listing search (pgvector + local embeddings, fused with keywords) | `ml/eval/retrieval_eval.py` (nDCG@5 0.87 on 15 labelled queries), `ai-search.test.ts`, live assistant runs |
+| Ask the documents (RAG with page citations and answer checks) on deal pages | `ml/tests`, `ai-search.test.ts`, Playwright `ask-documents.spec.ts` (real pipeline, local models) |
 | Dual-Move Copilot math and scenarios | `dual-move.test.ts` |
 | Market data from FRED (17 series) | Live refresh run |
 | Website analytics on the Surette Nexus site (`nexus-site`): consent, GPC, events stored as production | Playwright `analytics.spec.ts` |

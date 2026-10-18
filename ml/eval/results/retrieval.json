@@ -1,0 +1,31 @@
+{
+  "queries": 15,
+  "listings": 8,
+  "results": {
+    "bm25 (keywords)": {
+      "recall@3": 0.789,
+      "mrr": 0.867,
+      "ndcg@5": 0.77
+    },
+    "dense: nomic-embed-text": {
+      "recall@3": 0.722,
+      "mrr": 0.721,
+      "ndcg@5": 0.705
+    },
+    "hybrid: bm25 + nomic-embed-text": {
+      "recall@3": 0.722,
+      "mrr": 0.715,
+      "ndcg@5": 0.741
+    },
+    "dense: mxbai-embed-large": {
+      "recall@3": 0.756,
+      "mrr": 0.815,
+      "ndcg@5": 0.821
+    },
+    "hybrid: bm25 + mxbai-embed-large": {
+      "recall@3": 0.822,
+      "mrr": 0.88,
+      "ndcg@5": 0.871
+    }
+  }
+}

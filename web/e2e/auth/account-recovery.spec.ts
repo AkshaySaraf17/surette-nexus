@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { BASE, closeDb, db, waitFor } from "../helpers";
+import { BASE, closeDb, db, ownClientIp, waitFor } from "../helpers";
 
 /**
  * Customer account emails, end to end: sign-up → confirmation email → verified; forgot → reset
@@ -10,8 +10,7 @@ const MAILPIT = process.env.MAILPIT_URL ?? "http://localhost:8025";
 const stamp = Date.now();
 const NEW_USER = { name: "E2E Verify Person", email: `e2e-verify-${stamp}@example.com`, password: "first-pass-2026" };
 const headers = { Origin: new URL(BASE).origin };
-// Its own client address, so these sign-ins don't use up the per-address login limit (20 per 15 min) of the rest of the suite.
-test.use({ extraHTTPHeaders: { "X-Real-IP": `10.201.${Math.floor(Math.random() * 250)}.${Math.floor(Math.random() * 250)}` } });
+test.use({ extraHTTPHeaders: ownClientIp(201) });
 
 test.afterAll(async () => {
   await db().query("DELETE FROM users WHERE email LIKE 'e2e-verify-%@example.com'");

@@ -11,6 +11,8 @@ import { stream as aiStream, onlyKnownAmounts } from "./ai";
 import { contextFor } from "./auth";
 import { ANONYMOUS, withDb, withSystemDb } from "./db";
 import { getListingBySlug, listCities, listListings, type ListingFilters } from "./listings";
+import { embedQuery, toVector } from "./ml-client";
+import { fuse } from "./rank";
 import { suggestSlots } from "./showings";
 
 /**
@@ -20,6 +22,9 @@ import { suggestSlots } from "./showings";
  *    size, land, features) — deterministic regexes, never inferred personal attributes.
  * 2. Search PostgreSQL with those criteria (the model never invents inventory). Each result
  *    carries which criteria it meets, plus its source and when its status was last confirmed.
+ *    Semantic search: homes that pass the hard criteria are also ranked by meaning (pgvector
+ *    embeddings of each listing's text), fused with keyword matches, and the passage that
+ *    matched best is shown — so "quiet place by the water with room for a dog" works.
  * 3. If nothing matches, relax one constraint at a time and say exactly what differs.
  * 4. Ask a follow-up when key details are missing; offer to save the search (signed-in).
  * 5. Answer market questions from stored public data (with source + period), point to the
@@ -122,7 +127,7 @@ export function parseIntent(text: string, cities: string[]): Intent {
   const anchor = COMMUTE_ANCHORS.find((a) => t.includes(a.id) || t.includes(a.name.split(" (")[0].toLowerCase().split(",")[0]));
   if (anchor && /\b(commute|drive|near|close to|minutes)\b/.test(t)) c.commuteTo = anchor.id;
 
-  const isSearch = Boolean(c.city || c.minBeds || c.maxPriceCents || c.minPriceCents || c.type || c.propertyType || c.minGarage || c.minSqft || c.minLotSqft || c.features.length || c.minBaths || /\b(homes?|houses?|listings?|properties|places?|looking for|find|search|show me)\b/.test(t));
+  const isSearch = Boolean(c.city || c.minBeds || c.maxPriceCents || c.minPriceCents || c.type || c.propertyType || c.minGarage || c.minSqft || c.minLotSqft || c.features.length || c.minBaths || /\b(homes?|houses?|listings?|properties|places?|somewhere|looking for|find|search|show me|want to (?:live|move|buy|rent))\b/.test(t));
 
   return {
     criteria: c,
@@ -221,8 +226,60 @@ function toFilters(c: Criteria): ListingFilters {
   };
 }
 
+export interface SearchResult {
+  listings: ListingCard[];
+  relaxed: string | null;
+  /** Best-matching passage per listing from semantic search (only when it's a strong match). */
+  why?: Record<string, string>;
+}
+
+// Cosine similarity above which a listing passage is shown as the reason it matched.
+const STRONG_MATCH = 0.6;
+
+/**
+ * Meaning-based ranking of homes that already pass the hard criteria (town, budget, beds…).
+ * Null when the AI service is off — callers fall back to keyword search.
+ */
+export async function semanticSearch(c: Criteria, text: string): Promise<SearchResult | null> {
+  const candidates = await listListings(ANONYMOUS, { ...toFilters({ ...c, features: [] }), limit: 60 });
+  if (!candidates.length) return null;
+  const vector = await embedQuery(text);
+  if (!vector) return null;
+  const rows = await withDb(ANONYMOUS, (db) =>
+    db.query<{ property_id: string; ord: number; content: string; sim: number }>(
+      `SELECT DISTINCT ON (property_id) property_id, ord, content, 1 - (embedding <=> $1::vector) AS sim
+         FROM property_chunks WHERE property_id = ANY($2::uuid[])
+        ORDER BY property_id, embedding <=> $1::vector`,
+      [toVector(vector), candidates.map((l) => l.id)],
+    ),
+  );
+  if (!rows.length) return null; // listings not indexed yet
+  const byId = new Map(candidates.map((l) => [l.id, l]));
+  const semantic = rows.sort((a, b) => b.sim - a.sim).map((r) => byId.get(r.property_id)!).filter(Boolean);
+  // Keyword side of the hybrid: full-text rank of the visitor's own words (any word may match).
+  const keywordIds = await withDb(ANONYMOUS, (db) =>
+    db.query<{ id: string }>(
+      `SELECT id FROM properties, replace(plainto_tsquery('english', $1)::text, '&', '|')::tsquery AS q
+        WHERE id = ANY($2::uuid[]) AND search_vector @@ q ORDER BY ts_rank(search_vector, q) DESC`,
+      [text, candidates.map((l) => l.id)],
+    ),
+  ).catch(() => [] as { id: string }[]);
+  const keyword = keywordIds.map((r) => byId.get(r.id)!).filter(Boolean);
+  const why: Record<string, string> = {};
+  // ord 0 is the generated summary (title, beds, town); only quote the listing's own words.
+  for (const r of rows) if (r.sim >= STRONG_MATCH && r.ord > 0) why[r.property_id] = r.content.length > 140 ? `${r.content.slice(0, 137)}…` : r.content;
+  return { listings: fuse([semantic, keyword], 8), relaxed: null, why };
+}
+
 /** Exact search; if empty, relax one constraint at a time (features → garage → budget +15% → town). */
-export async function search(c: Criteria): Promise<{ listings: ListingCard[]; relaxed: string | null }> {
+export async function search(c: Criteria, text?: string): Promise<SearchResult> {
+  if (text) {
+    const semantic = await semanticSearch(c, text).catch((error) => {
+      log.warn({ err: error instanceof Error ? error.message : String(error) }, "semantic search failed; using keywords");
+      return null;
+    });
+    if (semantic?.listings.length) return semantic;
+  }
   const exact = await listListings(ANONYMOUS, toFilters(c));
   if (exact.length) return { listings: exact, relaxed: null };
   const steps: { label: string; change: (x: Criteria) => Criteria }[] = [
@@ -372,9 +429,16 @@ export async function* runAssistant(team: Team, viewer: Viewer | null, messages:
     }
   }
 
-  const results = !intent.fairHousingConcern && intent.isSearch && !dealLine ? await search(criteria) : { listings: [] as ListingCard[], relaxed: null };
+  // The visitor's own words (recent messages) drive the meaning-based ranking.
+  const searchText = messages.filter((m) => m.role === "user").slice(-3).map((m) => m.content).join(" ");
+  const results: SearchResult = !intent.fairHousingConcern && intent.isSearch && !dealLine ? await search(criteria, searchText) : { listings: [], relaxed: null };
+  const matchFor = (l: ListingCard) => {
+    const m = explainMatch(l, criteria);
+    const quote = results.why?.[l.id];
+    return quote ? { met: [...m.met, `“${quote}”`], unmet: m.unmet } : m;
+  };
   if (results.listings.length) {
-    yield { type: "listings", listings: results.listings.slice(0, 4), matches: Object.fromEntries(results.listings.slice(0, 4).map((l) => [l.id, explainMatch(l, criteria)])), relaxed: results.relaxed, criteria: describeCriteria(criteria) };
+    yield { type: "listings", listings: results.listings.slice(0, 4), matches: Object.fromEntries(results.listings.slice(0, 4).map((l) => [l.id, matchFor(l)])), relaxed: results.relaxed, criteria: describeCriteria(criteria) };
   }
   const market = intent.asksMarket && !intent.fairHousingConcern ? await marketFacts(intent.asksMarket) : [];
   if (market.length) yield { type: "market", facts: market };
@@ -386,7 +450,7 @@ export async function* runAssistant(team: Team, viewer: Viewer | null, messages:
 
   const facts = [
     focusVisible ? `VIEWING: ${listingFacts(focusVisible)}` : "",
-    results.listings.length ? `${results.relaxed ? `No exact match; relaxed ${results.relaxed}.` : "Exact matches."}\n${results.listings.slice(0, 4).map((l) => listingFacts(l, explainMatch(l, criteria))).join("\n")}` : intent.isSearch ? "No homes matched." : "",
+    results.listings.length ? `${results.relaxed ? `No exact match; relaxed ${results.relaxed}.` : "Exact matches."}\n${results.listings.slice(0, 4).map((l) => listingFacts(l, matchFor(l))).join("\n")}` : intent.isSearch ? "No homes matched." : "",
     market.length ? `MARKET: ${market.map((m) => `${m.label} ${m.value} (${m.source}, ${m.period})`).join("; ")}` : "",
     dealLine ? `CLIENT DEAL: ${dealLine}` : "",
   ].filter(Boolean).join("\n");

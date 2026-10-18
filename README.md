@@ -28,14 +28,15 @@ The website, property-management portal and team app for **Surette Real Estate**
 surette-nexus/
 ├── analytics-sdk/        Browser tracker (served at /sdk/surette-analytics.js)
 ├── .github/workflows/    CI (lint, types, tests, e2e, image) and CD (staging → production)
-├── database/migrations/  SQL migrations (001 core, 002 platform, 003–004 fixes, 005 queue/outbox/idempotency/indexes)
+├── database/migrations/  SQL migrations (001 core · 002 platform · 005 queue/outbox · 007 customer auth · 009–010 vector search)
 ├── data/gov/             Real government datasets (Census, BLS, FHFA) with checksums — see its README
 ├── deploy/               nginx gateway · Kubernetes (kustomize) · Prometheus, Alertmanager, Grafana, Loki
 ├── demo-site/            Fictional brokerage used to test analytics (served at /demo-site/, synthetic data)
 ├── docs/                 Documentation
+├── ml/                   AI service (Python: FastAPI + LlamaIndex): RAG, embeddings, evaluation
 ├── integrations/         Patch for the FastAPI landlord-dispatcher (not applied automatically)
 ├── mobile/               Expo team app
-├── scripts/              db.sh (local Postgres), sync-public.mjs
+├── scripts/              dev.sh (start everything), db.sh (local Postgres), ml-setup.sh (AI service), docker-demo.sh
 ├── web/                  Next.js 16 app: public site, portal, API, tests (Vitest + Playwright)
 ├── Dockerfile · docker-compose.yml
 ```
@@ -83,7 +84,11 @@ Useful scripts (in `web/`): `market:refresh`, `analytics:demo` (synthetic traffi
 
 ### Optional services
 
-- **Local AI**: install Ollama, `ollama pull llama3.2:3b`, set `OLLAMA_URL=http://localhost:11434`.
+- **Local AI**: install Ollama (`brew install ollama && brew services start ollama`), set
+  `OLLAMA_URL=http://localhost:11434`.
+- **AI search** (Ask the documents, meaning-based home search): run `scripts/ml-setup.sh` once, set
+  `ML_SERVICE_URL=http://localhost:8600` in `web/.env`; `scripts/dev.sh` starts the AI service. See
+  [docs/ai-assistant.md](docs/ai-assistant.md).
 - **Maintenance + vendor compliance**: apply `integrations/landlord-dispatcher/website-integration.patch` to the
   dispatcher, run it, then set `DISPATCHER_API_URL` and `DISPATCHER_API_KEY` in `web/.env`.
 
@@ -122,8 +127,8 @@ See [docs/testing.md](docs/testing.md). The dispatcher patch ships with its own 
 
 ## Honest limits
 
-See [docs/status.md](docs/status.md). In short: the Docker, Kubernetes, gateway, monitoring and CI/CD
-the Docker stack runs locally, but Kubernetes, the monitoring containers and the GitHub pipelines haven't run on real infrastructure yet; uploads use local disk; commute, school-district and walk-index figures are estimates; emails are
+See [docs/status.md](docs/status.md). In short: the Docker stack runs locally and the GitHub checks run on
+every push, but Kubernetes and the monitoring containers haven't run on real infrastructure yet; uploads use local disk; commute, school-district and walk-index figures are estimates; emails are
 drafted, not sent automatically; surette-realestate.com (Lofty) is not tracked or modified.
 
 ## Credits

@@ -49,6 +49,7 @@ with status 400/401/403/404/409/413/415/422/429. Authentication is the `sn_sessi
 | `GET/POST /deals`, `GET/PATCH/DELETE /deals/[id]` | staff (own deals; admin all) | Deals |
 | `POST/PATCH/DELETE /deals/[id]/items` | staff | Tasks and milestones |
 | `POST /deals/[id]/documents`, `GET/PATCH/DELETE /deals/[id]/documents/[docId]` | staff | Upload, download, verify extracted values |
+| `POST /deals/[id]/ask` | staff (own deals; admin all) | `{ question }` → answer from the deal's documents with page citations (30 per 10 min) |
 | `POST /deals/[id]/drafts`, `GET /drafts`, `PATCH /drafts/[id]` | staff | Draft, approve, mark sent |
 | `GET /deals/agenda` | staff | Upcoming deadlines |
 
@@ -65,7 +66,7 @@ with status 400/401/403/404/409/413/415/422/429. Authentication is the `sn_sessi
 ## AI assistant, market, analytics
 | Route | Access | Purpose |
 | --- | --- | --- |
-| `POST /agent/assistant` | public | Streaming AI assistant |
+| `POST /agent/assistant` | public | Streaming AI assistant (semantic + keyword listing search) |
 | `POST /agent/ops` | staff | Portal assistant |
 | `GET /market` | public | Market series with provenance (FRED + government datasets, with margins of error) |
 | `GET /market/datasets` | public | Government dataset provenance: agency, source file URLs, SHA-256, retrieval time |

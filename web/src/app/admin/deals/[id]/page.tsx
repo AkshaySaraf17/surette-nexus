@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { AlertTriangle, Check, Copy, Download, FileUp, Mail, Plus, Sparkles, Trash2 } from "lucide-react";
 import { useStaff } from "@/components/admin/admin-shell";
+import { AskDocuments } from "@/components/admin/ask-documents";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/input";
@@ -267,6 +268,7 @@ export default function DealPage() {
               </li>
             ))}
           </ul>
+          <AskDocuments dealId={id} hasDocuments={d.documents.length > 0} />
         </section>
 
         <section id="drafts" className="rounded-[24px] bg-paper p-6 ring-1 ring-line" aria-labelledby="drafts-h">
