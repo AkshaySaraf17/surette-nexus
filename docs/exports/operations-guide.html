@@ -88,7 +88,7 @@ section 2.</p>
 </thead>
 <tbody><tr>
 <td>Live demo (Oracle)</td>
-<td><a href="https://129-213-166-31.sslip.io">https://129-213-166-31.sslip.io</a></td>
+<td><a href="https://surette-demo.duckdns.org">https://surette-demo.duckdns.org</a> (the old <a href="https://129-213-166-31.sslip.io">https://129-213-166-31.sslip.io</a> redirects here)</td>
 </tr>
 <tr>
 <td>Local website</td>
@@ -319,7 +319,7 @@ code changes.</p>
 </tr>
 <tr>
 <td>Address</td>
-<td><a href="https://129-213-166-31.sslip.io">https://129-213-166-31.sslip.io</a> (free name from sslip.io; HTTPS by Caddy + Let&#39;s Encrypt)</td>
+<td><a href="https://surette-demo.duckdns.org">https://surette-demo.duckdns.org</a> (free DuckDNS name; HTTPS by Caddy + Let&#39;s Encrypt). The sslip.io name redirects to it (<code>REDIRECT_HOSTS</code> in the server&#39;s <code>.env</code>)</td>
 </tr>
 <tr>
 <td>Network</td>
@@ -421,15 +421,18 @@ first run only (saved to <code>DEMO-LOGINS.local.txt</code>), starts the contain
 <pre><code class="language-bash">gunzip -c surette-backup-YYYY-MM-DD.sql.gz | ssh -i ~/.ssh/surette_oracle ubuntu@129.213.166.31 &#39;cd surette &amp;&amp; docker compose exec -T db psql -U surette -d surette&#39;
 </code></pre>
 <p>Uploaded photos and documents live in the <code>storage</code> Docker volume on the server.</p>
-<h3 id="7-5-a-custom-name-surette-demo-duckdns-org-free">7.5 A custom name: surette-demo.duckdns.org (free)</h3><ol>
+<h3 id="7-5-a-custom-name-surette-demo-duckdns-org-free-set-up">7.5 A custom name: surette-demo.duckdns.org (free, set up)</h3><ol>
 <li><p>Go to <a href="https://www.duckdns.org">https://www.duckdns.org</a> and <strong>sign in with GitHub</strong>.</p>
 </li>
 <li><p>Type <code>surette-demo</code> (or another free name), click <strong>add domain</strong>, enter the server IP in
 <strong>current ip</strong>, click <strong>update ip</strong>.</p>
 </li>
-<li><p>Switch the site to the new name (Caddy gets a new HTTPS certificate automatically):</p>
-<pre><code class="language-bash">ssh -i ~/.ssh/surette_oracle ubuntu@129.213.166.31 &quot;cd surette &amp;&amp; sed -i &#39;s/^SITE_HOST=.*/SITE_HOST=surette-demo.duckdns.org/&#39; .env &amp;&amp; docker compose up -d&quot;
+<li><p>Switch the site to the new name (Caddy gets a new HTTPS certificate automatically), keep the old name
+as a redirect, and let the analytics collector accept the new address:</p>
+<pre><code class="language-bash">ssh -i ~/.ssh/surette_oracle ubuntu@129.213.166.31 &quot;cd surette &amp;&amp; sed -i &#39;s/^SITE_HOST=.*/SITE_HOST=surette-demo.duckdns.org/&#39; .env &amp;&amp; echo REDIRECT_HOSTS=129-213-166-31.sslip.io &gt;&gt; .env &amp;&amp; docker compose up -d&quot;
+ssh -i ~/.ssh/surette_oracle ubuntu@129.213.166.31 &quot;cd surette &amp;&amp; docker compose exec -T db psql -U surette -d surette -c \&quot;UPDATE analytics_projects SET allowed_origins = array_append(allowed_origins, &#39;https://surette-demo.duckdns.org&#39;)\&quot;&quot;
 </code></pre>
+<p>This is already done for <code>surette-demo.duckdns.org</code>.</p>
 </li>
 <li><p>Open <a href="https://surette-demo.duckdns.org">https://surette-demo.duckdns.org</a> (allow a minute for the certificate). If you set up Google
 sign-in, add the new address to its authorized redirect URIs.</p>

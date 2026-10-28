@@ -2,7 +2,8 @@
 # Deploy (or update) the site on the Oracle server:  scripts/deploy-oracle.sh <server-ip>
 #
 # Uses deploy/oracle (website, worker, PostgreSQL + pgvector, Caddy HTTPS). The site is served at
-# https://<ip-with-dashes>.sslip.io (free name, no account). Secrets are generated on the server on the
+# https://<ip-with-dashes>.sslip.io (free name, no account) until SITE_HOST in the server's .env is changed
+# to a custom name (docs/operations-guide.md §7.5). Secrets are generated on the server on the
 # first run and never leave it. On first deploy the demo data is loaded and every demo account gets a
 # new random password, saved to DEMO-LOGINS.local.txt on this Mac (private, git-ignored).
 # Re-running it updates to the latest image GitHub built from main.
@@ -40,6 +41,9 @@ if [ "$first" = "0" ]; then
   { echo "== Oracle server https://$HOST ($(date -u +%F)) =="; echo "$logins"; echo "Staff: https://$HOST/portal/sign-in   Customers: https://$HOST/sign-in"; echo; } >> "$ROOT/DEMO-LOGINS.local.txt"
   echo "   saved to DEMO-LOGINS.local.txt"
 fi
+
+# The site's address comes from the server's .env (e.g. after switching to a DuckDNS name).
+HOST=$("${SSH[@]}" "grep -m1 '^SITE_HOST=' ~/surette/.env | cut -d= -f2")
 
 echo "→ Starting the site"
 "${SSH[@]}" "cd ~/surette && docker compose up -d --remove-orphans web worker caddy && docker image prune -f >/dev/null"

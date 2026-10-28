@@ -5,3 +5,9 @@
 		header_up X-Real-IP {remote_host}
 	}
 }
+
+# Older addresses (e.g. the sslip.io name) redirect to the main one. REDIRECT_HOSTS is a comma-separated
+# list in .env; the plain-HTTP placeholder default never requests a certificate.
+{$REDIRECT_HOSTS:http://redirect.invalid} {
+	redir https://{$SITE_HOST}{uri} permanent
+}
