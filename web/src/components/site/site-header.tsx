@@ -17,6 +17,7 @@ const NAV = [
   { href: "/market", label: "Market" },
   { href: "/dual-move", label: "Sell & Buy" },
   { href: "/team", label: "Team" },
+  { href: "/scroll-version", label: "Scroll version" },
 ];
 
 /** Global navigation: one solid, readable bar on every page (it no longer changes color while scrolling). */
@@ -41,7 +42,7 @@ export function SiteHeader() {
           <Link href="/" aria-label={HOME_LABEL} className="shrink-0">
             <Wordmark />
           </Link>
-          <ul className="hidden items-center gap-8 text-[0.8125rem] font-medium tracking-wide md:flex">
+          <ul className="hidden items-center gap-6 whitespace-nowrap text-[0.8125rem] font-medium tracking-wide lg:flex xl:gap-8">
             {NAV.map((item) => (
               <li key={item.href}>
                 <Link
@@ -55,7 +56,7 @@ export function SiteHeader() {
               </li>
             ))}
           </ul>
-          <div className="hidden items-center gap-3 md:flex">
+          <div className="hidden items-center gap-3 whitespace-nowrap lg:flex">
             {staff ? (
               <Link href="/admin" className="text-[0.8125rem] font-medium opacity-80 hover:opacity-100">Portal</Link>
             ) : viewer ? (
@@ -71,7 +72,7 @@ export function SiteHeader() {
               </Link>
             )}
           </div>
-          <button type="button" className="pressable grid size-10 place-items-center md:hidden" onClick={() => setOpen((v) => !v)} aria-expanded={open} aria-label={open ? "Close menu" : "Open menu"}>
+          <button type="button" className="pressable grid size-10 place-items-center lg:hidden" onClick={() => setOpen((v) => !v)} aria-expanded={open} aria-label={open ? "Close menu" : "Open menu"}>
             {open ? <X className="size-5" /> : <Menu className="size-5" />}
           </button>
         </nav>
@@ -83,7 +84,7 @@ export function SiteHeader() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ type: "spring", bounce: 0, duration: 0.35 }}
-            className="material border-b border-line text-ink md:hidden"
+            className="material border-b border-line text-ink lg:hidden"
           >
             <ul className="flex flex-col px-5 py-3">
               {NAV.map((item) => (

@@ -46,10 +46,25 @@ test("the hero search takes you to matching homes", async ({ page }) => {
 test("no horizontal scrolling on a phone", async ({ browser }) => {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true });
   const page = await ctx.newPage();
-  for (const path of ["/", "/listings", "/market", "/dual-move", "/contact"]) {
+  for (const path of ["/", "/scroll-version", "/listings", "/market", "/dual-move", "/contact"]) {
     await page.goto(path);
     await page.waitForLoadState("load");
     expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth), path).toBeLessThanOrEqual(0);
   }
   await ctx.close();
+});
+
+test("the scroll version keeps the old effects, and they stop when you go back to the simple home page", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("navigation", { name: "Main" }).getByRole("link", { name: "Scroll version" }).click();
+  await expect(page).toHaveURL(/\/scroll-version$/);
+  await expect(page.getByRole("heading", { name: "The earlier, scroll-animated home page" })).toBeVisible();
+  await expect.poll(() => page.evaluate(() => document.documentElement.classList.contains("lenis"))).toBe(true);
+  expect(await page.evaluate(() => [...document.querySelectorAll("main *")].filter((el) => getComputedStyle(el).position === "sticky").length)).toBeGreaterThan(0);
+
+  // In-app navigation back to the simple page: smooth scrolling and colour changes are switched off.
+  await page.getByRole("link", { name: "See the simple version" }).click();
+  await expect(page).toHaveURL(/\/$/);
+  await expect.poll(() => page.evaluate(() => document.documentElement.classList.contains("lenis"))).toBe(false);
+  expect(await page.evaluate(() => document.documentElement.style.getPropertyValue("--tone-bg"))).toBe("");
 });
