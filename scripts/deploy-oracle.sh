@@ -21,8 +21,19 @@ scp -q -i "$KEY" "$ROOT/deploy/oracle/docker-compose.yml" "$ROOT/deploy/oracle/C
 echo "→ Settings (secrets are created on the server once)"
 "${SSH[@]}" "cd ~/surette && if [ ! -f .env ]; then umask 077; printf 'SITE_HOST=%s\nPOSTGRES_PASSWORD=%s\nJWT_SECRET=%s\nMETRICS_TOKEN=%s\n' '$HOST' \$(openssl rand -hex 16) \$(openssl rand -hex 32) \$(openssl rand -hex 16) > .env; fi"
 
-echo "→ Downloading the latest site image"
-"${SSH[@]}" "cd ~/surette && docker compose pull -q && docker compose up -d db && docker compose run --rm migrate"
+echo "→ Downloading the latest site image (on the server, at low priority)"
+# Unpacking the image saturates the small server's single CPU, which can drop an SSH session and
+# cancel a foreground pull. So the pull runs detached on the server and we check back until it ends.
+"${SSH[@]}" "cd ~/surette && rm -f pull.log && (setsid nohup nice -n 15 sh -c 'docker compose pull -q; echo PULL_EXIT=\$?' > pull.log 2>&1 < /dev/null &)"
+for _ in $(seq 1 90); do
+  sleep 20
+  status=$("${SSH[@]}" -o ConnectTimeout=15 "grep -o 'PULL_EXIT=[0-9]*' ~/surette/pull.log 2>/dev/null" 2>/dev/null || true)
+  [ -n "$status" ] && break
+  printf "."
+done
+echo
+[ "$status" = "PULL_EXIT=0" ] || { echo "Image download failed or timed out ($status). See ~/surette/pull.log on the server."; exit 1; }
+"${SSH[@]}" "cd ~/surette && docker compose up -d db && docker compose run --rm migrate"
 
 first=$("${SSH[@]}" "cd ~/surette && docker compose exec -T db psql -U surette -d surette -Atc 'SELECT count(*) FROM properties' 2>/dev/null || echo 0")
 if [ "$first" = "0" ]; then
