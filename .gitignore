@@ -31,3 +31,7 @@ deploy/observability/alertmanager/secrets/*
 /CLAUDE.md
 /.claude/
 oracle-ssh-key.pub.txt
+
+# Private passwords for the shared demo (never commit)
+DEMO-LOGINS.local.txt
+.share-logs/

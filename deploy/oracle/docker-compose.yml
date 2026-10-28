@@ -1,0 +1,78 @@
+# Small-server deployment (Oracle Always Free VM.Standard.E2.1.Micro: 1 CPU, 1 GB RAM + swap).
+# Website, worker, PostgreSQL (+ pgvector) and Caddy for automatic HTTPS. The local-AI services
+# (Ollama, ml/) need ~8 GB and are left out: the AI assistant uses its built-in answers and search
+# uses keywords. Deployed by scripts/deploy-oracle.sh; settings live in .env on the server.
+x-app: &app
+  image: ${IMAGE:-ghcr.io/akshaysaraf17/surette-nexus:main}
+  environment: &app-env
+    DATABASE_URL: postgresql://surette:${POSTGRES_PASSWORD:?}@db:5432/surette
+    DATABASE_DIRECT_URL: postgresql://surette:${POSTGRES_PASSWORD:?}@db:5432/surette
+    JWT_SECRET: ${JWT_SECRET:?}
+    METRICS_TOKEN: ${METRICS_TOKEN:?}
+    PUBLIC_SITE_URL: https://${SITE_HOST:?}
+    SITE_TEAM_SLUG: surette
+    STORAGE_DIR: /data/storage
+    EMBEDDED_WORKER: "0"
+    # No mail provider on the demo: sign-ups are confirmed at once and "Forgot password?" is hidden.
+    ACCOUNT_EMAILS: "off"
+    GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+    GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+    NODE_OPTIONS: --max-old-space-size=384
+  volumes: [storage:/data/storage]
+  restart: unless-stopped
+  depends_on:
+    db: { condition: service_healthy }
+
+services:
+  db:
+    image: pgvector/pgvector:0.8.1-pg17
+    environment:
+      POSTGRES_USER: surette
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?}
+      POSTGRES_DB: surette
+    # Tuned for a 1 GB machine.
+    command: ["postgres", "-c", "shared_buffers=64MB", "-c", "effective_cache_size=256MB", "-c", "work_mem=4MB", "-c", "maintenance_work_mem=32MB", "-c", "max_connections=40"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U surette"]
+      interval: 5s
+      retries: 20
+    restart: unless-stopped
+
+  migrate:
+    <<: *app
+    command: ["npm", "run", "db:migrate:prod"]
+    restart: "no"
+
+  web:
+    <<: *app
+    command: ["npm", "start"]
+    environment:
+      <<: *app-env
+      SERVICE_NAME: surette-web
+
+  worker:
+    <<: *app
+    command: ["npm", "run", "worker:prod"]
+    environment:
+      <<: *app-env
+      SERVICE_NAME: surette-worker
+      WORKER_PORT: "9464"
+      HEALTH_PORT: "9464"
+      HEALTH_PATH: /healthz
+
+  caddy:
+    image: caddy:2.10-alpine
+    ports: ["80:80", "443:443"]
+    environment:
+      SITE_HOST: ${SITE_HOST:?}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+    depends_on: [web]
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  storage:
+  caddy_data:

@@ -1,0 +1,7 @@
+# HTTPS with a free, automatically renewed Let's Encrypt certificate.
+{$SITE_HOST} {
+	encode zstd gzip
+	reverse_proxy web:3100 {
+		header_up X-Real-IP {remote_host}
+	}
+}
