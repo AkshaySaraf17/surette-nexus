@@ -1,0 +1,521 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Surette Nexus — Operations Guide</title><style>
+  :root { --ink:#15130f; --ink2:#4f493f; --ink3:#6b655a; --line:#e4ded3; --gold:#86602a; --code:#f3efe7; }
+  * { box-sizing: border-box; }
+  body { font: 10.5pt/1.55 "Inter", -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; color: var(--ink); margin: 0; }
+  main { max-width: 760px; margin: 0 auto; padding: 32px 24px; }
+  h1, h2, h3 { font-family: "Cormorant Garamond", "Iowan Old Style", Georgia, serif; line-height: 1.15; }
+  h1 { font-size: 30pt; margin: 0 0 6px; }
+  h2 { font-size: 19pt; margin: 30px 0 8px; padding-top: 8px; border-top: 1px solid var(--line); break-after: avoid; }
+  h3 { font-size: 13.5pt; margin: 20px 0 6px; break-after: avoid; }
+  p, li { color: var(--ink2); }
+  a { color: var(--gold); }
+  code { font: 9pt "JetBrains Mono", Menlo, monospace; background: var(--code); padding: 1px 4px; border-radius: 3px; }
+  pre { background: var(--code); padding: 10px 12px; border-radius: 6px; overflow-x: auto; break-inside: avoid; }
+  pre code { background: none; padding: 0; }
+  table { border-collapse: collapse; width: 100%; margin: 10px 0 14px; font-size: 9pt; break-inside: auto; }
+  th, td { border: 1px solid var(--line); padding: 5px 7px; text-align: left; vertical-align: top; }
+  th { background: var(--code); font-weight: 600; }
+  tr { break-inside: avoid; }
+  blockquote { margin: 12px 0; padding: 8px 14px; border-left: 3px solid var(--gold); background: #faf7f1; color: var(--ink2); }
+  figure.diagram { margin: 14px 0; text-align: center; break-inside: avoid; }
+  figure.diagram svg { max-width: 100%; height: auto; }
+  .cover { border-bottom: 2px solid var(--gold); padding-bottom: 14px; margin-bottom: 18px; }
+  .cover p { margin: 4px 0; color: var(--ink3); font-size: 9.5pt; }
+  .toc { columns: 2; font-size: 9.5pt; margin-bottom: 8px; }
+  .toc a { color: var(--ink2); text-decoration: none; }
+</style></head><body><main>
+<div class="cover"><h1>Operations Guide</h1><p>Surette Nexus · Surette Real Estate, Waterville, Maine</p><p>Generated October 27, 2026 from docs/operations-guide.md</p></div>
+<nav class="toc"><div><a href="#1-what-runs-where">1. What runs where</a></div><div><a href="#2-accounts-keys-and-private-files">2. Accounts, keys and private files</a></div><div><a href="#3-run-it-on-your-mac-development">3. Run it on your Mac (development)</a></div><div><a href="#4-settings-web-env">4. Settings (<code>web/.env</code>)</a></div><div><a href="#5-docker-on-your-mac-whole-stack-in-containers">5. Docker on your Mac (whole stack in containers)</a></div><div><a href="#6-share-from-your-mac-with-a-public-link-free-no-account">6. Share from your Mac with a public link (free, no account)</a></div><div><a href="#7-oracle-cloud-free-hosting">7. Oracle Cloud free hosting</a></div><div><a href="#8-github-and-automatic-checks">8. GitHub and automatic checks</a></div><div><a href="#9-common-tasks">9. Common tasks</a></div><div><a href="#10-troubleshooting">10. Troubleshooting</a></div><div><a href="#11-security-checklist">11. Security checklist</a></div></nav>
+<p>Step-by-step instructions for running, sharing, hosting and maintaining the Surette Nexus website:
+on a Mac, in Docker, from your Mac with a public link, and on the Oracle Cloud free server. Everything
+here uses free software. No passwords or keys are written in this guide; where they live is listed in
+section 2.</p>
+<h2 id="1-what-runs-where">1. What runs where</h2><table>
+<thead>
+<tr>
+<th>Part</th>
+<th>What it does</th>
+<th>Port (local)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Website + API (Next.js)</td>
+<td>Public site, customer accounts, staff portal (<code>/admin</code>), REST API</td>
+<td>3100</td>
+</tr>
+<tr>
+<td>Background worker</td>
+<td>Jobs: market data refresh, AI indexing, emails, clean-up</td>
+<td>9464 (health)</td>
+</tr>
+<tr>
+<td>Live updates (WebSocket)</td>
+<td>Instant refresh in the portal; falls back to Server-Sent Events</td>
+<td>3200</td>
+</tr>
+<tr>
+<td>PostgreSQL + pgvector</td>
+<td>All data, permissions (row-level security), vector search</td>
+<td>5434</td>
+</tr>
+<tr>
+<td>AI service (Python, <code>ml/</code>)</td>
+<td>Document Q&amp;A (RAG), semantic search</td>
+<td>8600</td>
+</tr>
+<tr>
+<td>Ollama</td>
+<td>Local AI models (<code>llama3.2:3b</code>, <code>mxbai-embed-large</code>)</td>
+<td>11434</td>
+</tr>
+<tr>
+<td>Mailpit</td>
+<td>Test inbox for sign-up and password-reset emails</td>
+<td>8025</td>
+</tr>
+<tr>
+<td>Market Lab dashboard (Streamlit)</td>
+<td>Analyst view of the models</td>
+<td>8501</td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th>Where</th>
+<th>Address</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Live demo (Oracle)</td>
+<td><a href="https://129-213-166-31.sslip.io">https://129-213-166-31.sslip.io</a></td>
+</tr>
+<tr>
+<td>Local website</td>
+<td><a href="http://localhost:3100">http://localhost:3100</a></td>
+</tr>
+<tr>
+<td>Staff portal</td>
+<td><code>/portal/sign-in</code> on either address</td>
+</tr>
+<tr>
+<td>Customer sign-in</td>
+<td><code>/sign-in</code></td>
+</tr>
+<tr>
+<td>Code</td>
+<td><a href="https://github.com/AkshaySaraf17/surette-nexus">https://github.com/AkshaySaraf17/surette-nexus</a></td>
+</tr>
+</tbody></table>
+<h2 id="2-accounts-keys-and-private-files">2. Accounts, keys and private files</h2><table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Where it is</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Demo logins (local and Oracle)</td>
+<td><code>DEMO-LOGINS.local.txt</code> in the project folder</td>
+<td>Private, never committed. The passwords in the public code no longer work.</td>
+</tr>
+<tr>
+<td>SSH key for the Oracle server</td>
+<td><code>~/.ssh/surette_oracle</code> (private) and <code>~/.ssh/surette_oracle.pub</code> (public)</td>
+<td>Losing the private key means losing access; back it up.</td>
+</tr>
+<tr>
+<td>Server secrets (database password, session key)</td>
+<td><code>~/surette/.env</code> on the Oracle server</td>
+<td>Created on first deploy; never leaves the server.</td>
+</tr>
+<tr>
+<td>Local settings</td>
+<td><code>web/.env</code> on your Mac</td>
+<td>Never committed (git-ignored).</td>
+</tr>
+<tr>
+<td>Oracle Cloud account</td>
+<td><a href="https://cloud.oracle.com">https://cloud.oracle.com</a> (region US East / Ashburn)</td>
+<td>Your login. Never upgrade to Pay As You Go unless you intend to pay.</td>
+</tr>
+<tr>
+<td>GitHub</td>
+<td>Account <code>AkshaySaraf17</code></td>
+<td>Commits use only your name and email.</td>
+</tr>
+<tr>
+<td>Oracle API key (optional, for the retry script)</td>
+<td><code>~/.oci/config</code> and <code>~/.oci/oci_api_key.pem</code></td>
+<td>Only on your Mac.</td>
+</tr>
+</tbody></table>
+<p>Never paste passwords, keys or <code>.env</code> contents into chats, emails or GitHub.</p>
+<h2 id="3-run-it-on-your-mac-development">3. Run it on your Mac (development)</h2><h3 id="3-1-one-time-install">3.1 One-time install</h3><ol>
+<li><p>Install Homebrew (<a href="https://brew.sh">https://brew.sh</a>), then the free tools:</p>
+<pre><code class="language-bash">brew install git gh node@22 postgresql@16 python ollama mailpit cloudflared
+brew services start ollama
+brew services start mailpit
+</code></pre>
+</li>
+<li><p>Get the code:</p>
+<pre><code class="language-bash">gh auth login
+gh repo clone AkshaySaraf17/surette-nexus ~/Documents/surette-nexus
+cd ~/Documents/surette-nexus/web
+cp .env.example .env
+</code></pre>
+</li>
+<li><p>Edit <code>web/.env</code> and set at least <code>JWT_SECRET</code> (a long random value from <code>openssl rand -base64 48</code>).
+For the AI features also set <code>OLLAMA_URL=&quot;http://localhost:11434&quot;</code> and
+<code>ML_SERVICE_URL=&quot;http://localhost:8600&quot;</code>.</p>
+</li>
+<li><p>Install packages, create the database and load demo data:</p>
+<pre><code class="language-bash">npm install
+cd .. &amp;&amp; scripts/db.sh start
+cd web &amp;&amp; npm run db:migrate &amp;&amp; npm run db:seed
+</code></pre>
+</li>
+<li><p>Optional, for the AI features (about 4 GB of downloads):</p>
+<pre><code class="language-bash">cd ~/Documents/surette-nexus &amp;&amp; scripts/ml-setup.sh
+</code></pre>
+</li>
+</ol>
+<h3 id="3-2-start-and-stop">3.2 Start and stop</h3><pre><code class="language-bash">cd ~/Documents/surette-nexus &amp;&amp; scripts/dev.sh
+</code></pre>
+<p>This starts the database, website, worker, live updates and (if set up) the AI service. Open
+<a href="http://localhost:3100">http://localhost:3100</a>. Press <strong>Ctrl+C</strong> to stop. In VS Code: <strong>Terminal → Run Build Task</strong>
+(Cmd+Shift+B) runs &quot;Start everything&quot;.</p>
+<h3 id="3-3-demo-logins">3.3 Demo logins</h3><p>Seeding creates an owner, an agent and a customer account (<code>owner@surette.test</code>, <code>agent@surette.test</code>,
+<code>client@surette.test</code>). Their current passwords are in <code>DEMO-LOGINS.local.txt</code>. After a fresh
+<code>npm run db:seed</code>, the passwords printed by the seed apply again; change them before sharing the site
+(section 9.3).</p>
+<h2 id="4-settings-web-env">4. Settings (<code>web/.env</code>)</h2><table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Purpose</th>
+<th>Typical value</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>DATABASE_URL</code></td>
+<td>PostgreSQL connection</td>
+<td><code>postgresql://surette@localhost:5434/surette</code></td>
+</tr>
+<tr>
+<td><code>JWT_SECRET</code></td>
+<td>Signs sign-in sessions (keep secret, long, random)</td>
+<td><code>openssl rand -base64 48</code></td>
+</tr>
+<tr>
+<td><code>PUBLIC_SITE_URL</code></td>
+<td>The site&#39;s public address (links in emails, Google sign-in)</td>
+<td><code>http://localhost:3100</code> locally</td>
+</tr>
+<tr>
+<td><code>SITE_TEAM_SLUG</code></td>
+<td>Which team the site shows</td>
+<td><code>surette</code></td>
+</tr>
+<tr>
+<td><code>STORAGE_DIR</code></td>
+<td>Where uploaded photos and documents are stored</td>
+<td><code>.storage</code></td>
+</tr>
+<tr>
+<td><code>OLLAMA_URL</code>, <code>OLLAMA_MODEL</code></td>
+<td>Local AI for nicer assistant wording</td>
+<td><code>http://localhost:11434</code>, <code>llama3.2:3b</code></td>
+</tr>
+<tr>
+<td><code>ML_SERVICE_URL</code>, <code>ML_SERVICE_TOKEN</code></td>
+<td>AI service for document Q&amp;A and semantic search</td>
+<td><code>http://localhost:8600</code>, empty locally</td>
+</tr>
+<tr>
+<td><code>OLLAMA_EMBED_MODEL</code></td>
+<td>Embedding model for vector search</td>
+<td><code>mxbai-embed-large</code></td>
+</tr>
+<tr>
+<td><code>ACCOUNT_EMAILS</code></td>
+<td><code>off</code> = no emails: sign-ups confirmed at once, &quot;Forgot password?&quot; hidden</td>
+<td>empty locally, <code>off</code> on the demo server</td>
+</tr>
+<tr>
+<td><code>SMTP_HOST</code>, <code>SMTP_PORT</code>, <code>SMTP_USER</code>, <code>SMTP_PASS</code>, <code>MAIL_FROM</code></td>
+<td>Real email sending (any provider)</td>
+<td>empty = Mailpit locally</td>
+</tr>
+<tr>
+<td><code>GOOGLE_CLIENT_ID</code>, <code>GOOGLE_CLIENT_SECRET</code></td>
+<td>&quot;Continue with Google&quot; (hidden when empty)</td>
+<td>from Google Cloud Console</td>
+</tr>
+<tr>
+<td><code>METRICS_TOKEN</code></td>
+<td>Protects <code>/api/metrics</code> (required in production)</td>
+<td>random</td>
+</tr>
+<tr>
+<td><code>NEXT_PUBLIC_REALTIME_URL</code></td>
+<td>WebSocket address for live updates (empty = Server-Sent Events)</td>
+<td><code>ws://localhost:3200/ws</code> with <code>dev.sh</code></td>
+</tr>
+<tr>
+<td><code>NEXT_PUBLIC_SITE_DEMO</code></td>
+<td>Demo label (badge, footer, no search indexing); <code>false</code> removes it</td>
+<td>default on</td>
+</tr>
+<tr>
+<td><code>REDIS_URL</code></td>
+<td>Optional shared cache and rate limits</td>
+<td>empty</td>
+</tr>
+<tr>
+<td><code>CORS_ORIGINS</code></td>
+<td>Other sites allowed to call the API</td>
+<td><code>http://localhost:8081</code></td>
+</tr>
+</tbody></table>
+<p><code>NEXT_PUBLIC_*</code> values are built into the website, so changing them needs a rebuild.</p>
+<h2 id="5-docker-on-your-mac-whole-stack-in-containers">5. Docker on your Mac (whole stack in containers)</h2><ol>
+<li><p>Free container runtime: <code>brew install colima docker docker-compose docker-buildx</code>, then <code>colima start</code>.</p>
+</li>
+<li><p>Start everything (creates a <code>.env</code> with random secrets on first run, loads demo data):</p>
+<pre><code class="language-bash">scripts/docker-demo.sh
+</code></pre>
+<p>Open <a href="http://localhost:8080">http://localhost:8080</a>. Stop with <code>scripts/docker-demo.sh stop</code>.</p>
+</li>
+<li><p>Extras: <code>docker compose --profile observability up -d</code> (Prometheus, Grafana, Loki);
+<code>docker compose --profile ai up -d</code> (Ollama + AI service; set <code>ML_SERVICE_URL=http://ml:8600</code> and
+<code>ML_SERVICE_TOKEN</code> in <code>.env</code>).</p>
+</li>
+<li><p><strong>Disk warning:</strong> Colima&#39;s virtual disk grows and can fill a small Mac disk. Stop it when not in use
+with <code>colima stop</code>, and check space with <code>df -h /</code>.</p>
+</li>
+</ol>
+<h2 id="6-share-from-your-mac-with-a-public-link-free-no-account">6. Share from your Mac with a public link (free, no account)</h2><pre><code class="language-bash">scripts/share.sh
+</code></pre>
+<p>It builds the production site, starts it with the worker and AI service, and prints a
+<code>https://….trycloudflare.com</code> link. Every feature works, including local AI. The link works only while
+the Mac is awake and the script runs, and it changes every time. Use <code>scripts/share.sh --rebuild</code> after
+code changes.</p>
+<h2 id="7-oracle-cloud-free-hosting">7. Oracle Cloud free hosting</h2><h3 id="7-1-what-39-s-deployed-now">7.1 What&#39;s deployed now</h3><table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Server</td>
+<td><code>VM.Standard.E2.1.Micro</code> (1 CPU, 1 GB memory + 4 GB swap), Ubuntu 24.04, Ashburn AD-1</td>
+</tr>
+<tr>
+<td>Public IP</td>
+<td><code>129.213.166.31</code></td>
+</tr>
+<tr>
+<td>Address</td>
+<td><a href="https://129-213-166-31.sslip.io">https://129-213-166-31.sslip.io</a> (free name from sslip.io; HTTPS by Caddy + Let&#39;s Encrypt)</td>
+</tr>
+<tr>
+<td>Network</td>
+<td>VCN <code>surette-vcn</code>, public subnet; ingress rules TCP 22, 80, 443</td>
+</tr>
+<tr>
+<td>On the server</td>
+<td><code>~/surette/docker-compose.yml</code>, <code>Caddyfile</code>, <code>.env</code> (secrets)</td>
+</tr>
+<tr>
+<td>Containers</td>
+<td><code>db</code> (PostgreSQL 17 + pgvector), <code>web</code>, <code>worker</code>, <code>caddy</code></td>
+</tr>
+<tr>
+<td>Site image</td>
+<td><code>ghcr.io/akshaysaraf17/surette-nexus:main</code> (built by GitHub on every push to main; public)</td>
+</tr>
+<tr>
+<td>Not included</td>
+<td>Ollama and the AI service (need ~8 GB): the assistant uses built-in answers, search uses keywords</td>
+</tr>
+</tbody></table>
+<h3 id="7-2-creating-a-server-for-reference-or-a-new-one">7.2 Creating a server (for reference or a new one)</h3><ol>
+<li><p>Sign in at <a href="https://cloud.oracle.com">https://cloud.oracle.com</a> and check the region (top right) is <strong>US East (Ashburn)</strong>.</p>
+</li>
+<li><p>Network: <a href="https://cloud.oracle.com/networking/vcns">https://cloud.oracle.com/networking/vcns</a> → <strong>Actions → Start VCN Wizard → Create VCN with
+Internet Connectivity</strong> → name <code>surette-vcn</code> → <strong>Next → Create</strong>.</p>
+</li>
+<li><p>Server: <a href="https://cloud.oracle.com/compute/instances/create">https://cloud.oracle.com/compute/instances/create</a></p>
+<ul>
+<li>Image: <strong>Canonical Ubuntu 24.04</strong>.</li>
+<li>Shape: <strong>VM.Standard.A1.Flex</strong> (Ampere; 2 OCPU / 12 GB is enough for the full AI) or
+<strong>VM.Standard.E2.1.Micro</strong> (always available in AD-1; no AI).</li>
+<li>Networking: existing VCN <code>surette-vcn</code>, subnet <strong>public subnet-surette-vcn</strong>, <strong>assign a public IPv4
+address: on</strong>.</li>
+<li>SSH keys: <strong>Paste public keys</strong> → the contents of <code>~/.ssh/surette_oracle.pub</code>.</li>
+<li>Boot volume: default for the Micro; 100 GB for an A1. The free allowance is 200 GB in total.</li>
+<li><strong>Create.</strong> &quot;Out of capacity&quot; for A1 is common: try AD-1, AD-2, AD-3, a smaller size, or another time.</li>
+</ul>
+</li>
+<li><p>Firewall: instance → <strong>Networking</strong> → subnet → <strong>Security</strong> → <strong>Default Security List for surette-vcn</strong>
+→ <strong>Add Ingress Rules</strong>: Source <code>0.0.0.0/0</code>, TCP, destination ports <code>80</code> and <code>443</code>.</p>
+</li>
+<li><p>Prepare the server (swap, Ubuntu firewall, Docker). Replace the IP:</p>
+<pre><code class="language-bash">ssh -i ~/.ssh/surette_oracle ubuntu@129.213.166.31
+sudo fallocate -l 4G /swapfile &amp;&amp; sudo chmod 600 /swapfile &amp;&amp; sudo mkswap /swapfile &amp;&amp; sudo swapon /swapfile
+echo &quot;/swapfile none swap sw 0 0&quot; | sudo tee -a /etc/fstab
+sudo iptables -I INPUT 5 -p tcp --dport 80 -m state --state NEW -j ACCEPT
+sudo iptables -I INPUT 5 -p tcp --dport 443 -m state --state NEW -j ACCEPT
+sudo sh -c &quot;iptables-save &gt; /etc/iptables/rules.v4&quot;
+sudo apt-get update &amp;&amp; sudo apt-get install -y docker.io docker-compose-v2
+sudo usermod -aG docker ubuntu &amp;&amp; exit
+</code></pre>
+</li>
+</ol>
+<h3 id="7-3-deploy-and-update">7.3 Deploy and update</h3><p>From your Mac, after GitHub&#39;s checks pass on main:</p>
+<pre><code class="language-bash">scripts/deploy-oracle.sh 129.213.166.31
+</code></pre>
+<p>It copies <code>deploy/oracle/*</code> to the server, creates secrets there on the first run, downloads the latest
+site image, applies database migrations, loads demo data and sets new random demo passwords on the
+first run only (saved to <code>DEMO-LOGINS.local.txt</code>), starts the containers and waits for HTTPS.</p>
+<h3 id="7-4-everyday-server-commands">7.4 Everyday server commands</h3><p>Connect: <code>ssh -i ~/.ssh/surette_oracle ubuntu@129.213.166.31</code>, then <code>cd ~/surette</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Task</th>
+<th>Command (on the server, in <code>~/surette</code>)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Status</td>
+<td><code>docker compose ps</code></td>
+</tr>
+<tr>
+<td>Logs (last 100 lines)</td>
+<td><code>docker compose logs --tail 100 web worker</code></td>
+</tr>
+<tr>
+<td>Restart the site</td>
+<td><code>docker compose restart web worker</code></td>
+</tr>
+<tr>
+<td>Stop / start everything</td>
+<td><code>docker compose down</code> / <code>docker compose up -d</code></td>
+</tr>
+<tr>
+<td>Memory use</td>
+<td><code>free -m</code> and <code>docker stats --no-stream</code></td>
+</tr>
+<tr>
+<td>Disk use</td>
+<td><code>df -h /</code></td>
+</tr>
+</tbody></table>
+<p><strong>Backup</strong> (run on your Mac; creates a compressed copy of the database):</p>
+<pre><code class="language-bash">ssh -i ~/.ssh/surette_oracle ubuntu@129.213.166.31 &#39;cd surette &amp;&amp; docker compose exec -T db pg_dump -U surette surette | gzip&#39; &gt; surette-backup-$(date +%F).sql.gz
+</code></pre>
+<p><strong>Restore</strong> a backup into the server (replaces the data):</p>
+<pre><code class="language-bash">gunzip -c surette-backup-YYYY-MM-DD.sql.gz | ssh -i ~/.ssh/surette_oracle ubuntu@129.213.166.31 &#39;cd surette &amp;&amp; docker compose exec -T db psql -U surette -d surette&#39;
+</code></pre>
+<p>Uploaded photos and documents live in the <code>storage</code> Docker volume on the server.</p>
+<h3 id="7-5-a-custom-name-surette-demo-duckdns-org-free">7.5 A custom name: surette-demo.duckdns.org (free)</h3><ol>
+<li><p>Go to <a href="https://www.duckdns.org">https://www.duckdns.org</a> and <strong>sign in with GitHub</strong>.</p>
+</li>
+<li><p>Type <code>surette-demo</code> (or another free name), click <strong>add domain</strong>, enter the server IP in
+<strong>current ip</strong>, click <strong>update ip</strong>.</p>
+</li>
+<li><p>Switch the site to the new name (Caddy gets a new HTTPS certificate automatically):</p>
+<pre><code class="language-bash">ssh -i ~/.ssh/surette_oracle ubuntu@129.213.166.31 &quot;cd surette &amp;&amp; sed -i &#39;s/^SITE_HOST=.*/SITE_HOST=surette-demo.duckdns.org/&#39; .env &amp;&amp; docker compose up -d&quot;
+</code></pre>
+</li>
+<li><p>Open <a href="https://surette-demo.duckdns.org">https://surette-demo.duckdns.org</a> (allow a minute for the certificate). If you set up Google
+sign-in, add the new address to its authorized redirect URIs.</p>
+</li>
+</ol>
+<p>A <code>.com</code> name costs about $10–12 a year (e.g. Cloudflare Registrar or Porkbun); point its DNS A record to
+the server IP and use the same <code>SITE_HOST</code> change.</p>
+<h3 id="7-6-moving-to-a-bigger-free-server-full-ai-online">7.6 Moving to a bigger free server (full AI online)</h3><p>When an A1 server is available (2 OCPU / 12 GB or more), create it as in 7.2, prepare it, take a backup
+of the current database, deploy with <code>scripts/deploy-oracle.sh &lt;new-ip&gt;</code>, restore the backup, add the AI
+services (<code>docker compose --profile ai</code>), then point the name (sslip or DuckDNS) to the new IP.</p>
+<h2 id="8-github-and-automatic-checks">8. GitHub and automatic checks</h2><ul>
+<li>Every push to <code>main</code> runs: lint and type checks, unit and database tests, browser tests (with a test
+email inbox), the Python AI-service tests, a container build with a security scan, and publishes the
+site image to GitHub Packages.</li>
+<li>See results: <a href="https://github.com/AkshaySaraf17/surette-nexus/actions">https://github.com/AkshaySaraf17/surette-nexus/actions</a>.</li>
+<li>Update the live site only after the checks are green (section 7.3).</li>
+<li>Commits are made with your name only. Run <code>gitleaks git --staged</code> before pushing to catch secrets.</li>
+</ul>
+<h2 id="9-common-tasks">9. Common tasks</h2><h3 id="9-1-run-the-tests">9.1 Run the tests</h3><pre><code class="language-bash">cd web &amp;&amp; npm test                 # unit + database tests
+cd web &amp;&amp; npm run test:e2e         # browser tests (with scripts/dev.sh running)
+cd ml &amp;&amp; .venv/bin/python -m pytest
+</code></pre>
+<h3 id="9-2-rebuild-the-market-lab-results">9.2 Rebuild the Market Lab results</h3><pre><code class="language-bash">cd ml &amp;&amp; .venv/bin/python -m market_lab.build
+cd ml &amp;&amp; PYTHONPATH=. .venv/bin/streamlit run market_lab/dashboard.py
+</code></pre>
+<h3 id="9-3-change-the-demo-passwords">9.3 Change the demo passwords</h3><ul>
+<li><strong>New staff accounts:</strong> the owner adds them in <strong>Portal → Team &amp; accounts</strong> with a starting password.</li>
+<li><strong>Resetting a password:</strong> the owner account can reset any account&#39;s password through the admin API
+(<code>PATCH /api/admin/users/&lt;id&gt;</code> with <code>{&quot;newPassword&quot;: &quot;…&quot;}</code>, at least 12 characters with letters and
+numbers). There&#39;s no button for it in the portal yet.</li>
+<li><strong>Customers</strong> reset their own password with &quot;Forgot password?&quot; when emails are switched on.</li>
+<li><strong>Server:</strong> a fresh database (empty <code>pgdata</code> volume) gets new random demo passwords on the next deploy.</li>
+</ul>
+<h3 id="9-4-remove-the-demo-label">9.4 Remove the demo label</h3><p>Build with <code>NEXT_PUBLIC_SITE_DEMO=false</code> (Docker: <code>SITE_DEMO=false</code> in <code>.env</code>, then rebuild).</p>
+<h2 id="10-troubleshooting">10. Troubleshooting</h2><table>
+<thead>
+<tr>
+<th>Problem</th>
+<th>Fix</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Pages flash / reload constantly and won&#39;t scroll (local)</td>
+<td>Stop the site, delete the build cache <code>rm -rf web/.next</code>, start again.</td>
+</tr>
+<tr>
+<td>Mac disk full</td>
+<td><code>colima stop</code>; <code>npm cache clean --force</code>; check <code>df -h /</code>.</td>
+</tr>
+<tr>
+<td>&quot;Port already in use&quot;</td>
+<td>Something is still running: stop <code>scripts/dev.sh</code> (Ctrl+C) or find it with <code>lsof -i :3100</code>.</td>
+</tr>
+<tr>
+<td>Sign-in says &quot;too many attempts&quot;</td>
+<td>Rate limit: wait 15 minutes.</td>
+</tr>
+<tr>
+<td>Oracle &quot;Out of capacity&quot;</td>
+<td>Try other availability domains, a smaller size, another time, or the Micro shape.</td>
+</tr>
+<tr>
+<td>Live site shows 502 right after deploy</td>
+<td>The site is still starting: wait 30–60 seconds. Check <code>docker compose logs --tail 50 web</code>.</td>
+</tr>
+<tr>
+<td>HTTPS certificate not issued</td>
+<td>Ports 80/443 must be open in both the Oracle security list and the server&#39;s iptables (7.2).</td>
+</tr>
+<tr>
+<td>Live site slow on first visit</td>
+<td>Normal on the 1 GB server after a quiet period; next pages load in about a second.</td>
+</tr>
+<tr>
+<td>AI assistant gives plain answers</td>
+<td>Expected on the small server (no local AI), or when the AI&#39;s wording failed its safety check.</td>
+</tr>
+<tr>
+<td>Cloudflare link stopped working</td>
+<td>The Mac slept or <code>share.sh</code> stopped; run it again for a new link.</td>
+</tr>
+</tbody></table>
+<h2 id="11-security-checklist">11. Security checklist</h2><ul>
+<li>Never commit <code>web/.env</code>, <code>DEMO-LOGINS.local.txt</code>, <code>~/.oci/*</code> or the SSH private key.</li>
+<li>Change demo passwords before sharing a site; send staff logins privately.</li>
+<li>Keep the Oracle account on the Always Free tier (no Pay As You Go) to avoid charges.</li>
+<li>The site is labelled as a demo and asks search engines not to index it.</li>
+</ul>
+</main></body></html>

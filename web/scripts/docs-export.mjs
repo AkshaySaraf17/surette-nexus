@@ -3,6 +3,7 @@
  *
  *   docs/system-design.md  →  docs/exports/system-design.{html,pdf,docx}
  *   docs/system-flows.md   →  docs/exports/system-flows.{html,pdf,docx}
+ *   docs/operations-guide.md → docs/exports/operations-guide.{html,pdf,docx}
  *
  * Mermaid diagrams are rendered once with headless Chrome (the installed Google Chrome) into
  * SVG (for HTML/PDF) and PNG (for Word) under docs/exports/diagrams/. Word files are produced
@@ -26,6 +27,7 @@ const mermaidJs = readFileSync(require.resolve("mermaid/dist/mermaid.min.js"), "
 const DOCS = [
   { file: "system-design.md", name: "system-design", title: "Surette Nexus — System Design" },
   { file: "system-flows.md", name: "system-flows", title: "Surette Nexus — System and Data Flows" },
+  { file: "operations-guide.md", name: "operations-guide", title: "Surette Nexus — Operations Guide" },
 ];
 
 const CSS = `
