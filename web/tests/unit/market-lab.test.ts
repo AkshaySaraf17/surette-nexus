@@ -11,7 +11,12 @@ describe("Market Lab results", () => {
   it("the committed results match the schema the page reads", () => {
     expect(lab.towns.map((t) => t.town)).toContain("Waterville");
     expect(lab.price_index.map((p) => p.geo).sort()).toEqual(["kennebec", "maine", "somerset"]);
-    for (const p of lab.price_index) for (const x of p.projection) expect(x.low).toBeLessThanOrEqual(x.central), expect(x.central).toBeLessThanOrEqual(x.high);
+    for (const p of lab.price_index) {
+      for (const x of p.projection) {
+        expect(x.low).toBeLessThanOrEqual(x.central);
+        expect(x.central).toBeLessThanOrEqual(x.high);
+      }
+    }
   });
 
   it("the chosen model beats the baseline by a wide margin", () => {

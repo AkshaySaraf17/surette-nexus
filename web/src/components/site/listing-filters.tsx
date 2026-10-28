@@ -84,7 +84,7 @@ export function ListingFilters({ cities }: { cities: string[] }) {
           <option value="price_asc">Price: low to high</option>
         </Select>
         <label className="flex items-center gap-2 px-2 text-[0.8125rem] text-ink-2">
-          <input type="checkbox" checked={params.get("sold") === "1"} onChange={(e) => update("sold", e.target.checked ? "1" : "")} className="accent-[var(--gold)]" />
+          <input type="checkbox" checked={params.get("sold") === "1"} onChange={(e) => update("sold", e.target.checked ? "1" : "")} className="accent-[var(--brand)]" />
           Include sold
         </label>
       </form>

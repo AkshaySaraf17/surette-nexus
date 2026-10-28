@@ -7,7 +7,7 @@ export const metadata: Metadata = { title: "Confirm work order", robots: { index
 export default function VendorConfirmPage() {
   return (
     <div data-tone="paper" className="mx-auto max-w-xl px-5 pb-32 pt-36">
-      <p className="type-eyebrow text-gold">Vendor portal</p>
+      <p className="type-eyebrow text-brand">Vendor portal</p>
       <h1 className="type-title mt-3">Confirm you&rsquo;ve received this job</h1>
       <div className="mt-10">
         <Suspense>

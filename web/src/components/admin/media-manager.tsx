@@ -34,11 +34,11 @@ export function MediaManager({ media, onChanged }: { media: MediaImage[]; onChan
       {error && <p className="mt-3 text-sm text-danger" role="alert">{error}</p>}
       <ul className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
         {media.map((m) => (
-          <li key={m.id} className={cn("group relative overflow-hidden rounded-2xl ring-2", m.isCover ? "ring-gold" : "ring-transparent", busy === m.id && "opacity-50")}>
+          <li key={m.id} className={cn("group relative overflow-hidden rounded-2xl ring-2", m.isCover ? "ring-brand" : "ring-transparent", busy === m.id && "opacity-50")}>
             <ListingImage image={m} alt={m.alt} sizes="200px" className="aspect-[4/3] w-full" />
             <div className="absolute inset-x-0 bottom-0 flex justify-between gap-1 bg-gradient-to-t from-black/60 p-2">
               <button type="button" disabled={m.isCover || busy !== null} onClick={() => void act(m.id, "cover")} className="pressable grid size-8 place-items-center rounded-full bg-white/90 text-ink disabled:opacity-60" aria-label={m.isCover ? "Cover photo" : "Make cover photo"}>
-                <Star className={cn("size-4", m.isCover && "fill-gold text-gold")} />
+                <Star className={cn("size-4", m.isCover && "fill-brand text-brand")} />
               </button>
               <button type="button" disabled={busy !== null} onClick={() => void act(m.id, "delete")} className="pressable grid size-8 place-items-center rounded-full bg-white/90 text-danger" aria-label="Delete photo">
                 <Trash2 className="size-4" />

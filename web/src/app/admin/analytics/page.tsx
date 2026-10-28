@@ -146,7 +146,7 @@ export default function AnalyticsPage() {
                 {data.funnel.map((s, i) => (
                   <li key={s.key}>
                     <div className="flex justify-between text-sm"><span>{i + 1}. {s.label}</span><span className="tabular">{s.sessions}{i > 0 && <span className="text-ink-3"> · {(s.rate * 100).toFixed(1)}% of {s.denominator}</span>}</span></div>
-                    <div className="mt-1 h-2 rounded-full bg-fill"><div className="h-full rounded-full bg-gold" style={{ width: `${data.funnel[0].sessions ? (s.sessions / data.funnel[0].sessions) * 100 : 0}%` }} /></div>
+                    <div className="mt-1 h-2 rounded-full bg-fill"><div className="h-full rounded-full bg-brand" style={{ width: `${data.funnel[0].sessions ? (s.sessions / data.funnel[0].sessions) * 100 : 0}%` }} /></div>
                     {i > 0 && s.dropOff > 0 && <p className="mt-0.5 text-[0.75rem] text-ink-3">{s.dropOff} sessions stopped before this step</p>}
                   </li>
                 ))}
@@ -154,7 +154,7 @@ export default function AnalyticsPage() {
               <details className="mt-4 text-[0.75rem] text-ink-3"><summary className="cursor-pointer">Methodology</summary><p className="mt-1">A session counts at a step if it fired one of that step&rsquo;s events and reached every earlier step. Rate = sessions at this step ÷ sessions at the previous step. Events per step: {data.funnel.map((s) => `${s.label}: ${s.events.join(", ")}`).join("; ")}.</p></details>
             </section>
             <section className={card}>
-              <h2 className="flex items-center gap-2 text-sm font-medium"><Lightbulb className="size-4 text-gold" /> Insights · {data.insights.period}</h2>
+              <h2 className="flex items-center gap-2 text-sm font-medium"><Lightbulb className="size-4 text-brand" /> Insights · {data.insights.period}</h2>
               <ul className="mt-3 space-y-3">
                 {data.insights.items.map((i) => (
                   <li key={i.title} className={cn("rounded-2xl p-4 text-sm", i.level === "warning" ? "bg-danger-bg" : i.level === "opportunity" ? "bg-warn-bg" : "bg-fill")}>

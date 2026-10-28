@@ -26,7 +26,7 @@ async function Workspace() {
 export default function AccountPage() {
   return (
     <div data-tone="ivory" className="mx-auto max-w-[1400px] px-5 pb-32 pt-32 sm:px-8">
-      <p className="type-eyebrow text-gold">Your account</p>
+      <p className="type-eyebrow text-brand">Your account</p>
       <Suspense fallback={<Skeleton className="mt-6 h-96 w-full rounded-[28px]" />}>
         <Workspace />
       </Suspense>

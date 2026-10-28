@@ -63,7 +63,7 @@ export function ContactForm({ propertyId }: { propertyId?: string }) {
       <Field label="How can we help?" htmlFor="c-message" error={errors.message}><Textarea id="c-message" value={f.message} onChange={set("message")} rows={5} maxLength={4000} /></Field>
       <div aria-hidden className="absolute -left-[9999px] h-0 w-0 overflow-hidden"><label htmlFor="c-website">Website</label><input id="c-website" tabIndex={-1} autoComplete="off" value={f.website} onChange={set("website")} /></div>
       <label className="flex items-start gap-2.5 text-[0.8125rem] text-ink-2">
-        <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5 accent-[var(--gold)]" />
+        <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5 accent-[var(--brand)]" />
         <span>{CONTACT_CONSENT_TEXT}</span>
       </label>
       {errors.consentContact && <p className="text-[0.8125rem] text-danger">{errors.consentContact}</p>}

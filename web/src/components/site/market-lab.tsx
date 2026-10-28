@@ -66,7 +66,7 @@ export function MarketLab() {
 
   return (
     <section className="rounded-[28px] bg-paper p-6 ring-1 ring-line" aria-labelledby="lab-h">
-      <p className="type-eyebrow text-gold">Market Lab</p>
+      <p className="type-eyebrow text-brand">Market Lab</p>
       <h2 id="lab-h" className="type-headline mt-1">Our towns, analyzed against all {lab.cleaning.raw_rows} Maine towns</h2>
       <p className="mt-1 max-w-3xl text-sm text-ink-2">
         Statistical models trained on public Census and FHFA data. Each figure shows its method and typical error. This is context for decisions, not an appraisal of any home.

@@ -68,7 +68,7 @@ export function AdminShell({ viewer, children }: { viewer: Viewer; children: Rea
                   <li key={item.href}>
                     <Link href={item.href} onClick={() => setOpen(false)} aria-current={active ? "page" : undefined} className="relative flex items-center gap-3 rounded-xl px-3 py-2 text-sm">
                       {active && <motion.span layoutId="admin-nav" className="absolute inset-0 rounded-xl bg-fill" transition={{ type: "spring", bounce: 0, duration: 0.35 }} />}
-                      <item.icon className={cn("relative size-4", active ? "text-gold" : "text-ink-3")} aria-hidden />
+                      <item.icon className={cn("relative size-4", active ? "text-brand" : "text-ink-3")} aria-hidden />
                       <span className={cn("relative", active ? "font-medium text-ink" : "text-ink-2")}>{item.label}</span>
                     </Link>
                   </li>

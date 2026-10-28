@@ -263,7 +263,7 @@ export function MapExplorer({ initial, focusSlug }: { initial: ListingCard[]; fo
       </div>
 
       <div className="material absolute left-4 top-4 z-10 w-[min(320px,calc(100vw-2rem))] rounded-3xl border border-line p-5 text-ink shadow-lg">
-        <p className="type-eyebrow text-gold">Layers</p>
+        <p className="type-eyebrow text-brand">Layers</p>
         <ul className="mt-4 space-y-4">
           <li className="flex items-center justify-between gap-3">
             <label htmlFor="layer-schools" className="flex items-center gap-2.5 text-sm"><GraduationCap className="size-4 text-pine" aria-hidden /> School districts</label>
@@ -343,7 +343,7 @@ export function MapExplorer({ initial, focusSlug }: { initial: ListingCard[]; fo
         .map-pin { font: 600 12px/1 var(--font-sans); letter-spacing: -0.01em; padding: 8px 11px; border-radius: 999px;
           background: var(--ink); color: var(--paper); box-shadow: 0 6px 20px rgb(0 0 0 / .25); cursor: pointer;
           transition: transform .2s cubic-bezier(.16,1,.3,1), background-color .2s; }
-        .map-pin:hover, .map-pin[data-selected="true"] { transform: scale(1.12); background: var(--gold); color: #fff; z-index: 5; }
+        .map-pin:hover, .map-pin[data-selected="true"] { transform: scale(1.12); background: var(--brand); color: #fff; z-index: 5; }
         .map-pin[data-status="pending"] { background: #6b5f4d; }
         .map-pin[data-status="sold"] { background: #8c8579; text-decoration: line-through; }
       `}</style>

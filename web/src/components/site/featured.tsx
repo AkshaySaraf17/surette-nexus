@@ -26,7 +26,7 @@ export function Featured({ listings }: { listings: ListingCard[] }) {
             </div>
           </Link>
           <Reveal className={cn("lg:col-span-5", i % 2 === 1 && "lg:order-1 lg:col-start-1 lg:row-start-1")}>
-            <p className="type-eyebrow text-gold">
+            <p className="type-eyebrow text-brand">
               {String(i + 1).padStart(2, "0")} · {l.city}, Maine
             </p>
             <h3 className="type-display mt-4">{l.title}</h3>

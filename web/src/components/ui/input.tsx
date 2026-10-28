@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 
 /** shadcn/ui Input / Textarea / Select with label, hint and inline error. */
 const fieldClass =
-  "w-full rounded-xl border border-line-strong bg-paper px-3.5 text-[0.9375rem] text-ink placeholder:text-ink-3 transition-colors focus:border-gold focus:outline-none focus:ring-4 focus:ring-gold/15 aria-invalid:border-danger aria-invalid:ring-danger/10 disabled:opacity-50";
+  "w-full rounded-xl border border-line-strong bg-paper px-3.5 text-[0.9375rem] text-ink placeholder:text-ink-3 transition-colors focus:border-brand focus:outline-none focus:ring-4 focus:ring-brand/15 aria-invalid:border-danger aria-invalid:ring-danger/10 disabled:opacity-50";
 
 export function Input({ className, ...props }: ComponentProps<"input">) {
   return <input className={cn(fieldClass, "h-11", className)} {...props} />;

@@ -68,7 +68,7 @@ async function ListingView({ params }: { params: PageProps<"/listings/[slug]">["
         <div>
           <div className="flex items-center gap-2">
             <Badge tone={listing.status === "active" ? "success" : listing.status === "pending" ? "warn" : "neutral"}>{STATUS_LABEL[listing.status]}</Badge>
-            {listing.listingType === "rent" && <Badge tone="gold">For lease</Badge>}
+            {listing.listingType === "rent" && <Badge tone="brand">For lease</Badge>}
           </div>
           <h1 className="type-display mt-4">{listing.title}</h1>
           <p className="mt-3 text-ink-2">
@@ -111,7 +111,7 @@ async function ListingView({ params }: { params: PageProps<"/listings/[slug]">["
               <h2 className="type-headline">Amenities</h2>
               <ul className="mt-6 grid gap-x-8 gap-y-3 sm:grid-cols-2">
                 {listing.amenities.map((a) => (
-                  <li key={a} className="flex items-center gap-3 border-b border-line pb-3"><span className="size-1.5 rounded-full bg-gold" aria-hidden />{a}</li>
+                  <li key={a} className="flex items-center gap-3 border-b border-line pb-3"><span className="size-1.5 rounded-full bg-brand" aria-hidden />{a}</li>
                 ))}
               </ul>
             </Reveal>
@@ -135,7 +135,7 @@ async function ListingView({ params }: { params: PageProps<"/listings/[slug]">["
             <h2 className="type-headline">The neighborhood</h2>
             <div className="mt-6 grid gap-6 sm:grid-cols-3">
               <div className="rounded-3xl bg-paper p-6 ring-1 ring-line">
-                <GraduationCap className="size-5 text-gold" aria-hidden />
+                <GraduationCap className="size-5 text-brand" aria-hidden />
                 <p className="mt-3 font-medium">{listing.schoolDistrict ?? "District on request"}</p>
                 <ul className="mt-3 space-y-1.5 text-sm text-ink-2">
                   {nearbySchools.map((s) => (
@@ -144,7 +144,7 @@ async function ListingView({ params }: { params: PageProps<"/listings/[slug]">["
                 </ul>
               </div>
               <div className="rounded-3xl bg-paper p-6 ring-1 ring-line">
-                <Car className="size-5 text-gold" aria-hidden />
+                <Car className="size-5 text-brand" aria-hidden />
                 <p className="mt-3 font-medium">Estimated drives</p>
                 <ul className="mt-3 space-y-1.5 text-sm text-ink-2">
                   {pos && COMMUTE_ANCHORS.slice(0, 4).map((a) => (
@@ -153,12 +153,12 @@ async function ListingView({ params }: { params: PageProps<"/listings/[slug]">["
                 </ul>
               </div>
               <div className="rounded-3xl bg-paper p-6 ring-1 ring-line">
-                <Footprints className="size-5 text-gold" aria-hidden />
+                <Footprints className="size-5 text-brand" aria-hidden />
                 <p className="mt-3 font-medium">Walk Index {listing.walkScore ?? "—"}</p>
                 {listing.walkScore !== null && (
                   <>
                     <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-fill" role="meter" aria-valuemin={0} aria-valuemax={100} aria-valuenow={listing.walkScore} aria-label="Walk Index">
-                      <div className="h-full rounded-full bg-gold" style={{ width: `${listing.walkScore}%` }} />
+                      <div className="h-full rounded-full bg-brand" style={{ width: `${listing.walkScore}%` }} />
                     </div>
                     <p className="mt-3 text-sm text-ink-2">{walkIndexLabel(listing.walkScore)}</p>
                   </>

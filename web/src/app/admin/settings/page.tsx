@@ -110,7 +110,7 @@ export default function SettingsPage() {
                 </label>
                 <span className="text-ink-3">Collect:</span>
                 {CATEGORIES.map((c) => (
-                  <label key={c} className="flex items-center gap-1.5 capitalize"><input type="checkbox" checked={p.enabled_categories.includes(c)} onChange={(e) => void save(p.key, { enabledCategories: e.target.checked ? [...p.enabled_categories, c] : p.enabled_categories.filter((x) => x !== c) })} className="accent-[var(--gold)]" />{c}</label>
+                  <label key={c} className="flex items-center gap-1.5 capitalize"><input type="checkbox" checked={p.enabled_categories.includes(c)} onChange={(e) => void save(p.key, { enabledCategories: e.target.checked ? [...p.enabled_categories, c] : p.enabled_categories.filter((x) => x !== c) })} className="accent-[var(--brand)]" />{c}</label>
                 ))}
               </div>
             </div>

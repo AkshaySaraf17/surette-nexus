@@ -23,7 +23,7 @@ import { ListingImage } from "./listing-image";
 
 const REACTIONS: { value: Reaction; label: string; icon: typeof Heart; on: string }[] = [
   { value: "love", label: "Love", icon: Heart, on: "bg-[#c2410c] text-white border-transparent" },
-  { value: "maybe", label: "Maybe", icon: HelpCircle, on: "bg-gold text-white border-transparent" },
+  { value: "maybe", label: "Maybe", icon: HelpCircle, on: "bg-brand text-on-brand border-transparent" },
   { value: "pass", label: "Pass", icon: ThumbsDown, on: "bg-ink text-paper border-transparent" },
 ];
 

@@ -26,7 +26,7 @@ export function PrivacyControls() {
   }
   return (
     <div className="mt-8 rounded-[24px] bg-paper p-6 ring-1 ring-line">
-      <p className="font-medium">Anonymous analytics on this browser: <span className="text-gold">{state === "granted" ? "allowed" : state === "denied" ? "declined" : "not decided (off)"}</span></p>
+      <p className="font-medium">Anonymous analytics on this browser: <span className="text-brand">{state === "granted" ? "allowed" : state === "denied" ? "declined" : "not decided (off)"}</span></p>
       <div className="mt-4 flex gap-2">
         <Button size="sm" onClick={() => decide("granted")} disabled={state === "granted"}>Allow</Button>
         <Button size="sm" variant="outline" onClick={() => decide("denied")} disabled={state === "denied"}>Decline &amp; delete id</Button>

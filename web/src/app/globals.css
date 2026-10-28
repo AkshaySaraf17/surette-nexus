@@ -20,9 +20,11 @@
   --line: rgb(21 19 15 / 0.1);
   --line-strong: rgb(21 19 15 / 0.22);
   --fill: rgb(21 19 15 / 0.05);
-  --gold: #86602a; /* text-safe gold: ≥ 4.5:1 on light surfaces, white text on it 5.6:1 */
-  --gold-soft: #d9b98a;
-  --navy: #0f1a24;
+  /* Surette Real Estate maroon (from surette-realestate.com): 10.8:1 on white; white text on it 10.8:1 */
+  --brand: #77162d;
+  --brand-soft: #f2c6cf; /* decorative accents on dark sections */
+  --on-brand: #ffffff; /* text on brand-colored buttons and badges */
+  --navy: #201a1c; /* dark sections: a warm charcoal that pairs with the maroon */
   --pine: #1f3a32;
   --danger: #b42318;
   --danger-bg: #fdecea;
@@ -37,7 +39,7 @@
 
   --tone-bg: var(--ivory);
   --tone-ink: var(--ink);
-  --glare-a: rgb(217 185 138 / 0.35);
+  --glare-a: rgb(119 22 45 / 0.18);
   --glare-b: rgb(255 255 255 / 0);
   --glare-x: 50vw;
   --glare-y: 30vh;
@@ -54,8 +56,9 @@
     --line: rgb(243 239 231 / 0.1);
     --line-strong: rgb(243 239 231 / 0.24);
     --fill: rgb(243 239 231 / 0.06);
-    --gold: #d2a965;
-    --gold-soft: #8d6a35;
+    --brand: #e8899b; /* 7.9:1 on the dark background */
+    --brand-soft: #f2c6cf;
+    --on-brand: #0d0c0a;
     --danger: #ff8a80;
     --danger-bg: rgb(255 80 60 / 0.14);
     --success: #6fd394;
@@ -66,7 +69,7 @@
     --scrim: rgb(0 0 0 / 0.65);
     --shadow-lg: 0 30px 80px -20px rgb(0 0 0 / 0.8);
     --shadow-sm: 0 0 0 1px rgb(243 239 231 / 0.06);
-    --glare-a: rgb(210 169 101 / 0.22);
+    --glare-a: rgb(232 137 155 / 0.18);
     color-scheme: dark;
   }
 }
@@ -83,8 +86,9 @@
   --color-line: var(--line);
   --color-line-strong: var(--line-strong);
   --color-fill: var(--fill);
-  --color-gold: var(--gold);
-  --color-gold-soft: var(--gold-soft);
+  --color-brand: var(--brand);
+  --color-brand-soft: var(--brand-soft);
+  --color-on-brand: var(--on-brand);
   --color-navy: var(--navy);
   --color-pine: var(--pine);
   --color-danger: var(--danger);
@@ -232,7 +236,7 @@ body {
 }
 
 :focus-visible {
-  outline: 2px solid var(--gold);
+  outline: 2px solid var(--brand);
   outline-offset: 3px;
 }
 

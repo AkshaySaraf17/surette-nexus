@@ -70,7 +70,7 @@ export default function WebhooksPage() {
           <div className="mt-2 flex flex-wrap gap-2">
             {EVENTS.map((ev) => (
               <label key={ev} className="flex items-center gap-2 rounded-full border border-line-strong px-3 py-1.5 text-[0.8125rem]">
-                <input type="checkbox" checked={events.includes(ev)} onChange={(e) => setEvents((all) => (e.target.checked ? [...all, ev] : all.filter((x) => x !== ev)))} className="accent-[var(--gold)]" />
+                <input type="checkbox" checked={events.includes(ev)} onChange={(e) => setEvents((all) => (e.target.checked ? [...all, ev] : all.filter((x) => x !== ev)))} className="accent-[var(--brand)]" />
                 {ev}
               </label>
             ))}

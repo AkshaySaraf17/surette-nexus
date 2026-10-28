@@ -138,7 +138,7 @@ export function AuthForm() {
         {mode === "signup" && (
           <div>
             <label className="flex items-start gap-3 text-sm text-ink-2">
-              <input type="checkbox" checked={acceptTerms} onChange={(e) => setAcceptTerms(e.target.checked)} className="mt-1 accent-[var(--gold)]" aria-invalid={Boolean(errors.acceptTerms)} />
+              <input type="checkbox" checked={acceptTerms} onChange={(e) => setAcceptTerms(e.target.checked)} className="mt-1 accent-[var(--brand)]" aria-invalid={Boolean(errors.acceptTerms)} />
               <span>
                 I&rsquo;ve read the <Link href="/privacy" className="underline underline-offset-4">privacy notice</Link>. Surette stores my saved homes, searches and
                 scenarios so I can use them across devices, and I can delete them anytime.

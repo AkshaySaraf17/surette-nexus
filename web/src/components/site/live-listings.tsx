@@ -71,7 +71,7 @@ export function LiveListings({ initial, query = "", emptyMessage = "No homes mat
                 className="relative"
               >
                 {fresh.has(listing.id) && (
-                  <span className="absolute -top-2 left-5 z-10 rounded-full bg-gold px-3 py-1 text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-white shadow-sm">
+                  <span className="absolute -top-2 left-5 z-10 rounded-full bg-brand px-3 py-1 text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-on-brand shadow-sm">
                     Just listed
                   </span>
                 )}

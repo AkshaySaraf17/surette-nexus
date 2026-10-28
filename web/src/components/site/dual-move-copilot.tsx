@@ -326,7 +326,7 @@ export function DualMoveCopilot({ referenceRate }: { referenceRate: { value: num
                       <XAxis dataKey="rate" tick={{ fontSize: 11, fill: "var(--ink-3)" }} />
                       <YAxis tick={{ fontSize: 11, fill: "var(--ink-3)" }} width={48} />
                       <Tooltip formatter={(v) => [`$${Number(v).toLocaleString("en-US")}`, "P&I / month"]} contentStyle={{ background: "var(--paper)", border: "1px solid var(--line)", borderRadius: 12 }} />
-                      <Bar dataKey="payment" fill="var(--gold)" radius={[6, 6, 0, 0]} />
+                      <Bar dataKey="payment" fill="var(--brand)" radius={[6, 6, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -347,7 +347,7 @@ export function DualMoveCopilot({ referenceRate }: { referenceRate: { value: num
             <div className="rounded-[24px] bg-paper p-6 ring-1 ring-line">
               <p className="type-headline">Typical timeline</p>
               <ol className="mt-4 space-y-3 border-l border-line-strong pl-5">
-                {result.timeline.map((s) => <li key={s.label} className="relative text-sm"><span className="absolute -left-[27px] top-1 size-2.5 rounded-full bg-gold" aria-hidden /><span className="font-medium">Month {s.month}: {s.label}</span>{s.detail && <span className="block text-ink-2">{s.detail}</span>}</li>)}
+                {result.timeline.map((s) => <li key={s.label} className="relative text-sm"><span className="absolute -left-[27px] top-1 size-2.5 rounded-full bg-brand" aria-hidden /><span className="font-medium">Month {s.month}: {s.label}</span>{s.detail && <span className="block text-ink-2">{s.detail}</span>}</li>)}
               </ol>
             </div>
 
@@ -407,7 +407,7 @@ export function DualMoveCopilot({ referenceRate }: { referenceRate: { value: num
                     </div>
                     <Field label="Note (optional)" htmlFor="sh-m"><Textarea id="sh-m" value={share.message} onChange={(e) => setShare((s) => ({ ...s, message: e.target.value }))} className="min-h-16" /></Field>
                     <label className="flex items-start gap-2.5 text-[0.8125rem] text-ink-2">
-                      <input type="checkbox" checked={share.consent} onChange={(e) => setShare((s) => ({ ...s, consent: e.target.checked }))} className="mt-0.5 accent-[var(--gold)]" />
+                      <input type="checkbox" checked={share.consent} onChange={(e) => setShare((s) => ({ ...s, consent: e.target.checked }))} className="mt-0.5 accent-[var(--brand)]" />
                       <span>{CONTACT_CONSENT_TEXT}</span>
                     </label>
                     {share.errors.consentContact && <p className="text-[0.8125rem] text-danger">{share.errors.consentContact}</p>}

@@ -1,4 +1,4 @@
-import { DEMO } from "@/lib/site";
+import { BROKERAGE, DEMO } from "@/lib/site";
 import Link from "next/link";
 import { Wordmark } from "./wordmark";
 
@@ -42,7 +42,7 @@ export function SiteFooter() {
         </nav>
       </div>
       <div className="mx-auto flex max-w-[1400px] flex-wrap justify-between gap-4 border-t border-white/10 px-5 py-6 text-xs text-white/60 sm:px-8">
-        <p>© Surette Real Estate. Equal Housing Opportunity.</p>
+        <p>© Surette Real Estate Team at {BROKERAGE}. Equal Housing Opportunity.</p>
           {DEMO && <p>Demo site: a sample project, not the official Surette Real Estate website. Listings, people and figures may be sample data.</p>}
         <p>Commute times and Walk Index are estimates. Listing information is deemed reliable but not guaranteed.</p>
       </div>

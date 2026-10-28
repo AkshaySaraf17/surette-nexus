@@ -45,7 +45,7 @@ async function LeaderSection() {
         <AgentPortrait agent={leader} className="aspect-[4/5] w-full rounded-[32px] shadow-lg" />
       </Reveal>
       <Reveal className="lg:col-span-6 lg:col-start-7" delay={0.1}>
-        <p className="type-eyebrow text-gold">{leader.title}</p>
+        <p className="type-eyebrow text-brand">{leader.title}</p>
         <h2 className="type-display mt-4">{leader.fullName}</h2>
         {leader.bio && <p className="type-lede mt-6 text-ink-2">{leader.bio}</p>}
         {leader.specialties.length > 0 && (
@@ -83,29 +83,29 @@ export default function HomePage() {
     <>
       <Hero />
 
-      <section id="intro" data-tone="ivory" className="mx-auto max-w-[1400px] px-5 py-32 sm:px-8 sm:py-44">
-        <p className="type-eyebrow text-gold">Since 1978</p>
+      <section id="intro" className="mx-auto max-w-[1400px] px-5 py-24 sm:px-8">
+        <p className="type-eyebrow text-brand">Since 1978</p>
         <RevealWords
           as="h2"
           className="type-display mt-6 max-w-5xl"
           text="Waterville, the Belgrade Lakes and the Kennebec Valley — represented by people who live here."
         />
-        <div className="mt-20 grid gap-10 border-t border-line pt-10 sm:grid-cols-3">
+        <div className="mt-12 grid gap-6 sm:grid-cols-3">
           {[
             { k: "Homes & estates", v: "Historic colonials to lakefront glass houses, photographed inside and out." },
             { k: "Waterfront & land", v: "Frontage, acreage and farms across Kennebec and Somerset counties." },
             { k: "Leasing & management", v: "Rentals and portfolio management backed by our operations team." },
-          ].map((item, i) => (
-            <Reveal key={item.k} delay={i * 0.08}>
+          ].map((item) => (
+            <div key={item.k} className="rounded-[20px] bg-paper p-6 ring-1 ring-line">
               <h3 className="type-headline">{item.k}</h3>
               <p className="mt-3 text-ink-2">{item.v}</p>
-            </Reveal>
+            </div>
           ))}
         </div>
       </section>
 
-      <section data-tone="paper" aria-labelledby="featured-heading" className="mx-auto max-w-[1400px] px-5 pb-40 sm:px-8">
-        <div className="mb-20 flex items-end justify-between gap-6">
+      <section aria-labelledby="featured-heading" className="mx-auto max-w-[1400px] px-5 pb-16 sm:px-8">
+        <div className="mb-10 flex items-end justify-between gap-6">
           <h2 id="featured-heading" className="type-title">
             Featured residences
           </h2>
@@ -120,10 +120,10 @@ export default function HomePage() {
 
       <HomeScenes />
 
-      <section id="available" data-tone="ivory" aria-labelledby="available-heading" className="mx-auto max-w-[1400px] px-5 py-32 sm:px-8">
+      <section id="available" aria-labelledby="available-heading" className="mx-auto max-w-[1400px] px-5 py-24 sm:px-8">
         <div className="mb-10 flex flex-wrap items-end justify-between gap-6">
           <div>
-            <p className="type-eyebrow text-gold">Available now</p>
+            <p className="type-eyebrow text-brand">Available now</p>
             <h2 id="available-heading" className="type-display mt-3">
               Every home we represent.
             </h2>
@@ -137,7 +137,7 @@ export default function HomePage() {
         </Suspense>
       </section>
 
-      <section data-tone="navy" aria-labelledby="map-heading" className="relative overflow-hidden py-32 text-white">
+      <section aria-labelledby="map-heading" className="relative overflow-hidden bg-navy py-24 text-white">
         <div className="mx-auto grid max-w-[1400px] items-center gap-14 px-5 sm:px-8 lg:grid-cols-2">
           <Reveal>
             <p className="type-eyebrow text-white/60">Know the neighborhood</p>
@@ -146,16 +146,16 @@ export default function HomePage() {
             </h2>
             <ul className="mt-10 space-y-5 text-white/80">
               <li className="flex gap-4">
-                <GraduationCap className="mt-1 size-5 shrink-0 text-gold-soft" aria-hidden /> District areas and every public school, elementary to high school.
+                <GraduationCap className="mt-1 size-5 shrink-0 text-brand-soft" aria-hidden /> District areas and every public school, elementary to high school.
               </li>
               <li className="flex gap-4">
-                <Car className="mt-1 size-5 shrink-0 text-gold-soft" aria-hidden /> Commute rings to downtown, Colby, MaineGeneral, Augusta and Portland.
+                <Car className="mt-1 size-5 shrink-0 text-brand-soft" aria-hidden /> Commute rings to downtown, Colby, MaineGeneral, Augusta and Portland.
               </li>
               <li className="flex gap-4">
-                <Footprints className="mt-1 size-5 shrink-0 text-gold-soft" aria-hidden /> A walkability heat layer built from everyday destinations.
+                <Footprints className="mt-1 size-5 shrink-0 text-brand-soft" aria-hidden /> A walkability heat layer built from everyday destinations.
               </li>
             </ul>
-            <Link href="/map" className={`${buttonVariants({ variant: "gold", size: "lg" })} mt-10`}>
+            <Link href="/map" className={`${buttonVariants({ variant: "brand", size: "lg" })} mt-10`}>
               Open the map
             </Link>
           </Reveal>
@@ -170,14 +170,14 @@ export default function HomePage() {
 
       <Seasons />
 
-      <section data-tone="gold" aria-label="Team leader" className="mx-auto max-w-[1400px] px-5 py-36 sm:px-8">
+      <section aria-label="Team leader" className="mx-auto max-w-[1400px] px-5 py-24 sm:px-8">
         <Suspense fallback={<Skeleton className="h-[480px] w-full rounded-[32px]" />}>
           <LeaderSection />
         </Suspense>
       </section>
 
-      <section data-tone="ivory" className="relative overflow-hidden">
-        <Parallax strength={10} className="h-[70svh]">
+      <section className="relative mx-auto mb-24 max-w-[1400px] overflow-hidden rounded-[28px] px-0 sm:mx-8 xl:mx-auto">
+        <Parallax className="h-[420px]">
           {/* eslint-disable-next-line @next/next/no-img-element -- static brand still */}
           <img src="/media/brand/lake-foliage.webp" srcSet="/media/brand/lake-foliage-sm.webp 960w, /media/brand/lake-foliage.webp 2000w" sizes="100vw" alt="Autumn trees reflected in still water" loading="lazy" className="size-full object-cover" />
         </Parallax>
@@ -186,7 +186,7 @@ export default function HomePage() {
             <h2 className="type-display mx-auto max-w-3xl">Looking for something not yet listed?</h2>
             <p className="type-lede mx-auto mt-5 max-w-xl text-white/85">Tell the AI assistant what you have in mind. Our team hears about homes before they reach the market.</p>
             <div className="mt-9">
-              <AssistantButton variant="gold" prompt="I'm looking for a home that isn't listed yet.">
+              <AssistantButton variant="brand" prompt="I'm looking for a home that isn't listed yet.">
                 Start a private search
               </AssistantButton>
             </div>

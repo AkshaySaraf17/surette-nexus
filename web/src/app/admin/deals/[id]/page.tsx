@@ -175,7 +175,7 @@ export default function DealPage() {
       )}
       {error && <p className="flex items-center gap-2 rounded-2xl bg-danger-bg p-3 text-sm text-danger" role="alert"><AlertTriangle className="size-4" /> {error}</p>}
 
-      <p className="rounded-[22px] bg-paper p-5 text-sm leading-relaxed ring-1 ring-line"><span className="type-eyebrow mr-2 text-gold">Status</span>{d.summary}</p>
+      <p className="rounded-[22px] bg-paper p-5 text-sm leading-relaxed ring-1 ring-line"><span className="type-eyebrow mr-2 text-brand">Status</span>{d.summary}</p>
 
       <div className="grid gap-6 xl:grid-cols-3">
         <form onSubmit={saveKeys} className="space-y-3 rounded-[24px] bg-paper p-6 ring-1 ring-line">
@@ -196,7 +196,7 @@ export default function DealPage() {
           <ul className="mt-3 divide-y divide-line">
             {d.milestones.map((m) => (
               <li key={m.id} className="flex flex-wrap items-center gap-3 py-2.5 text-sm">
-                <input type="checkbox" checked={m.done} onChange={(e) => void item({ kind: "milestone", itemId: m.id, done: e.target.checked })} className="size-4 accent-[var(--gold)]" aria-label={`Mark ${m.label} ${m.done ? "not done" : "done"}`} />
+                <input type="checkbox" checked={m.done} onChange={(e) => void item({ kind: "milestone", itemId: m.id, done: e.target.checked })} className="size-4 accent-[var(--brand)]" aria-label={`Mark ${m.label} ${m.done ? "not done" : "done"}`} />
                 <span className={cn("flex-1", m.done && "text-ink-3 line-through")}>{m.label}{m.clientVisible && <Badge className="ml-2" tone="neutral">client sees</Badge>}</span>
                 <input type="date" value={m.dueOn ?? ""} onChange={(e) => void item({ kind: "milestone", itemId: m.id, dueOn: e.target.value || null })} className={cn("rounded-lg border border-line bg-transparent px-2 py-1 text-[0.8125rem]", tone(m.urgency))} aria-label={`${m.label} due date`} />
                 {!m.done && m.dueOn && <button type="button" onClick={() => void generate("deadline_reminder", m.id)} className="text-[0.75rem] underline underline-offset-2" disabled={draftBusy}>Draft reminder</button>}
@@ -207,7 +207,7 @@ export default function DealPage() {
           <ul className="mt-3 divide-y divide-line">
             {d.tasks.map((t) => (
               <li key={t.id} className="flex flex-wrap items-center gap-3 py-2.5 text-sm">
-                <input type="checkbox" checked={t.status !== "open"} onChange={(e) => void item({ kind: "task", itemId: t.id, done: e.target.checked })} className="size-4 accent-[var(--gold)]" aria-label={`Mark ${t.title} done`} />
+                <input type="checkbox" checked={t.status !== "open"} onChange={(e) => void item({ kind: "task", itemId: t.id, done: e.target.checked })} className="size-4 accent-[var(--brand)]" aria-label={`Mark ${t.title} done`} />
                 <span className={cn("flex-1", t.status !== "open" && "text-ink-3 line-through")}>{t.title}</span>
                 <select value={t.assignee?.id ?? ""} onChange={(e) => void item({ kind: "task", itemId: t.id, assigneeId: e.target.value || null })} className="rounded-lg border border-line bg-transparent px-2 py-1 text-[0.8125rem]" aria-label={`${t.title} assignee`}>
                   <option value="">Unassigned</option>{staff.map((s) => <option key={s.id} value={s.id}>{s.fullName}</option>)}
@@ -236,7 +236,7 @@ export default function DealPage() {
           <form onSubmit={uploadDoc} className="mt-4 space-y-3 rounded-2xl border border-dashed border-line-strong p-4">
             <input ref={fileRef} type="file" accept="application/pdf,image/jpeg,image/png,text/plain" aria-label="Choose a document" className="text-sm" />
             <Input value={upload.label} onChange={(e) => setUpload({ ...upload, label: e.target.value })} placeholder="Label, e.g. Purchase & sale agreement" aria-label="Document label" className="h-10" />
-            <label className="flex items-center gap-2 text-[0.8125rem]"><input type="checkbox" checked={upload.extract} onChange={(e) => setUpload({ ...upload, extract: e.target.checked })} className="accent-[var(--gold)]" /> Find price & dates for me to review (PDF / text)</label>
+            <label className="flex items-center gap-2 text-[0.8125rem]"><input type="checkbox" checked={upload.extract} onChange={(e) => setUpload({ ...upload, extract: e.target.checked })} className="accent-[var(--brand)]" /> Find price & dates for me to review (PDF / text)</label>
             {upload.error && <p className="text-sm text-danger">{upload.error}</p>}
             <Button type="submit" size="sm" disabled={upload.busy}><FileUp /> {upload.busy ? "Uploading…" : "Upload"}</Button>
           </form>

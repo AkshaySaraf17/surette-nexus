@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { SITE_NAME } from "@/lib/site";
+import { HOME_LABEL } from "@/lib/site";
 import Link from "next/link";
 import { Suspense } from "react";
 import { StaffSignIn } from "@/components/admin/staff-sign-in";
@@ -21,7 +21,7 @@ export default function PortalSignInPage() {
       </div>
       <div className="flex items-center justify-center bg-ivory px-6 py-16 text-ink">
         <div className="w-full max-w-sm">
-          <Link href="/" aria-label={`${SITE_NAME} home`}><Wordmark /></Link>
+          <Link href="/" aria-label={HOME_LABEL}><Wordmark /></Link>
           <h1 className="type-title mt-10">Team sign-in</h1>
           <p className="mt-2 text-sm text-ink-2">For Surette owners, administrators and agents.</p>
           <div className="mt-8">

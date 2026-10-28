@@ -1,10 +1,4 @@
-import { Reveal } from "@/components/motion/reveal";
-
-/**
- * "Inside the homes" — full-screen photographs that stack as you scroll. Each panel is
- * `position: sticky`, so the next one slides up over it using the browser's native
- * scrolling: no frame scrubbing, no JavaScript per frame, nothing to stutter.
- */
+/** "Inside the homes": four photographs in simple boxes with a short caption, scrolled past like any page. */
 const SCENES = [
   { src: "/media/brand/scenes/lake-view", alt: "Still lake at dawn with autumn trees on the far shore", eyebrow: "The Belgrade Lakes", text: "Mornings that start at the water." },
   { src: "/media/brand/scenes/sunroom", alt: "Sunroom with floor-to-ceiling windows and a wood ceiling", eyebrow: "Built around the view", text: "Rooms that let the outside in." },
@@ -14,28 +8,28 @@ const SCENES = [
 
 export function HomeScenes() {
   return (
-    <section data-tone="pine" aria-label="Inside the homes we represent" className="relative bg-[#1f3a32]">
-      {SCENES.map((scene, i) => (
-        <div key={scene.src} className="sticky top-0 h-svh overflow-hidden" style={{ zIndex: i + 1 }}>
-          {/* eslint-disable-next-line @next/next/no-img-element -- pre-sized WebP renditions */}
-          <img
-            src={`${scene.src}.webp`}
-            srcSet={`${scene.src}-sm.webp 960w, ${scene.src}.webp 2000w`}
-            sizes="100vw"
-            alt={scene.alt}
-            loading="lazy"
-            decoding="async"
-            className="absolute inset-0 size-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-black/20" aria-hidden />
-          <div className="absolute inset-x-0 bottom-[12%] px-6 text-center text-white">
-            <Reveal>
-              <p className="type-eyebrow text-white/75">{scene.eyebrow}</p>
-              <p className="type-display mx-auto mt-3 max-w-3xl [text-shadow:0_2px_30px_rgb(0_0_0/0.35)]">{scene.text}</p>
-            </Reveal>
-          </div>
-        </div>
-      ))}
+    <section aria-labelledby="scenes-heading" className="mx-auto max-w-[1400px] px-5 py-24 sm:px-8">
+      <h2 id="scenes-heading" className="type-title">Inside the homes we represent</h2>
+      <ul className="mt-10 grid gap-6 sm:grid-cols-2">
+        {SCENES.map((scene) => (
+          <li key={scene.src} className="overflow-hidden rounded-[24px] bg-paper ring-1 ring-line">
+            {/* eslint-disable-next-line @next/next/no-img-element -- pre-sized WebP renditions */}
+            <img
+              src={`${scene.src}-sm.webp`}
+              srcSet={`${scene.src}-sm.webp 960w, ${scene.src}.webp 2000w`}
+              sizes="(min-width: 640px) 50vw, 100vw"
+              alt={scene.alt}
+              loading="lazy"
+              decoding="async"
+              className="aspect-[3/2] w-full object-cover"
+            />
+            <div className="p-6">
+              <p className="type-eyebrow text-brand">{scene.eyebrow}</p>
+              <p className="type-headline mt-2">{scene.text}</p>
+            </div>
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }

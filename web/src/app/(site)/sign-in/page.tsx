@@ -15,7 +15,7 @@ export default function SignInPage() {
       </div>
       <div className="flex items-center justify-center px-5 pb-16 pt-32">
         <div className="w-full max-w-md">
-          <p className="type-eyebrow text-gold">Welcome</p>
+          <p className="type-eyebrow text-brand">Welcome</p>
           <h1 className="type-title mt-3 mb-10">Your Surette account</h1>
           <Suspense>
             <AuthForm />

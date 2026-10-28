@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 
 /**
- * Scroll-reactive palette. Any section can declare `data-tone="ivory|dusk|pine|navy|gold|night"`.
+ * Scroll-reactive palette. Any section can declare `data-tone="ivory|dusk|pine|navy|brand|night"`.
  * Whichever toned section crosses the middle of the viewport sets the page background,
  * ink color and cursor-glare tint; body transitions between them (globals.css), so colors
  * melt into one another as you scroll — like Apple's product pages.
@@ -16,7 +16,7 @@ const LIGHT: Record<string, Tone> = {
   dusk: { bg: "#efe4d6", ink: "#2a1f14", glare: "rgb(255 170 110 / 0.42)" },
   pine: { bg: "#1f3a32", ink: "#eef0ea", glare: "rgb(150 220 180 / 0.28)" },
   navy: { bg: "#0f1a24", ink: "#eef1f5", glare: "rgb(120 170 255 / 0.3)" },
-  gold: { bg: "#e9dcc4", ink: "#231a0e", glare: "rgb(255 210 140 / 0.5)" },
+  brand: { bg: "#e9dcc4", ink: "#231a0e", glare: "rgb(255 210 140 / 0.5)" },
   night: { bg: "#0b0a08", ink: "#f3efe7", glare: "rgb(210 169 101 / 0.3)" },
 };
 const DARK: Record<string, Tone> = {
@@ -24,7 +24,7 @@ const DARK: Record<string, Tone> = {
   ivory: { bg: "#0d0c0a", ink: "#f3efe7", glare: "rgb(210 169 101 / 0.22)" },
   paper: { bg: "#16140f", ink: "#f3efe7", glare: "rgb(210 169 101 / 0.2)" },
   dusk: { bg: "#1c140d", ink: "#f3e6d6", glare: "rgb(255 150 90 / 0.25)" },
-  gold: { bg: "#21190d", ink: "#f3e6d0", glare: "rgb(255 200 120 / 0.28)" },
+  brand: { bg: "#21190d", ink: "#f3e6d0", glare: "rgb(255 200 120 / 0.28)" },
 };
 
 export function ScrollTone() {

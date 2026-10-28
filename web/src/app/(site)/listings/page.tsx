@@ -47,7 +47,7 @@ async function Filters() {
 export default function ListingsPage({ searchParams }: PageProps<"/listings">) {
   return (
     <div data-tone="ivory" className="mx-auto max-w-[1400px] px-5 pb-32 pt-32 sm:px-8">
-      <p className="type-eyebrow text-gold">Homes</p>
+      <p className="type-eyebrow text-brand">Homes</p>
       <h1 className="type-display mt-3">Available in Central Maine</h1>
       <div className="mt-10">
         <Suspense fallback={<div className="h-16" />}>

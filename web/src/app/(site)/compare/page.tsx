@@ -69,7 +69,7 @@ async function Comparison({ searchParams }: { searchParams: PageProps<"/compare"
 export default function ComparePage({ searchParams }: PageProps<"/compare">) {
   return (
     <div data-tone="paper" className="mx-auto max-w-[1400px] px-5 pb-32 pt-32 sm:px-8">
-      <p className="type-eyebrow text-gold">Compare</p>
+      <p className="type-eyebrow text-brand">Compare</p>
       <h1 className="type-display mt-3">Side by side</h1>
       <div className="mt-10">
         <Suspense fallback={<Skeleton className="h-96 w-full rounded-[28px]" />}>

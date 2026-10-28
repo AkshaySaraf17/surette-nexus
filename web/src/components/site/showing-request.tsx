@@ -118,7 +118,7 @@ export function ShowingRequest({ propertyId, title }: { propertyId: string; titl
               </Field>
             </div>
             <label className="mt-5 flex items-start gap-2.5 text-[0.8125rem] text-ink-2">
-              <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5 accent-[var(--gold)]" />
+              <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5 accent-[var(--brand)]" />
               <span>{CONTACT_CONSENT_TEXT}</span>
             </label>
             {errors.consentContact && <p className="mt-1 text-[0.8125rem] text-danger">{errors.consentContact}</p>}

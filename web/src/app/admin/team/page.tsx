@@ -66,7 +66,7 @@ export default function TeamAdminPage() {
             <li key={m.id} className="flex items-center gap-4 rounded-[20px] bg-paper p-4 ring-1 ring-line">
               <AgentPortrait agent={m} className="size-14 shrink-0 rounded-2xl [&>span]:text-lg" />
               <div>
-                <p className="font-medium">{m.fullName} {m.isLeader && <span className="text-gold">· Leader</span>}</p>
+                <p className="font-medium">{m.fullName} {m.isLeader && <span className="text-brand">· Leader</span>}</p>
                 <p className="text-sm text-ink-2">{m.title} · {m.email}</p>
               </div>
             </li>

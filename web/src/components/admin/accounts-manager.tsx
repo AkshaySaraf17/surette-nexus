@@ -47,7 +47,7 @@ export function AccountsManager({ selfId }: { selfId: string }) {
           <tbody className="divide-y divide-line">
             {shown.map((u) => (
               <tr key={u.id} className={cn(!u.isActive && "opacity-60")}>
-                <td className="py-2.5"><span className="font-medium">{u.fullName}</span>{u.isLeader && <Badge className="ml-2" tone="gold">Leader</Badge>}<span className="block text-ink-3">{u.email} · last sign-in {u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleDateString("en-US") : "never"}</span></td>
+                <td className="py-2.5"><span className="font-medium">{u.fullName}</span>{u.isLeader && <Badge className="ml-2" tone="brand">Leader</Badge>}<span className="block text-ink-3">{u.email} · last sign-in {u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleDateString("en-US") : "never"}</span></td>
                 <td className="py-2.5">
                   {u.role === "client" ? "Customer" : (
                     <select value={u.role} disabled={u.id === selfId} onChange={(e) => void patch(u.id, { role: e.target.value })} className="rounded-lg border border-line bg-transparent px-2 py-1" aria-label={`Role for ${u.fullName}`}>
@@ -61,7 +61,7 @@ export function AccountsManager({ selfId }: { selfId: string }) {
                       <option value="">None</option>{staff.map((s) => <option key={s.id} value={s.id}>{s.fullName}</option>)}
                     </select>
                   ) : (
-                    <label className="flex items-center gap-2"><input type="checkbox" checked={u.isPublic} onChange={(e) => void patch(u.id, { isPublic: e.target.checked })} className="accent-[var(--gold)]" /> Public</label>
+                    <label className="flex items-center gap-2"><input type="checkbox" checked={u.isPublic} onChange={(e) => void patch(u.id, { isPublic: e.target.checked })} className="accent-[var(--brand)]" /> Public</label>
                   )}
                 </td>
                 <td className="py-2.5">

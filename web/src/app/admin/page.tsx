@@ -60,7 +60,7 @@ export default function AdminDashboard() {
     <div className="space-y-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="type-eyebrow text-gold">{new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}</p>
+          <p className="type-eyebrow text-brand">{new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}</p>
           <h1 className="type-title mt-2">Good {new Date().getHours() < 12 ? "morning" : new Date().getHours() < 17 ? "afternoon" : "evening"}, {viewer.fullName.split(" ")[0]}.</h1>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -108,7 +108,7 @@ export default function AdminDashboard() {
             {open.length === 0 ? <li className="text-sm text-ink-2">No open deals yet.</li> : open.map((p) => (
               <li key={p.stage}>
                 <div className="flex justify-between text-sm"><span>{STAGE_LABEL[p.stage]}</span><span className="tabular text-ink-2">{p.deals} · {formatPrice(Number(p.value_cents))}</span></div>
-                <div className="mt-1 h-1.5 rounded-full bg-fill"><div className="h-full rounded-full bg-gold" style={{ width: `${pipelineValue ? Math.max(4, (Number(p.value_cents) / pipelineValue) * 100) : 4}%` }} /></div>
+                <div className="mt-1 h-1.5 rounded-full bg-fill"><div className="h-full rounded-full bg-brand" style={{ width: `${pipelineValue ? Math.max(4, (Number(p.value_cents) / pipelineValue) * 100) : 4}%` }} /></div>
               </li>
             ))}
           </ul>

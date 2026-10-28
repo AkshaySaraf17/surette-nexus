@@ -54,7 +54,7 @@ function ConsentBox({ checked, onChange, error }: { checked: boolean; onChange: 
   return (
     <div>
       <label className="flex items-start gap-2.5 text-[0.8125rem] text-ink-2">
-        <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="mt-0.5 accent-[var(--gold)]" />
+        <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="mt-0.5 accent-[var(--brand)]" />
         <span>{CONTACT_CONSENT_TEXT}</span>
       </label>
       {error && <p className="mt-1 text-[0.8125rem] text-danger">{error}</p>}
@@ -334,7 +334,7 @@ export function Assistant() {
             className="pressable fixed bottom-5 right-5 z-40 flex items-center gap-2 rounded-full bg-ink px-5 py-3.5 text-sm font-medium text-paper shadow-lg sm:bottom-8 sm:right-8"
             aria-label="Open the AI assistant"
           >
-            <Sparkles className="size-4 text-gold-soft" aria-hidden /> AI assistant
+            <Sparkles className="size-4 text-brand-soft" aria-hidden /> AI assistant
           </motion.button>
         )}
       </AnimatePresence>
@@ -354,7 +354,7 @@ export function Assistant() {
           >
             <header className="flex items-center justify-between border-b border-line px-5 py-4">
               <div>
-                <p className="type-eyebrow text-gold">Surette AI assistant</p>
+                <p className="type-eyebrow text-brand">Surette AI assistant</p>
                 <p className="text-sm text-ink-2">Live listings · market data · showings</p>
               </div>
               <button type="button" onClick={() => setOpen(false)} className="pressable grid size-9 place-items-center rounded-full bg-fill" aria-label="Close the AI assistant">
@@ -484,7 +484,7 @@ export function Assistant() {
                 rows={1}
                 maxLength={2000}
                 placeholder={listingSlug ? "Ask about this home…" : "e.g. 3 bedrooms in Waterville under $450K"}
-                className="max-h-32 min-h-11 flex-1 resize-none rounded-2xl border border-line-strong bg-paper px-4 py-2.5 text-[0.9375rem] focus:border-gold focus:outline-none"
+                className="max-h-32 min-h-11 flex-1 resize-none rounded-2xl border border-line-strong bg-paper px-4 py-2.5 text-[0.9375rem] focus:border-brand focus:outline-none"
               />
               <Button type="submit" size="icon" disabled={busy || !input.trim()} aria-label="Send">
                 <ArrowUp />

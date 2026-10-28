@@ -7,7 +7,7 @@ export default function ContactPage() {
   return (
     <div data-tone="paper" className="mx-auto grid max-w-[1200px] gap-16 px-5 pb-32 pt-32 sm:px-8 lg:grid-cols-2">
       <div>
-        <p className="type-eyebrow text-gold">Contact</p>
+        <p className="type-eyebrow text-brand">Contact</p>
         <h1 className="type-display mt-3">Let&rsquo;s talk about your next move.</h1>
         <dl className="mt-10 space-y-5 text-lg">
           <div><dt className="type-eyebrow text-ink-3">Office</dt><dd className="mt-1">113 Silver Street, Waterville, ME 04901</dd></div>

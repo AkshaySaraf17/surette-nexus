@@ -1,10 +1,10 @@
 "use client";
 
-import { SITE_NAME } from "@/lib/site";
+import { HOME_LABEL } from "@/lib/site";
 import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Menu, X, UserRound } from "lucide-react";
 import { api } from "@/lib/client-api";
 import { cn } from "@/lib/utils";
@@ -19,27 +19,12 @@ const NAV = [
   { href: "/team", label: "Team" },
 ];
 
-const DARK_TONES = new Set(["night", "pine", "navy"]);
-
-/**
- * Translucent global navigation. Its ink flips to white over dark scroll tones
- * (the hero photos, the full-screen scenes) and back to ink over light sections.
- */
+/** Global navigation: one solid, readable bar on every page (it no longer changes color while scrolling). */
 export function SiteHeader() {
   const pathname = usePathname();
   const router = useRouter();
   const { viewer, refreshViewer } = useSaved();
-  const [onDark, setOnDark] = useState(false);
   const [open, setOpen] = useState(false);
-
-  useEffect(() => {
-    const root = document.documentElement;
-    const update = () => setOnDark(DARK_TONES.has(root.dataset.tone ?? ""));
-    update();
-    const observer = new MutationObserver(update);
-    observer.observe(root, { attributes: true, attributeFilter: ["data-tone"] });
-    return () => observer.disconnect();
-  }, []);
 
   async function signOut() {
     await api("/api/auth/logout", { method: "POST" }).catch(() => undefined);
@@ -50,10 +35,10 @@ export function SiteHeader() {
   const staff = viewer && (viewer.role === "admin" || viewer.role === "agent");
 
   return (
-    <header className={cn("fixed inset-x-0 top-0 z-40 transition-colors duration-700", onDark ? "text-white" : "text-ink")}>
-      <div className={cn("transition-[background-color,border-color] duration-700", onDark ? "border-b border-white/10 bg-black/15 backdrop-blur-xl" : "material border-b border-line")}>
+    <header className="fixed inset-x-0 top-0 z-40 text-ink">
+      <div className="border-b border-line bg-paper">
         <nav aria-label="Main" className="mx-auto flex h-16 max-w-[1400px] items-center justify-between gap-6 px-5 sm:px-8">
-          <Link href="/" aria-label={`${SITE_NAME} home`} className="shrink-0">
+          <Link href="/" aria-label={HOME_LABEL} className="shrink-0">
             <Wordmark />
           </Link>
           <ul className="hidden items-center gap-8 text-[0.8125rem] font-medium tracking-wide md:flex">

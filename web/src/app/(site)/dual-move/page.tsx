@@ -18,7 +18,7 @@ async function Copilot() {
 export default function DualMovePage() {
   return (
     <div data-tone="paper" className="mx-auto max-w-[1400px] px-5 pb-32 pt-32 sm:px-8">
-      <p className="type-eyebrow text-gold">Dual-Move Copilot</p>
+      <p className="type-eyebrow text-brand">Dual-Move Copilot</p>
       <h1 className="type-display mt-3 max-w-4xl">Selling one home and buying the next — see both moves at once.</h1>
       <p className="type-lede mt-5 max-w-2xl text-ink-2">Estimated proceeds, cash needed, monthly payments, and what changes if you sell first or buy first. Calculated from your numbers, instantly.</p>
       <div className="mt-14">

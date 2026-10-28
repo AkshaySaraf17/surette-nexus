@@ -37,7 +37,7 @@ export function AskDocuments({ dealId, hasDocuments }: { dealId: string; hasDocu
   if (!hasDocuments) return null;
   return (
     <div className="mt-6 rounded-2xl bg-fill p-4" aria-labelledby="ask-docs-h">
-      <h3 id="ask-docs-h" className="flex items-center gap-2 text-sm font-semibold"><Sparkles className="size-4 text-gold" aria-hidden /> Ask the documents</h3>
+      <h3 id="ask-docs-h" className="flex items-center gap-2 text-sm font-semibold"><Sparkles className="size-4 text-brand" aria-hidden /> Ask the documents</h3>
       <p className="mt-1 text-[0.75rem] text-ink-3">Answers come only from this deal&rsquo;s files and cite the page. Always confirm against the document before acting.</p>
       <form onSubmit={ask} className="mt-3 flex gap-2">
         <label htmlFor="ask-docs-q" className="sr-only">Question about this deal&rsquo;s documents</label>

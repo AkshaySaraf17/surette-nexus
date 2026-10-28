@@ -6,7 +6,7 @@ export const badgeVariants = cva("inline-flex items-center gap-1 rounded-full px
   variants: {
     tone: {
       neutral: "bg-fill text-ink-2",
-      gold: "bg-gold/15 text-gold",
+      brand: "bg-brand/15 text-brand",
       success: "bg-success-bg text-success",
       warn: "bg-warn-bg text-warn",
       danger: "bg-danger-bg text-danger",

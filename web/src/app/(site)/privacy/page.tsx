@@ -17,7 +17,7 @@ export default function PrivacyPage() {
   ];
   return (
     <div data-tone="paper" className="mx-auto max-w-4xl px-5 pb-32 pt-32 sm:px-8">
-      <p className="type-eyebrow text-gold">Privacy</p>
+      <p className="type-eyebrow text-brand">Privacy</p>
       <h1 className="type-display mt-3">What we collect, and why.</h1>
       <p className="type-lede mt-5 text-ink-2">We collect as little as we can, keep it on our own servers, and never sell it. There are no third-party ad trackers on this site.</p>
       <div className="mt-12 overflow-x-auto rounded-[24px] bg-paper ring-1 ring-line">

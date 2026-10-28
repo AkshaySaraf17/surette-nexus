@@ -7,4 +7,8 @@
  */
 export const DEMO = process.env.NEXT_PUBLIC_SITE_DEMO !== "false";
 export const BRAND = "Surette Real Estate";
+/** The team's brokerage, shown with the name as on surette-realestate.com ("Surette Real Estate Team at eXp Realty"). */
+export const BROKERAGE = "eXp Realty";
 export const SITE_NAME = DEMO ? `${BRAND} Demo` : BRAND;
+/** Accessible name of the logo link; it contains the visible wordmark text ("Surette Real Estate at eXp Realty Demo"). */
+export const HOME_LABEL = `${BRAND} at ${BROKERAGE}${DEMO ? " Demo" : ""} home`;

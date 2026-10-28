@@ -90,7 +90,7 @@ export function ListingsTable() {
                       <Select id={`st-${l.id}`} value={l.status} onChange={(e) => void setStatus(l.id, e.target.value)} className="h-9 w-40 text-sm">
                         {Object.entries(STATUS_LABEL).map(([v, label]) => <option key={v} value={v}>{label}</option>)}
                       </Select>
-                      {l.isFeatured && <Badge tone="gold">Featured</Badge>}
+                      {l.isFeatured && <Badge tone="brand">Featured</Badge>}
                     </div>
                   </td>
                 </tr>

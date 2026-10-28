@@ -27,7 +27,7 @@ async function Directory() {
             </GlareCard>
           </Reveal>
           <Reveal className="lg:col-span-6 lg:col-start-7" delay={0.1}>
-            <p className="type-eyebrow text-gold">{leader.title}</p>
+            <p className="type-eyebrow text-brand">{leader.title}</p>
             <h2 id="leader-name" className="type-display mt-4">{leader.fullName}</h2>
             {leader.bio && <p className="type-lede mt-6 text-ink-2">{leader.bio}</p>}
             <ul className="mt-8 space-y-2 text-sm">
@@ -57,7 +57,7 @@ async function Directory() {
                       <AgentPortrait agent={m} className="aspect-[4/5] w-full" />
                       <div className="p-6">
                         <h3 className="type-headline">{m.fullName}</h3>
-                        <p className="mt-1 text-sm text-gold">{m.title}</p>
+                        <p className="mt-1 text-sm text-brand">{m.title}</p>
                         {m.bio && <p className="mt-3 line-clamp-4 text-sm text-ink-2">{m.bio}</p>}
                         <p className="mt-4 text-sm"><a href={`mailto:${m.email}`} className="underline underline-offset-4">{m.email}</a></p>
                       </div>
@@ -76,7 +76,7 @@ async function Directory() {
 export default function TeamPage() {
   return (
     <div data-tone="ivory" className="mx-auto max-w-[1400px] px-5 pb-36 pt-32 sm:px-8">
-      <p className="type-eyebrow text-gold">Our team</p>
+      <p className="type-eyebrow text-brand">Our team</p>
       <RevealWords as="h1" className="type-display mt-4 max-w-4xl" text="Local knowledge, carried across generations." />
       <div className="mt-24">
         <Suspense fallback={<Skeleton className="h-[520px] w-full rounded-[32px]" />}>

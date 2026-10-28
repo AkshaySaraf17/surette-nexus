@@ -62,7 +62,7 @@ export function HeroSearch() {
           <option value="">Any beds</option>
           {[2, 3, 4, 5].map((b) => <option key={b} value={b}>{b}+ beds</option>)}
         </select>
-        <button type="submit" className="pressable flex h-12 items-center justify-center gap-2 rounded-full bg-gold px-6 font-medium text-white hover:brightness-110">
+        <button type="submit" className="pressable flex h-12 items-center justify-center gap-2 rounded-full bg-brand px-6 font-medium text-on-brand hover:brightness-110">
           <Search className="size-4" aria-hidden /> Search
         </button>
       </div>

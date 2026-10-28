@@ -1,47 +1,15 @@
-"use client";
-
-import { motion, useTransform } from "motion/react";
-import { useScrollProgress } from "@/components/motion/use-scroll-progress";
-import { useRef } from "react";
-
-/**
- * A film that opens like an aperture: the autumn river clip starts as a small
- * rounded window and expands to full-bleed as you scroll, while the statement
- * above it fades. Background tone shifts to "dusk" for this section.
- */
+/** "Life in Central Maine": one still photograph beside a short paragraph. */
 export function Seasons() {
-  const ref = useRef<HTMLElement>(null);
-  const scrollYProgress = useScrollProgress(ref, ["start end", "end start"]);
-  const clip = useTransform(scrollYProgress, [0.15, 0.5], ["inset(18% 24% 18% 24% round 40px)", "inset(0% 0% 0% 0% round 0px)"]);
-  const scale = useTransform(scrollYProgress, [0.15, 0.6], [1.25, 1]);
-  const textOpacity = useTransform(scrollYProgress, [0.12, 0.3, 0.5], [0, 1, 0]);
-  const quoteOpacity = useTransform(scrollYProgress, [0.5, 0.6, 0.78], [0, 1, 0]);
-
   return (
-    <section ref={ref} data-tone="dusk" className="relative h-[220svh]" aria-label="Four seasons in Central Maine">
-      <div className="sticky top-0 h-svh overflow-hidden">
-        <motion.div className="absolute inset-0" style={{ clipPath: clip }}>
-          <motion.video
-            className="size-full object-cover"
-            style={{ scale }}
-            src="/media/brand/autumn-river.mp4"
-            poster="/media/brand/autumn-river-poster.webp"
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="metadata"
-            aria-hidden
-          />
-          <div className="absolute inset-0 bg-black/25" aria-hidden />
-        </motion.div>
-        <motion.div style={{ opacity: textOpacity }} className="pointer-events-none absolute inset-x-0 top-[8%] px-6 text-center">
-          <p className="type-eyebrow text-ink-2">Life in Central Maine</p>
-          <p className="type-title mx-auto mt-3 max-w-2xl">Rivers, lakes and four honest seasons.</p>
-        </motion.div>
-        <motion.div style={{ opacity: quoteOpacity }} className="pointer-events-none absolute inset-0 grid place-items-center px-6 text-center text-white">
-          <p className="type-display max-w-4xl">October on the water is reason enough to stay.</p>
-        </motion.div>
+    <section aria-labelledby="seasons-heading" className="mx-auto max-w-[1400px] px-5 py-24 sm:px-8">
+      <div className="grid items-center gap-10 overflow-hidden rounded-[28px] bg-paper ring-1 ring-line lg:grid-cols-2">
+        {/* eslint-disable-next-line @next/next/no-img-element -- static brand still */}
+        <img src="/media/brand/autumn-river-poster.webp" alt="An autumn river lined with orange and red trees" loading="lazy" className="aspect-[4/3] size-full object-cover" />
+        <div className="p-8 lg:p-12">
+          <p className="type-eyebrow text-brand">Life in Central Maine</p>
+          <h2 id="seasons-heading" className="type-title mt-3">Rivers, lakes and four honest seasons.</h2>
+          <p className="type-lede mt-5 text-ink-2">From October on the water to quiet winters and long summer evenings at camp, we help you find a home that fits the way you want to live here.</p>
+        </div>
       </div>
     </section>
   );

@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-/** Home page media: photo slideshow and stacked scenes — and no drone footage anywhere. */
+/** Home page: photos in simple boxes, nothing that moves while you scroll, and no drone footage anywhere. */
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("sa_consent", "denied"));
 });
@@ -13,9 +13,27 @@ test("the hero shows house photos and the page never requests drone media", asyn
   const hero = page.locator('section[aria-label="Introduction"] img').first();
   await expect(hero).toBeVisible();
   expect(await hero.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0)).toBe(true);
-  await page.locator('[aria-label="Inside the homes we represent"]').scrollIntoViewIfNeeded();
-  await expect(page.locator('[aria-label="Inside the homes we represent"] img')).toHaveCount(4);
+  const scenes = page.getByRole("region", { name: "Inside the homes we represent" });
+  await scenes.scrollIntoViewIfNeeded();
+  await expect(scenes.locator("img")).toHaveCount(4);
   expect(requested.filter((u) => /orbit|drone|hero-orbit|aerial-foliage/.test(u))).toEqual([]);
+});
+
+test("nothing moves on its own while you scroll", async ({ page }) => {
+  await page.goto("/");
+  // Measure only after everything above has loaded (listing cards stream in and push content down once).
+  await page.waitForLoadState("networkidle");
+  await expect(page.locator("[data-sa-property-card]").first()).toBeVisible();
+  // Content scrolls exactly with the page: no sticky panels, no parallax, no scroll-linked fades.
+  const sticky = await page.evaluate(() => [...document.querySelectorAll("main *")].filter((el) => getComputedStyle(el).position === "sticky").length);
+  expect(sticky).toBe(0);
+  const heading = page.getByRole("heading", { name: "Inside the homes we represent" });
+  const before = await heading.evaluate((el) => el.getBoundingClientRect().top + window.scrollY);
+  await page.mouse.wheel(0, 1500);
+  await page.waitForTimeout(400);
+  const after = await heading.evaluate((el) => el.getBoundingClientRect().top + window.scrollY);
+  expect(Math.abs(after - before)).toBeLessThan(1);
+  expect(await page.evaluate(() => document.documentElement.classList.contains("lenis"))).toBe(false);
 });
 
 test("the hero search takes you to matching homes", async ({ page }) => {

@@ -44,7 +44,7 @@ export function OpsAssistant() {
     <>
       {!open && (
         <button type="button" onClick={() => setOpen(true)} className="pressable fixed bottom-5 right-5 z-40 flex items-center gap-2 rounded-full bg-ink px-4 py-3 text-sm font-medium text-paper shadow-lg" aria-label="Ask ops — open the operations assistant">
-          <Bot className="size-4 text-gold-soft" aria-hidden /> Ask ops
+          <Bot className="size-4 text-brand-soft" aria-hidden /> Ask ops
         </button>
       )}
       <AnimatePresence>
@@ -82,7 +82,7 @@ export function OpsAssistant() {
             </div>
             <form onSubmit={(e) => void ask(q, e)} className="flex gap-2 border-t border-line p-3">
               <label htmlFor="ops-q" className="sr-only">Ask the ops assistant</label>
-              <input id="ops-q" value={q} onChange={(e) => setQ(e.target.value)} maxLength={500} placeholder="e.g. What's overdue?" className="h-10 flex-1 rounded-full border border-line-strong bg-paper px-4 text-sm focus:border-gold focus:outline-none" />
+              <input id="ops-q" value={q} onChange={(e) => setQ(e.target.value)} maxLength={500} placeholder="e.g. What's overdue?" className="h-10 flex-1 rounded-full border border-line-strong bg-paper px-4 text-sm focus:border-brand focus:outline-none" />
               <Button type="submit" size="icon" className="size-10" disabled={busy || !q.trim()} aria-label="Ask"><ArrowUp /></Button>
             </form>
           </motion.section>
