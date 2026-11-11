@@ -25,10 +25,23 @@ const nextConfig: NextConfig = {
         headers: [
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-          { key: "X-Frame-Options", value: "SAMEORIGIN" },
           { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(self)" },
           ...(process.env.NODE_ENV === "production" ? [{ key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains" }] : []),
         ],
+      },
+      {
+        // No other site may frame these pages (clickjacking)...
+        source: "/((?!embed/).*)",
+        headers: [
+          { key: "X-Frame-Options", value: "SAMEORIGIN" },
+          { key: "Content-Security-Policy", value: "frame-ancestors 'self'" },
+        ],
+      },
+      {
+        // ...except /embed/*: small forms the team can place on another site (e.g. their Lofty
+        // website). EMBED_ALLOWED_ORIGINS (space-separated) limits who may frame them.
+        source: "/embed/:path*",
+        headers: [{ key: "Content-Security-Policy", value: `frame-ancestors 'self' ${process.env.EMBED_ALLOWED_ORIGINS?.trim() || "https:"}` }],
       },
       {
         source: "/media/:path*",

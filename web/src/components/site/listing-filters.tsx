@@ -4,6 +4,8 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { Search } from "lucide-react";
 import { Input, Select } from "@/components/ui/input";
+import { COMMUTE_ANCHORS } from "@/lib/geo";
+import { HOME_STYLES } from "@/lib/home-styles";
 import { cn } from "@/lib/utils";
 import { priceBand, track } from "@/lib/analytics-client";
 
@@ -30,7 +32,7 @@ export function ListingFilters({ cities }: { cities: string[] }) {
     else next.delete(key);
     if (key === "q") track("search_submit", { surface: "listings", fields_used: next.size });
     else if (key === "sort") track("sort_change", { sort: value || "featured" });
-    else track("filter_change", { filter: key === "maxPrice" ? "max_price" : key === "minBeds" ? "min_beds" : key, value: key === "maxPrice" ? priceBand(value) : key === "city" ? (value ? "town" : "any") : value || "any" });
+    else track("filter_change", { filter: key === "maxPrice" ? "max_price" : key === "minBeds" ? "min_beds" : key === "driveTo" ? "drive_to" : key === "maxDrive" ? "max_drive" : key, value: key === "maxPrice" ? priceBand(value) : key === "city" ? (value ? "town" : "any") : value || "any" });
     startTransition(() => router.replace(`${pathname}${next.size ? `?${next}` : ""}`, { scroll: false }));
   }
 
@@ -76,6 +78,30 @@ export function ListingFilters({ cities }: { cities: string[] }) {
             <option key={b} value={b}>{b}+ beds</option>
           ))}
         </Select>
+        <label htmlFor="f-style" className="sr-only">Home style</label>
+        <Select id="f-style" value={params.get("style") ?? ""} onChange={(e) => update("style", e.target.value)} className="w-auto">
+          <option value="">Any style</option>
+          {HOME_STYLES.map((s) => (
+            <option key={s.slug} value={s.slug}>{s.label}</option>
+          ))}
+        </Select>
+        <label htmlFor="f-drive" className="sr-only">Commute to</label>
+        <Select id="f-drive" value={params.get("driveTo") ?? ""} onChange={(e) => update("driveTo", e.target.value)} className="w-auto">
+          <option value="">Any commute</option>
+          {COMMUTE_ANCHORS.map((a) => (
+            <option key={a.id} value={a.id}>Commute to {a.name.split(" (")[0].replace("Maine State House, ", "")}</option>
+          ))}
+        </Select>
+        {params.get("driveTo") && (
+          <>
+            <label htmlFor="f-maxdrive" className="sr-only">Longest drive</label>
+            <Select id="f-maxdrive" value={params.get("maxDrive") ?? "30"} onChange={(e) => update("maxDrive", e.target.value)} className="w-auto">
+              {[15, 20, 30, 45, 60, 90].map((m) => (
+                <option key={m} value={m}>Within {m} min</option>
+              ))}
+            </Select>
+          </>
+        )}
         <label htmlFor="f-sort" className="sr-only">Sort</label>
         <Select id="f-sort" value={params.get("sort") ?? ""} onChange={(e) => update("sort", e.target.value)} className="w-auto">
           <option value="">Featured</option>

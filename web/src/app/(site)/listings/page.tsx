@@ -24,6 +24,8 @@ async function Results({ searchParams }: { searchParams: PageProps<"/listings">[
     type: type === "sale" || type === "rent" ? type : undefined,
     maxPriceCents: int(sp.maxPrice),
     minBeds: int(sp.minBeds),
+    style: str(sp.style),
+    commute: str(sp.driveTo) ? { anchor: str(sp.driveTo)!, maxMinutes: int(sp.maxDrive) ?? 30 } : undefined,
     includeSold: sp.sold === "1",
     sort: sort === "newest" || sort === "price_asc" || sort === "price_desc" ? sort : "featured",
     limit: 200,

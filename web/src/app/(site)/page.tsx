@@ -94,7 +94,7 @@ export default function HomePage() {
           {[
             { k: "Homes & estates", v: "Historic colonials to lakefront glass houses, photographed inside and out." },
             { k: "Waterfront & land", v: "Frontage, acreage and farms across Kennebec and Somerset counties." },
-            { k: "Leasing & management", v: "Rentals and portfolio management backed by our operations team." },
+            { k: "Camps & cottages", v: "Seasonal camps and year-round cottages on the Belgrade Lakes, Messalonskee and China Lake." },
           ].map((item) => (
             <div key={item.k} className="rounded-[20px] bg-paper p-6 ring-1 ring-line">
               <h3 className="type-headline">{item.k}</h3>
@@ -184,10 +184,13 @@ export default function HomePage() {
         <div className="absolute inset-0 grid place-items-center bg-black/35 px-5 text-center text-white">
           <Reveal>
             <h2 className="type-display mx-auto max-w-3xl">Looking for something not yet listed?</h2>
-            <p className="type-lede mx-auto mt-5 max-w-xl text-white/85">Tell the AI assistant what you have in mind. Our team hears about homes before they reach the market.</p>
-            <div className="mt-9">
-              <AssistantButton variant="brand" prompt="I'm looking for a home that isn't listed yet.">
-                Start a private search
+            <p className="type-lede mx-auto mt-5 max-w-xl text-white/85">Our team hears about homes before they reach the market. Tell us what you&rsquo;re looking for and you&rsquo;ll hear first.</p>
+            <div className="mt-9 flex flex-wrap justify-center gap-3">
+              <Link href="/off-market" className={buttonVariants({ variant: "brand", size: "lg" })}>
+                Get off-market alerts
+              </Link>
+              <AssistantButton variant="glass" prompt="I'm looking for a home that isn't listed yet.">
+                Ask the AI assistant
               </AssistantButton>
             </div>
           </Reveal>

@@ -27,14 +27,13 @@ export function SiteFooter() {
             <li><Link href="/account" className="hover:text-white">Your account &amp; saved homes</Link></li>
             <li><Link href="/dual-move" className="hover:text-white">Dual-Move Copilot</Link></li>
             <li><Link href="/market" className="hover:text-white">Market intelligence</Link></li>
-            <li><Link href="/maintenance" className="hover:text-white">Tenant maintenance request</Link></li>
             <li><Link href="/sign-in" className="hover:text-white">Customer sign-in</Link></li>
           </ul>
         </nav>
         <nav aria-label="Company" className="text-sm">
           <p className="type-eyebrow text-white/60">Company</p>
           <ul className="mt-4 space-y-2.5 text-white/75">
-            <li><Link href="/portal/sign-in" className="hover:text-white">Property management sign-in</Link></li>
+            <li><Link href="/portal/sign-in" className="hover:text-white">Team portal sign-in</Link></li>
             <li><Link href="/privacy" className="hover:text-white">Privacy &amp; cookies</Link></li>
             <li><Link href="/contact" className="hover:text-white">Contact</Link></li>
             <li><Link href="/credits" className="hover:text-white">Photo &amp; film credits</Link></li>

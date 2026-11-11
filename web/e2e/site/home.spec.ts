@@ -15,7 +15,7 @@ test("the hero shows house photos and the page never requests drone media", asyn
   expect(await hero.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0)).toBe(true);
   const scenes = page.getByRole("region", { name: "Inside the homes we represent" });
   await scenes.scrollIntoViewIfNeeded();
-  await expect(scenes.locator("img")).toHaveCount(4);
+  await expect(scenes.locator("img")).toHaveCount(8);
   expect(requested.filter((u) => /orbit|drone|hero-orbit|aerial-foliage/.test(u))).toEqual([]);
 });
 
@@ -46,7 +46,7 @@ test("the hero search takes you to matching homes", async ({ page }) => {
 test("no horizontal scrolling on a phone", async ({ browser }) => {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true });
   const page = await ctx.newPage();
-  for (const path of ["/", "/scroll-version", "/listings", "/market", "/dual-move", "/contact"]) {
+  for (const path of ["/", "/scroll-version", "/listings", "/market", "/dual-move", "/contact", "/off-market", "/embed/off-market"]) {
     await page.goto(path);
     await page.waitForLoadState("load");
     expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth), path).toBeLessThanOrEqual(0);

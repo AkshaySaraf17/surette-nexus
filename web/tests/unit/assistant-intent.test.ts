@@ -23,6 +23,27 @@ describe("AI assistant criteria extraction (deterministic)", () => {
     expect(i.criteria.type).toBe("rent");
     expect(i.criteria.maxPriceCents).toBe(250_000);
   });
+  it("recognizes camps, cabins and outdoor living as home styles", () => {
+    expect(parseIntent("a camp on the lake under 300k", cities).criteria.style).toBe("camps-cottages");
+    expect(parseIntent("looking for a cottage for summers", cities).criteria.style).toBe("camps-cottages");
+    expect(parseIntent("a cabin in the woods", cities).criteria.style).toBe("cabin-woods");
+    expect(parseIntent("house with a big backyard and a fire pit", cities).criteria.style).toBe("outdoor-oasis");
+    expect(parseIntent("a camp", cities).isSearch).toBe(true);
+    expect(describeCriteria(parseIntent("a camp", cities).criteria)).toContain("camps & cottages");
+  });
+  it("reads a commute limit in minutes", () => {
+    const c = parseIntent("3 bed home within 20 minutes of Augusta", cities).criteria;
+    expect(c).toMatchObject({ commuteTo: "augusta", commuteMinutes: 20 });
+    expect(describeCriteria(c).join(" ")).toContain("within 20 min");
+    // Without a number the default is 30 minutes.
+    expect(parseIntent("short commute to Augusta", cities).criteria.commuteMinutes).toBeUndefined();
+  });
+  it("spots requests for homes that aren't listed yet", () => {
+    for (const q of ["any off-market homes?", "I'm looking for a home that isn't listed yet", "pocket listings on Long Pond"]) {
+      expect(parseIntent(q, cities).wantsOffMarket).toBe(true);
+    }
+    expect(parseIntent("homes for sale in Oakland", cities).wantsOffMarket).toBe(false);
+  });
   it("treats short numbers as thousands", () => {
     expect(parseIntent("homes under 450", cities).criteria.maxPriceCents).toBe(45_000_000);
   });

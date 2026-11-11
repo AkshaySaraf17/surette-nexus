@@ -7,12 +7,19 @@ test.beforeEach(async ({ page }) => {
 });
 
 test("community profile shows Census figures for Waterville with margins of error", async ({ page }) => {
-  const table = page.getByRole("table");
+  const table = page.getByRole("region", { name: /community profile/i }).getByRole("table");
   await expect(table).toBeVisible();
   const row = table.getByRole("row", { name: /^Waterville/ });
   await expect(row).toContainText(/\$\d{3},\d{3}/); // median home value
   await expect(row).toContainText("±");
   for (const area of ["Augusta", "Oakland", "Kennebec County, ME", "Maine", "United States"]) await expect(table.getByRole("rowheader", { name: area })).toBeVisible();
+});
+
+test("commutes and walkability are shown town by town, with rural towns marked honestly", async ({ page }) => {
+  const table = page.getByRole("table", { name: /drive times and Walk Index/ });
+  await expect(table.getByRole("row", { name: /^Waterville/ })).toContainText(/Walker|walkable/);
+  await expect(table.getByRole("row", { name: /^Augusta/ })).toContainText(/~\d+ min/);
+  await expect(table.getByRole("row", { name: /^Sidney/ })).toContainText("Rural: plan to drive");
 });
 
 test("unemployment, permits and county price index charts load", async ({ page }) => {

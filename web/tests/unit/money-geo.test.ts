@@ -47,5 +47,17 @@ describe("local context", () => {
     expect(minutes).toBeGreaterThan(25);
     expect(minutes).toBeLessThan(45);
     for (const m of [10, 20, 30, 45]) expect(driveRadiusKm(m)).toBeGreaterThan(driveRadiusKm(m - 5));
+    // The inverse really is the inverse: a point at the radius for N minutes is about N minutes away.
+    for (const m of [10, 30, 60]) {
+      const km = driveRadiusKm(m);
+      const north: [number, number] = [mainStreet[0], mainStreet[1] + km / 111.2];
+      expect(Math.abs(estimateDriveMinutes(mainStreet, north) - m)).toBeLessThanOrEqual(1);
+    }
+  });
+  it("keeps long highway drives realistic (Waterville to Portland is about 80 minutes)", () => {
+    const portland = COMMUTE_ANCHORS.find((a) => a.id === "portland")!.position;
+    const minutes = estimateDriveMinutes(mainStreet, portland);
+    expect(minutes).toBeGreaterThan(75);
+    expect(minutes).toBeLessThan(100);
   });
 });

@@ -4,6 +4,7 @@ import { childLogger } from "./logger";
 const log = childLogger("ai_assistant");
 import type { AssistantEvent, ListingCard, ListingDetail, Team, Viewer } from "@/lib/types";
 import { formatPrice } from "@/lib/money";
+import { homeStyle } from "@/lib/home-styles";
 import { formatBaths } from "@/lib/utils";
 import { COMMUTE_ANCHORS, DISTRICTS, SCHOOLS, estimateDriveMinutes, walkIndexLabel, type LngLat } from "@/lib/geo";
 import { STAGE_LABEL } from "@/lib/deal-rules";
@@ -52,6 +53,10 @@ export interface Criteria {
   minLotSqft?: number;
   features: string[];
   commuteTo?: string;
+  /** Longest acceptable drive to commuteTo, in minutes ("within 20 minutes of Augusta"); default 30. */
+  commuteMinutes?: number;
+  /** A HOME_STYLES slug ("camps-cottages", "cabin-woods"...). */
+  style?: string;
 }
 
 export interface Intent {
@@ -59,6 +64,7 @@ export interface Intent {
   wantsShowing: boolean;
   wantsAgent: boolean;
   wantsSave: boolean;
+  wantsOffMarket: boolean;
   wantsCompare: boolean;
   asksSchools: boolean;
   asksCommute: boolean;
@@ -126,14 +132,21 @@ export function parseIntent(text: string, cities: string[]): Intent {
   for (const w of FEATURE_WORDS) if (new RegExp(`\\b${w}\\b`).test(t)) c.features.push(w);
   const anchor = COMMUTE_ANCHORS.find((a) => t.includes(a.id) || t.includes(a.name.split(" (")[0].toLowerCase().split(",")[0]));
   if (anchor && /\b(commute|drive|near|close to|minutes)\b/.test(t)) c.commuteTo = anchor.id;
+  const within = /(?:within|under|less than|no more than|max(?:imum)?)\s*(\d{1,3})\s*(?:min|mins|minutes)\b/.exec(t);
+  if (c.commuteTo && within) c.commuteMinutes = Math.min(Number(within[1]), 180);
 
-  const isSearch = Boolean(c.city || c.minBeds || c.maxPriceCents || c.minPriceCents || c.type || c.propertyType || c.minGarage || c.minSqft || c.minLotSqft || c.features.length || c.minBaths || /\b(homes?|houses?|listings?|properties|places?|somewhere|looking for|find|search|show me|want to (?:live|move|buy|rent))\b/.test(t));
+  if (/\b(camps?|cottages?|seasonal (?:home|place)|summer place)\b/.test(t)) c.style = "camps-cottages";
+  else if (/\b(cabins?|in the woods|wooded|secluded)\b/.test(t)) c.style = "cabin-woods";
+  else if (/\b(outdoor oasis|big (?:yard|backyard)|backyard|fire ?pit|outdoor living)\b/.test(t)) c.style = "outdoor-oasis";
+
+  const isSearch = Boolean(c.style || c.city || c.minBeds || c.maxPriceCents || c.minPriceCents || c.type || c.propertyType || c.minGarage || c.minSqft || c.minLotSqft || c.features.length || c.minBaths || /\b(homes?|houses?|listings?|properties|places?|somewhere|looking for|find|search|show me|want to (?:live|move|buy|rent))\b/.test(t));
 
   return {
     criteria: c,
     wantsShowing: /\b(tour|showing|see (?:it|the (?:house|home|place)) in person|visit|viewing|walk[- ]?through|schedule|book)\b/.test(t),
     wantsAgent: /\b(agent|realtor|talk to (?:someone|a person|jeff\w*)|call me|contact me|reach out|speak (?:with|to)|human)\b/.test(t),
     wantsSave: /\b(save (?:this|my) search|alert me|notify me|let me know when)\b/.test(t),
+    wantsOffMarket: /\b(off[- ]market|not (?:yet )?listed|isn'?t listed|before (?:it'?s|they'?re) listed|pocket listings?|coming soon)\b/.test(t),
     wantsCompare: /\b(compare|comparison|side by side|vs\.?|versus)\b/.test(t),
     asksSchools: /\b(school|schools|district|elementary|high school)\b/.test(t),
     asksCommute: /\b(commute|drive to|how far|distance|minutes? (?:to|from))\b/.test(t),
@@ -181,8 +194,9 @@ export function describeCriteria(c: Criteria): string[] {
   if (c.minGarage) out.push(`${c.minGarage}+ car garage`);
   if (c.minSqft) out.push(`${c.minSqft.toLocaleString("en-US")}+ sq ft`);
   if (c.minLotSqft) out.push(`${(c.minLotSqft / 43_560).toFixed(1)}+ acres`);
+  if (c.style) out.push(homeStyle(c.style)?.label.toLowerCase() ?? c.style);
   if (c.features.length) out.push(c.features.join(", "));
-  if (c.commuteTo) out.push(`near ${COMMUTE_ANCHORS.find((a) => a.id === c.commuteTo)?.name}`);
+  if (c.commuteTo) out.push(`within ${c.commuteMinutes ?? 30} min of ${COMMUTE_ANCHORS.find((a) => a.id === c.commuteTo)?.name}`);
   return out;
 }
 
@@ -204,7 +218,7 @@ export function explainMatch(l: ListingCard, c: Criteria): { met: string[]; unme
   if (c.commuteTo && l.latitude !== null && l.longitude !== null) {
     const a = COMMUTE_ANCHORS.find((x) => x.id === c.commuteTo)!;
     const min = estimateDriveMinutes([l.longitude, l.latitude], a.position);
-    check(min <= 30, `~${min} min to ${a.name.split(" (")[0].split(",")[0]}`);
+    check(min <= (c.commuteMinutes ?? 30), `~${min} min to ${a.name.split(" (")[0].split(",")[0]}`);
   }
   return { met, unmet };
 }
@@ -221,6 +235,7 @@ function toFilters(c: Criteria): ListingFilters {
     minGarage: c.minGarage,
     minSqft: c.minSqft,
     minLotSqft: c.minLotSqft,
+    style: c.style,
     q: c.features.length ? c.features.join(" OR ") : undefined,
     limit: 8,
   };
@@ -284,6 +299,7 @@ export async function search(c: Criteria, text?: string): Promise<SearchResult> 
   if (exact.length) return { listings: exact, relaxed: null };
   const steps: { label: string; change: (x: Criteria) => Criteria }[] = [
     { label: "without the specific features", change: (x) => ({ ...x, features: [] }) },
+    { label: "in any style of home", change: (x) => ({ ...x, style: undefined }) },
     { label: "without the garage requirement", change: (x) => ({ ...x, minGarage: undefined }) },
     { label: "with the budget stretched 15%", change: (x) => ({ ...x, maxPriceCents: x.maxPriceCents ? Math.round(x.maxPriceCents * 1.15) : undefined }) },
     { label: "in any nearby town", change: (x) => ({ ...x, city: undefined }) },
@@ -353,6 +369,9 @@ function deterministicAnswer(team: Team, intent: Intent, c: Criteria, results: {
   if (intent.asksMarket && !market.length) return "Market data hasn't been loaded yet. Our team can share current figures — or check the Market page once it refreshes.";
   if (intent.asksDualMove && !intent.isSearch) return "Selling one home and buying the next? The Dual-Move Copilot compares selling first vs. buying first, shows estimated proceeds, cash needed and monthly payments from your own numbers. I've linked it below.";
   if (intent.wantsShowing && (focus ?? results.listings[0])) return `I'd be glad to arrange a private showing of ${(focus ?? results.listings[0]).title}. Choose a time below and the listing agent will confirm personally.`;
+  if (intent.wantsOffMarket && (!results.listings.length || !describeCriteria(c).length)) {
+    return `Many homes here sell before they're ever listed. Tell the team what you're after on the Off-market page (in the menu): pick the kind of place, towns and budget, and an agent will reach out when something fits. I've linked it below.`;
+  }
   if (intent.wantsAgent) return `Of course — share how to reach you below and a ${team.name} agent will follow up. Only what you enter in that form is sent.`;
   if (focus && (intent.asksSchools || intent.asksCommute || intent.asksWalkability)) {
     const pos: LngLat | null = focus.longitude !== null && focus.latitude !== null ? [focus.longitude, focus.latitude] : null;
@@ -367,7 +386,7 @@ function deterministicAnswer(team: Team, intent: Intent, c: Criteria, results: {
   }
   const wanted = describeCriteria(c);
   if (!results.listings.length) {
-    return `I don't see an available home ${wanted.length ? wanted.join(", ") : "matching that"} right now, even after loosening the search. Try a wider budget or nearby towns — or ask the team to watch for new listings.`;
+    return `I don't see an available home ${wanted.length ? wanted.join(", ") : "matching that"} right now, even after loosening the search. Try a wider budget or nearby towns, or sign up for off-market alerts (Off-market in the menu): the team often hears about homes before they're listed.`;
   }
   const lines = [
     results.relaxed
@@ -487,6 +506,7 @@ export async function* runAssistant(team: Team, viewer: Viewer | null, messages:
   const links: { label: string; href: string }[] = [];
   if (intent.asksDualMove) links.push({ label: "Open the Dual-Move Copilot", href: "/dual-move" });
   if (intent.asksMarket) links.push({ label: "See the market dashboard", href: "/market" });
+  if (intent.wantsOffMarket || (intent.isSearch && !results.listings.length)) links.push({ label: "Get off-market alerts", href: "/off-market" });
   if (results.listings.length >= 2 && (intent.wantsCompare || results.listings.length >= 2)) links.push({ label: "Compare these homes", href: `/compare?ids=${results.listings.slice(0, 3).map((l) => l.id).join(",")}` });
   if (intent.isSearch) {
     const q = new URLSearchParams();
@@ -494,6 +514,11 @@ export async function* runAssistant(team: Team, viewer: Viewer | null, messages:
     if (criteria.maxPriceCents) q.set("maxPrice", String(criteria.maxPriceCents));
     if (criteria.minBeds) q.set("minBeds", String(criteria.minBeds));
     if (criteria.type) q.set("type", criteria.type);
+    if (criteria.style) q.set("style", criteria.style);
+    if (criteria.commuteTo) {
+      q.set("driveTo", criteria.commuteTo);
+      q.set("maxDrive", String(criteria.commuteMinutes ?? 30));
+    }
     links.push({ label: "Open these filters on the Homes page", href: `/listings${q.size ? `?${q}` : ""}` });
   }
   if (links.length) yield { type: "links", links };

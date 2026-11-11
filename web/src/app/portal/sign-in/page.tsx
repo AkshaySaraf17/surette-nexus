@@ -5,7 +5,7 @@ import { Suspense } from "react";
 import { StaffSignIn } from "@/components/admin/staff-sign-in";
 import { Wordmark } from "@/components/site/wordmark";
 
-export const metadata: Metadata = { title: "Property management sign-in", robots: { index: false } };
+export const metadata: Metadata = { title: "Team portal sign-in", robots: { index: false } };
 
 export default function PortalSignInPage() {
   return (
@@ -15,7 +15,7 @@ export default function PortalSignInPage() {
         <img src="/media/brand/two-cent-bridge.webp" alt="" className="absolute inset-0 size-full object-cover opacity-60" />
         <div className="absolute inset-0 bg-gradient-to-tr from-[#0f1a24] via-[#0f1a24]/60 to-transparent" />
         <div className="absolute bottom-14 left-12 right-12">
-          <p className="type-eyebrow text-[#d9b98a]">Property management</p>
+          <p className="type-eyebrow text-[#d9b98a]">Team portal</p>
           <p className="type-display mt-4 max-w-xl">Listings, leads, deals and analytics — one workspace for the team.</p>
         </div>
       </div>

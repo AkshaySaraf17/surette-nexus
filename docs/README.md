@@ -11,6 +11,7 @@
 | [analytics.md](analytics.md) | First-party tracking on the Surette Nexus website, consent, events, dashboards |
 | [deals-and-leads.md](deals-and-leads.md) | Lead routing, the deal board, deadlines, documents, drafts |
 | [market-lab.md](market-lab.md) | Data analysis and machine learning on every Maine town: cleaning, models, clustering, forecasting, MLflow |
+| [off-market-embed.md](off-market-embed.md) | Off-market alerts sign-up, and how to place it on another site such as the team's Lofty website |
 | [ai-assistant.md](ai-assistant.md) | The website chatbot, the portal assistant, local AI (Ollama) and fallbacks |
 | [market-data.md](market-data.md) | FRED / Census sources, refresh, provenance |
 | [privacy-and-security.md](privacy-and-security.md) | Privacy, fair housing, security controls |

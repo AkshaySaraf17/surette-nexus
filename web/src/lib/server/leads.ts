@@ -14,7 +14,7 @@ import { publishEvent } from "./events";
  * creating another one, so agents don't receive duplicate leads.
  */
 
-export type LeadSource = "ai_assistant" | "contact_form" | "showing_request" | "dual_move" | "signup" | "manual" | "import";
+export type LeadSource = "ai_assistant" | "off_market" | "contact_form" | "showing_request" | "dual_move" | "signup" | "manual" | "import";
 
 export interface LeadInput {
   source: LeadSource;

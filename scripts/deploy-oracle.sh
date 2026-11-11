@@ -51,6 +51,9 @@ if [ "$first" = "0" ]; then
   umask 077
   { echo "== Oracle server https://$HOST ($(date -u +%F)) =="; echo "$logins"; echo "Staff: https://$HOST/portal/sign-in   Customers: https://$HOST/sign-in"; echo; } >> "$ROOT/DEMO-LOGINS.local.txt"
   echo "   saved to DEMO-LOGINS.local.txt"
+else
+  # Later deploys only add demo listings that are new in this release; existing data is kept.
+  "${SSH[@]}" "cd ~/surette && docker compose run --rm -e ALLOW_DEMO_SEED=1 web npx tsx --conditions=react-server scripts/seed.ts --add-missing" | grep -vE "npm notice" || true
 fi
 
 # The site's address comes from the server's .env (e.g. after switching to a DuckDNS name).

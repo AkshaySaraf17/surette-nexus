@@ -335,7 +335,118 @@ const LISTINGS: SeedListing[] = [
       { file: "rail-bridge", alt: "Railroad bridge reflected in the river" },
     ],
   },
+  {
+    slug: "long-pond-camp-belgrade",
+    garageSpaces: 0,
+    title: "Long Pond Camp",
+    headline: "A classic Belgrade Lakes camp with 120 feet of frontage and a screened porch.",
+    description:
+      "Knotty-pine walls, a fieldstone fireplace and a screened porch a few steps from the water. A sandy swim area, a dock and a bunkhouse for summer guests. Seasonal camp: water is shut off in winter, and the road is plowed to the drive.",
+    addressLine: "27 Camp Road",
+    city: "Belgrade",
+    postalCode: "04917",
+    position: [-69.8852, 44.5503],
+    status: "active",
+    listingType: "sale",
+    priceCents: 28_900_000,
+    taxAnnualCents: 412_000,
+    bedrooms: 2,
+    fullBaths: 1,
+    halfBaths: 0,
+    livingAreaSqft: 860,
+    lotSizeSqft: 17_400,
+    yearBuilt: 1952,
+    amenities: ["120 ft frontage", "Dock", "Screened porch", "Bunkhouse", "Fieldstone fireplace", "Seasonal camp"],
+    structuralFeatures: { Foundation: "Posts and piers", Roof: "Metal (2019)", Heating: "Woodstove + electric" },
+    photos: [{ file: "camp-exterior", alt: "A small camp on the shore of a quiet lake below wooded hills" }],
+  },
+  {
+    slug: "pine-hollow-cabin-vassalboro",
+    garageSpaces: 0,
+    title: "Pine Hollow Cabin",
+    headline: "A log cabin on six wooded acres, with a woodstove and a trail down to the brook.",
+    description:
+      "A snug, year-round log cabin set back in the woods: open living room with a woodstove, two bedrooms, a covered porch for morning coffee and a path through the pines down to the brook. Heat pump for the shoulder seasons and a storage shed for the sled and the kayak.",
+    addressLine: "140 Pine Hollow Road",
+    city: "Vassalboro",
+    postalCode: "04989",
+    position: [-69.6631, 44.4519],
+    status: "active",
+    listingType: "sale",
+    priceCents: 23_900_000,
+    taxAnnualCents: 298_000,
+    bedrooms: 2,
+    fullBaths: 1,
+    halfBaths: 0,
+    livingAreaSqft: 980,
+    lotSizeSqft: 261_360,
+    yearBuilt: 1987,
+    amenities: ["6 wooded acres", "Woodstove", "Covered porch", "Trail to the brook", "Storage shed", "Heat pump"],
+    structuralFeatures: { Foundation: "Full basement", Roof: "Metal", Heating: "Woodstove + heat pump" },
+    photos: [{ file: "cabin-exterior", alt: "Log cabin among trees" }],
+  }
+
 ];
+
+/** Inserts one demo listing and its photos (through the same image pipeline as real uploads). */
+async function insertListing(listing: SeedListing, ctx: { teamId: string; leaderId: string; agentId: string }): Promise<string> {
+  const { teamId, leaderId, agentId } = ctx;
+  const id = crypto.randomUUID();
+  const district = districtFor(listing.position);
+  const listingAgent = listing.slug.includes("winslow") || listing.slug.includes("fairfield") ? agentId : leaderId;
+  await withSystemDb((db) =>
+    db.query(
+      `INSERT INTO properties (id, team_id, listing_agent_id, slug, status, listing_type, title, headline, description,
+          address_line, city, state, postal_code, latitude, longitude, price_cents, hoa_monthly_cents, tax_annual_cents,
+          bedrooms, full_baths, half_baths, living_area_sqft, lot_size_sqft, year_built, amenities, structural_features,
+          school_district, walk_score, is_featured, created_by, property_type, garage_spaces, source)
+       VALUES ($1, $2, $3, $4, $5::listing_status, $6::listing_type, $7, $8, $9, $10, $11, 'ME', $12, $13, $14, $15, $16, $17,
+               $18, $19, $20, $21, $22, $23, $24, $25::jsonb, $26, $27, $28, $3, $29::property_type, $30, 'demo')`,
+      [
+        id, teamId, listingAgent, listing.slug, listing.status, listing.listingType, listing.title, listing.headline, listing.description,
+        listing.addressLine, listing.city, listing.postalCode, listing.position[1], listing.position[0], listing.priceCents,
+        listing.hoaMonthlyCents ?? 0, listing.taxAnnualCents, listing.bedrooms, listing.fullBaths, listing.halfBaths,
+        listing.livingAreaSqft, listing.lotSizeSqft, listing.yearBuilt, listing.amenities, JSON.stringify(listing.structuralFeatures),
+        district?.name ?? null, walkIndex(listing.position), listing.featured ?? false, listing.propertyType ?? "single_family", listing.garageSpaces ?? 0,
+      ],
+    ),
+  );
+  for (const [index, photo] of listing.photos.entries()) {
+    const file = path.join(PHOTOS, `${photo.file}.jpg`);
+    if (!existsSync(file)) throw new Error(`Missing seed photo ${file}`);
+    const assetId = crypto.randomUUID();
+    const image = await processImageStream(createReadStream(file), `listings/${id}/${assetId}`);
+    await withSystemDb((db) =>
+      db.query(
+        `INSERT INTO media_assets (id, property_id, kind, url, storage_key, variants, width, height, bytes, blur_data_url,
+                                   alt_text, sort_order, is_cover, original_name, uploaded_by)
+         VALUES ($1, $2, 'image', $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
+        [assetId, id, image.url, image.storageKey, image.variants, image.width, image.height, image.bytes, image.blurDataUrl, photo.alt, index, index === 0, `${photo.file}.jpg`, leaderId],
+      ),
+    );
+  }
+  console.log(`  ✓ ${listing.title} (${listing.photos.length} photos)`);
+  return id;
+}
+
+/**
+ * `--add-missing`: add any demo listings this database doesn't have yet, without touching anything
+ * else (for a running demo whose leads, analytics and passwords must be kept).
+ */
+async function addMissingListings() {
+  if (process.env.NODE_ENV === "production" && process.env.ALLOW_DEMO_SEED !== "1") throw new Error("Refusing to load demo data in production.");
+  const ctx = await withSystemDb(async (db) => {
+    const team = await db.one<{ id: string }>("SELECT id FROM agent_teams WHERE slug = 'surette'");
+    if (!team) throw new Error("No demo team yet: run the full seed first.");
+    const leader = await db.one<{ id: string }>("SELECT id FROM users WHERE team_id = $1 AND is_leader ORDER BY sort_order LIMIT 1", [team.id]);
+    const agent = await db.one<{ id: string }>("SELECT id FROM users WHERE email = 'agent@surette.test'");
+    const existing = await db.query<{ slug: string }>("SELECT slug FROM properties WHERE team_id = $1", [team.id]);
+    return { teamId: team.id, leaderId: leader!.id, agentId: agent?.id ?? leader!.id, existing: new Set(existing.map((r) => r.slug)) };
+  });
+  const missing = LISTINGS.filter((l) => !ctx.existing.has(l.slug));
+  for (const listing of missing) await insertListing(listing, ctx);
+  console.log(missing.length ? `Added ${missing.length} demo listing(s).` : "All demo listings already present.");
+}
 
 async function main() {
   if (process.env.NODE_ENV === "production" && process.env.ALLOW_DEMO_SEED !== "1") {
@@ -402,44 +513,7 @@ async function main() {
   });
 
   const ids = new Map<string, string>();
-  for (const listing of LISTINGS) {
-    const id = crypto.randomUUID();
-    ids.set(listing.slug, id);
-    const district = districtFor(listing.position);
-    const listingAgent = listing.slug.includes("winslow") || listing.slug.includes("fairfield") ? agentId : leaderId;
-    await withSystemDb((db) =>
-      db.query(
-        `INSERT INTO properties (id, team_id, listing_agent_id, slug, status, listing_type, title, headline, description,
-            address_line, city, state, postal_code, latitude, longitude, price_cents, hoa_monthly_cents, tax_annual_cents,
-            bedrooms, full_baths, half_baths, living_area_sqft, lot_size_sqft, year_built, amenities, structural_features,
-            school_district, walk_score, is_featured, created_by, property_type, garage_spaces, source)
-         VALUES ($1, $2, $3, $4, $5::listing_status, $6::listing_type, $7, $8, $9, $10, $11, 'ME', $12, $13, $14, $15, $16, $17,
-                 $18, $19, $20, $21, $22, $23, $24, $25::jsonb, $26, $27, $28, $3, $29::property_type, $30, 'demo')`,
-        [
-          id, teamId, listingAgent, listing.slug, listing.status, listing.listingType, listing.title, listing.headline, listing.description,
-          listing.addressLine, listing.city, listing.postalCode, listing.position[1], listing.position[0], listing.priceCents,
-          listing.hoaMonthlyCents ?? 0, listing.taxAnnualCents, listing.bedrooms, listing.fullBaths, listing.halfBaths,
-          listing.livingAreaSqft, listing.lotSizeSqft, listing.yearBuilt, listing.amenities, JSON.stringify(listing.structuralFeatures),
-          district?.name ?? null, walkIndex(listing.position), listing.featured ?? false, listing.propertyType ?? "single_family", listing.garageSpaces ?? 0,
-        ],
-      ),
-    );
-    for (const [index, photo] of listing.photos.entries()) {
-      const file = path.join(PHOTOS, `${photo.file}.jpg`);
-      if (!existsSync(file)) throw new Error(`Missing seed photo ${file}`);
-      const assetId = crypto.randomUUID();
-      const image = await processImageStream(createReadStream(file), `listings/${id}/${assetId}`);
-      await withSystemDb((db) =>
-        db.query(
-          `INSERT INTO media_assets (id, property_id, kind, url, storage_key, variants, width, height, bytes, blur_data_url,
-                                     alt_text, sort_order, is_cover, original_name, uploaded_by)
-           VALUES ($1, $2, 'image', $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
-          [assetId, id, image.url, image.storageKey, image.variants, image.width, image.height, image.bytes, image.blurDataUrl, photo.alt, index, index === 0, `${photo.file}.jpg`, leaderId],
-        ),
-      );
-    }
-    console.log(`  ✓ ${listing.title} (${listing.photos.length} photos)`);
-  }
+  for (const listing of LISTINGS) ids.set(listing.slug, await insertListing(listing, { teamId, leaderId, agentId }));
 
   const loft = ids.get("riverwalk-loft-waterville")!;
   const colonial = ids.get("kennebec-federal-colonial-waterville")!;
@@ -530,7 +604,7 @@ async function main() {
   void ownerId;
 }
 
-main()
+(process.argv.includes("--add-missing") ? addMissingListings() : main())
   .then(async () => {
     await getPool().end();
     await closeRedis();

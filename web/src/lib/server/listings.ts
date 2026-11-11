@@ -1,5 +1,7 @@
 import "server-only";
 import type { AgentCard, ListingCard, ListingDetail, Team } from "@/lib/types";
+import { COMMUTE_ANCHORS, estimateDriveMinutes } from "@/lib/geo";
+import { homeStyle, styleTsQuery } from "@/lib/home-styles";
 import { cached } from "./cache";
 import { withDb, ANONYMOUS, type DbContext } from "./db";
 import { ensureLiveInvalidation } from "./live-cache";
@@ -42,6 +44,10 @@ export interface ListingFilters {
   minSqft?: number;
   minLotSqft?: number;
   propertyType?: string;
+  /** A HOME_STYLES slug, e.g. "camps-cottages". */
+  style?: string;
+  /** Estimated drive time limit to a COMMUTE_ANCHORS id, e.g. { anchor: "augusta", maxMinutes: 30 }. */
+  commute?: { anchor: string; maxMinutes: number };
   ids?: string[];
   includeSold?: boolean;
   featuredOnly?: boolean;
@@ -93,7 +99,13 @@ async function queryListings(context: DbContext, filters: ListingFilters, option
   if (filters.minSqft !== undefined) add("p.living_area_sqft >= ?", filters.minSqft);
   if (filters.minLotSqft !== undefined) add("p.lot_size_sqft >= ?", filters.minLotSqft);
   if (filters.propertyType) add("p.property_type = ?::property_type", filters.propertyType);
-  if (filters.ids?.length) add("p.id = ANY(?::uuid[])", filters.ids);
+  const style = homeStyle(filters.style);
+  if (style) {
+    add(
+      "(p.search_vector || to_tsvector('english', array_to_string(p.amenities, ' '))) @@ to_tsquery('english', ?)",
+      styleTsQuery(style),
+    );
+  }  if (filters.ids?.length) add("p.id = ANY(?::uuid[])", filters.ids);
   if (filters.featuredOnly) where.push("p.is_featured");
 
   const order = {
@@ -113,7 +125,13 @@ async function queryListings(context: DbContext, filters: ListingFilters, option
       values,
     ),
   );
-  return rows.map(toListingCard);
+  const cards = rows.map(toListingCard);
+  const anchor = filters.commute && COMMUTE_ANCHORS.find((a) => a.id === filters.commute!.anchor);
+  if (!anchor) return cards;
+  // Drive times are estimated from coordinates (see lib/geo), so this filter runs after the query.
+  return cards.filter(
+    (c) => c.latitude !== null && c.longitude !== null && estimateDriveMinutes([c.longitude, c.latitude], anchor.position) <= filters.commute!.maxMinutes,
+  );
 }
 
 type DetailRow = ListingRow & {

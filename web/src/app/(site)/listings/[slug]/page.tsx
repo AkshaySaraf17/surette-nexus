@@ -147,7 +147,7 @@ async function ListingView({ params }: { params: PageProps<"/listings/[slug]">["
                 <Car className="size-5 text-brand" aria-hidden />
                 <p className="mt-3 font-medium">Estimated drives</p>
                 <ul className="mt-3 space-y-1.5 text-sm text-ink-2">
-                  {pos && COMMUTE_ANCHORS.slice(0, 4).map((a) => (
+                  {pos && COMMUTE_ANCHORS.map((a) => (
                     <li key={a.id}>{a.name.split(" (")[0]} · ~{estimateDriveMinutes(pos, a.position)} min</li>
                   ))}
                 </ul>
@@ -161,6 +161,7 @@ async function ListingView({ params }: { params: PageProps<"/listings/[slug]">["
                       <div className="h-full rounded-full bg-brand" style={{ width: `${listing.walkScore}%` }} />
                     </div>
                     <p className="mt-3 text-sm text-ink-2">{walkIndexLabel(listing.walkScore)}</p>
+                    {listing.walkScore < 20 && <p className="mt-1.5 text-[0.75rem] text-ink-3">Usual for Central Maine outside the downtowns: you&rsquo;ll drive for errands, so check the drive times.</p>}
                   </>
                 )}
               </div>

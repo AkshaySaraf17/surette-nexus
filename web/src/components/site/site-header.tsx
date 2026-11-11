@@ -13,6 +13,7 @@ import { Wordmark } from "./wordmark";
 
 const NAV = [
   { href: "/listings", label: "Homes" },
+  { href: "/off-market", label: "Off-market" },
   { href: "/map", label: "Map" },
   { href: "/market", label: "Market" },
   { href: "/dual-move", label: "Sell & Buy" },

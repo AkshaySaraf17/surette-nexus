@@ -86,6 +86,36 @@ export const AMENITIES: { name: string; kind: string; position: LngLat; weight: 
   { name: "Oakland Main Street", kind: "Dining", position: [-69.7212, 44.5408], weight: 0.6 },
   { name: "Messalonskee Lake landing", kind: "Recreation", position: [-69.7314, 44.5488], weight: 0.4 },
   { name: "Fairfield Main Street", kind: "Dining", position: [-69.5989, 44.5884], weight: 0.5 },
+  // Village centers, so homes in the smaller towns get credit for the store and post office in walking range.
+  { name: "Belgrade Lakes village", kind: "Grocery", position: [-69.8617, 44.5269], weight: 0.6 },
+  { name: "China Village", kind: "Grocery", position: [-69.5175, 44.4783], weight: 0.4 },
+  { name: "Clinton village", kind: "Grocery", position: [-69.5034, 44.6378], weight: 0.4 },
+];
+
+export interface TownCenter {
+  town: string;
+  position: LngLat;
+  /**
+   * "mapped": everyday destinations around the center are in AMENITIES, so its Walk Index means
+   * something; "rural": little within walking distance; "unmapped": a city we haven't mapped yet.
+   */
+  walk: "mapped" | "rural" | "unmapped";
+}
+
+/** Approximate town and village centers for the towns the team works in (commute and walkability by town). */
+export const TOWN_CENTERS: TownCenter[] = [
+  { town: "Waterville", position: [-69.6317, 44.552], walk: "mapped" },
+  { town: "Winslow", position: [-69.6206, 44.5428], walk: "mapped" },
+  { town: "Oakland", position: [-69.7212, 44.5408], walk: "mapped" },
+  { town: "Fairfield", position: [-69.5989, 44.5884], walk: "mapped" },
+  { town: "Belgrade (Lakes village)", position: [-69.8617, 44.5269], walk: "mapped" },
+  { town: "China (village)", position: [-69.5175, 44.4783], walk: "mapped" },
+  { town: "Clinton", position: [-69.5034, 44.6378], walk: "mapped" },
+  { town: "Sidney", position: [-69.7286, 44.4725], walk: "rural" },
+  { town: "Vassalboro", position: [-69.6767, 44.4592], walk: "rural" },
+  { town: "Benton", position: [-69.5539, 44.6045], walk: "rural" },
+  { town: "Augusta", position: [-69.7795, 44.3106], walk: "unmapped" },
+  { town: "Skowhegan", position: [-69.7193, 44.765], walk: "unmapped" },
 ];
 
 const EARTH_KM = 6371;
@@ -123,23 +153,46 @@ export function walkIndexLabel(score: number): string {
 }
 
 /**
- * Estimated drive time in minutes: straight-line distance × 1.3 road-winding
- * factor at ~30 mph in town and ~55 mph beyond 15 km, plus 3 minutes to park.
+ * Estimated drive time in minutes: straight-line distance × 1.15 road-winding factor, driven as
+ * 5 km of town streets (~25 mph), then 10 km of country roads (~37 mph), then highway (~68 mph,
+ * Route 201 / I-95), plus 2 minutes to park. Fitted to typical drives from downtown Waterville
+ * (Augusta ~30 min, Portland ~1 h 20, Belgrade Lakes ~22, Skowhegan ~27, Oakland ~11): within
+ * about 10% on average. Not live traffic.
  */
+const ROAD_FACTOR = 1.15;
+const PARK_MINUTES = 2;
+const LEGS: { km: number; kmh: number }[] = [
+  { km: 5, kmh: 40 },
+  { km: 10, kmh: 60 },
+  { km: Infinity, kmh: 110 },
+];
+
 export function estimateDriveMinutes(from: LngLat, to: LngLat): number {
-  const roadKm = distanceKm(from, to) * 1.3;
-  const townKm = Math.min(roadKm, 15);
-  const highwayKm = Math.max(roadKm - 15, 0);
-  const minutes = (townKm / 48.3) * 60 + (highwayKm / 88.5) * 60 + 3;
+  let remaining = distanceKm(from, to) * ROAD_FACTOR;
+  let minutes = PARK_MINUTES;
+  for (const leg of LEGS) {
+    const km = Math.min(remaining, leg.km);
+    minutes += (km / leg.kmh) * 60;
+    remaining -= km;
+    if (remaining <= 0) break;
+  }
   return Math.max(3, Math.round(minutes));
 }
 
 /** Radius (km, straight-line) reachable within `minutes` of driving — inverse of estimateDriveMinutes. */
 export function driveRadiusKm(minutes: number): number {
-  const usable = Math.max(minutes - 3, 0);
-  const townMinutes = (15 / 48.3) * 60;
-  const roadKm = usable <= townMinutes ? (usable / 60) * 48.3 : 15 + ((usable - townMinutes) / 60) * 88.5;
-  return roadKm / 1.3;
+  let left = Math.max(minutes - PARK_MINUTES, 0);
+  let roadKm = 0;
+  for (const leg of LEGS) {
+    const legMinutes = (leg.km / leg.kmh) * 60;
+    if (left <= legMinutes) {
+      roadKm += (left / 60) * leg.kmh;
+      break;
+    }
+    roadKm += leg.km;
+    left -= legMinutes;
+  }
+  return roadKm / ROAD_FACTOR;
 }
 
 /** A GeoJSON polygon approximating a circle (for district areas and commute rings). */

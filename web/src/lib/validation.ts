@@ -34,7 +34,7 @@ export const leadRequestSchema = z
     contactPhone: e164.optional().nullable(),
     message: z.string().trim().max(4000).optional().nullable(),
     propertyId: z.uuid().optional().nullable(),
-    source: z.enum(["contact_form", "ai_assistant", "dual_move"]).default("contact_form"),
+    source: z.enum(["contact_form", "ai_assistant", "dual_move", "off_market"]).default("contact_form"),
     preferences: z.record(z.string(), z.union([z.string().max(200), z.number(), z.boolean(), z.array(z.string().max(60)).max(20)])).optional(),
     consentContact: consentToContact,
     website: z.string().max(0).optional(),

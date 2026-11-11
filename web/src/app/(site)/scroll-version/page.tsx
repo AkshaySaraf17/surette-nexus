@@ -5,7 +5,6 @@ import { Parallax } from "@/components/motion/parallax-animated";
 import { Reveal, RevealWords } from "@/components/motion/reveal-animated";
 import { ScrollTone } from "@/components/motion/scroll-tone";
 import { SmoothScroll } from "@/components/motion/smooth-scroll";
-import { AssistantButton } from "@/components/site/assistant-button";
 import { ScrollHero } from "@/components/site/scroll-version/hero";
 import { ScrollScenes } from "@/components/site/scroll-version/scenes";
 import { ScrollSeasons } from "@/components/site/scroll-version/seasons";
@@ -55,7 +54,7 @@ export default function ScrollVersionPage() {
           {[
             { k: "Homes & estates", v: "Historic colonials to lakefront glass houses, photographed inside and out." },
             { k: "Waterfront & land", v: "Frontage, acreage and farms across Kennebec and Somerset counties." },
-            { k: "Leasing & management", v: "Rentals and portfolio management backed by our operations team." },
+            { k: "Camps & cottages", v: "Seasonal camps and year-round cottages on the Belgrade Lakes, Messalonskee and China Lake." },
           ].map((item, i) => (
             <Reveal key={item.k} delay={i * 0.08}>
               <h3 className="type-headline">{item.k}</h3>
@@ -79,9 +78,9 @@ export default function ScrollVersionPage() {
             <h2 className="type-display mx-auto max-w-3xl">Looking for something not yet listed?</h2>
             <p className="type-lede mx-auto mt-5 max-w-xl text-white/85">Tell the AI assistant what you have in mind. Our team hears about homes before they reach the market.</p>
             <div className="mt-9 flex flex-wrap justify-center gap-3">
-              <AssistantButton variant="brand" prompt="I'm looking for a home that isn't listed yet.">
-                Start a private search
-              </AssistantButton>
+              <Link href="/off-market" className={buttonVariants({ variant: "brand", size: "lg" })}>
+                Get off-market alerts
+              </Link>
               <Link href="/" className={buttonVariants({ variant: "glass", size: "lg" })}>
                 Back to the simple version
               </Link>

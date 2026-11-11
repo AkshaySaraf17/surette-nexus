@@ -85,7 +85,7 @@ export function AdminShell({ viewer, children }: { viewer: Viewer; children: Rea
       <div className="min-h-svh bg-ivory text-ink lg:grid lg:grid-cols-[260px_1fr]">
         <aside className="sticky top-0 hidden h-svh flex-col border-r border-line bg-paper px-4 py-6 lg:flex">
           <Link href="/admin" className="px-3"><Wordmark className="[&>span:first-child]:text-[1.2rem]" /></Link>
-          <p className="mt-1 px-3 text-[0.6875rem] uppercase tracking-[0.18em] text-ink-3">Property management</p>
+          <p className="mt-1 px-3 text-[0.6875rem] uppercase tracking-[0.18em] text-ink-3">Team portal</p>
           <div className="mt-8 flex-1 overflow-y-auto">{nav}</div>
           <div className="border-t border-line px-3 pt-4 text-[0.8125rem]">
             <p className="font-medium">{viewer.fullName}</p>

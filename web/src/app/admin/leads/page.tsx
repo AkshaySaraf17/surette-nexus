@@ -35,7 +35,7 @@ interface Detail { lead: Lead; notes: { id: string; body: string; author: string
 
 const STATUSES = ["new", "contacted", "qualified", "nurturing", "converted", "lost"] as const;
 const TONE: Record<string, "warn" | "success" | "neutral" | "danger" | "brand"> = { new: "warn", contacted: "brand", qualified: "success", nurturing: "neutral", converted: "success", lost: "danger" };
-const SOURCE_LABEL: Record<string, string> = { ai_assistant: "AI assistant", contact_form: "Contact form", showing_request: "Showing request", dual_move: "Dual-Move", signup: "Sign-up", manual: "Manual", import: "Import" };
+const SOURCE_LABEL: Record<string, string> = { ai_assistant: "AI assistant", off_market: "Off-market alert", contact_form: "Contact form", showing_request: "Showing request", dual_move: "Dual-Move", signup: "Sign-up", manual: "Manual", import: "Import" };
 
 function LeadsPage() {
   const viewer = useStaff();
